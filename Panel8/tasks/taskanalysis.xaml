@@ -1,0 +1,40 @@
+﻿<Window x:Class="TNov.taskanalysis"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TNov" 
+             mc:Ignorable="d" Width="930"
+        
+            WindowStartupLocation="CenterScreen" 
+            Background="DarkSeaGreen"
+            Title="TNov. Задание">
+    <StackPanel VerticalAlignment="Center" >
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock  Text="Проверьте статусы отверстий и выберите действие:" Margin="5"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock  Text="Вы можете отработать каждое отверстие отдельно, либо полностью перевставить группу задания." VerticalAlignment="Center" Margin="5"/>
+
+            <Button Content="Перевставить группу полностью" x:Name="replaceButton" Click="replacegroup_Click" MinWidth="200" MinHeight="25" Margin="5" />
+            
+        </StackPanel>
+        
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" >
+
+            <ScrollViewer Name="scroll" Height="350">
+                <StackPanel Orientation="Vertical" Name="sp0">
+
+                </StackPanel>
+            </ScrollViewer>
+
+
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" >
+            <Button Content="Назад" x:Name="backButton" Click="backButton_Click" MinWidth="120" MinHeight="25" Margin="5" />
+            <Button Content="Завершить" x:Name="cancelButton" IsDefault="True" Click="cancelButton_Click" MinWidth="120" MinHeight="25" Margin="5" />
+
+        </StackPanel>
+    </StackPanel>
+    
+</Window>

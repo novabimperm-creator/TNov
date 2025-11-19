@@ -1,0 +1,61 @@
+﻿<Window x:Class="TNov.officeswpf"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TNov"
+             mc:Ignorable="d" Height="400" Width="400"
+        d:DataContext="{d:DesignInstance local:officesViewModel}"
+            WindowStartupLocation="CenterScreen" 
+            Background="DarkSeaGreen"
+            Title="TNov. Помещения" ResizeMode="NoResize">
+    <StackPanel VerticalAlignment="Center" Margin="5">
+        <GroupBox Header="Общие настройки" Padding="5">
+            <StackPanel Orientation="Vertical" >
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Margin="5" Text="Помещения с коэффициентом 0,3:" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBox Name="textBox3" Text="{Binding k03}" MinWidth="340" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Margin="5" Text="Помещения с коэффициентом 0,5:" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBox Name="textBox4" Text="{Binding k05}" MinWidth="340" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <CheckBox x:Name="checkBox1" IsThreeState="False" IsChecked="{Binding recalc}" Content="Переокруглить площади помещений" Margin="5" />
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+        <GroupBox Header="Офисография" Padding="5">
+            <StackPanel Orientation="Vertical" >
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Margin="5" Text="Исключить из полезной и расчетной площади:" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBox Name="textBox1" Text="{Binding names1}" MinWidth="340" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+            </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Margin="5" Text="Исключить из расчетной площади:" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBox Name="textBox2" Text="{Binding names2}" MinWidth="340" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+        
+
+        
+            
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="Отмена" x:Name="escButton" IsCancel="True" Click="escButton_Click" MinWidth="60" MinHeight="25" Margin="5" />
+            <Button Content="Выбрать и применить" Command="{Binding Path=scenario2}" Click="acceptButton_Click" MinWidth="140" MinHeight="25" Margin="5" />
+            <Button Content="Применить для всех" x:Name="acceptButton" Command="{Binding Path=scenario1}" IsDefault="True" Click="acceptButton_Click" MinWidth="140" Margin="5"/>
+            
+        </StackPanel>
+       
+    </StackPanel>
+    
+</Window>

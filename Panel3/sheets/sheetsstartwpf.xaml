@@ -1,0 +1,35 @@
+﻿<Window x:Class="TNov.sheetsstartwpf"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TNov"
+             mc:Ignorable="d" Width="400"
+       
+            WindowStartupLocation="CenterScreen" 
+            Background="DarkSeaGreen"
+            Title="TNov. Менеджер листов" ResizeMode="NoResize">
+    <StackPanel VerticalAlignment="Center" Margin="5">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Margin="5" Text="Внимание! Синхронизируйтесь перед запуском этого плагина!" FontWeight="Bold" Foreground="Red" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <CheckBox IsChecked="{Binding prefix}" Content="Добавить префиксы разделов в Номер листа" HorizontalAlignment="Left" Margin="5" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Отмена" x:Name="escButton" IsCancel="True" Click="escButton_Click" MinWidth="100" MinHeight="25" Margin="5 5 160 5" />
+            <Button Content="Применить" IsDefault="True" Command="{Binding Path=scenario1}" Click="acceptButton_Click" MinWidth="100" Margin="5"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <TextBlock Margin="5" Width="155" TextWrapping="Wrap" VerticalAlignment="Center">
+    <Hyperlink NavigateUri="https://portal.talan.group/knowledge/proektirovanie/listynumeratsiyaikomplektynaeksport/" 
+               RequestNavigate="Hyperlink_RequestNavigate" >
+        Справка по функции</Hyperlink>
+            </TextBlock>
+            <Button Content="Применить и открыть нумератор" Command="{Binding Path=scenario2}" Click="acceptButton_Click" MinWidth="200" MinHeight="25" Margin="5"/>
+            
+        </StackPanel>
+
+    </StackPanel>
+    
+</Window>

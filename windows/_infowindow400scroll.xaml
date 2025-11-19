@@ -1,0 +1,23 @@
+﻿    <Window x:Class="TNov.infowindow400scroll"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TNov"
+             mc:Ignorable="d" Width="400" 
+        
+            WindowStartupLocation="CenterScreen" 
+            Background="DarkSeaGreen"
+            Title="TNov" ResizeMode="NoResize">
+    <StackPanel VerticalAlignment="Center" Margin="5">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <ScrollViewer CanContentScroll="True" MaxHeight="360" VerticalScrollBarVisibility="Auto">
+                <TextBlock Name="text1" Margin="5" Text="" Width="Auto" TextWrapping="Wrap" />
+            </ScrollViewer>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="Хорошо" x:Name="escButton" IsDefault="True" IsCancel="True" Click="escButton_Click" MinWidth="90" MinHeight="25" Margin="5" />
+        </StackPanel>
+    </StackPanel>
+    
+</Window>

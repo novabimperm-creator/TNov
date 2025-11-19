@@ -1,0 +1,98 @@
+﻿<Window x:Class="TNov.adskpwpf"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TNov"
+             mc:Ignorable="d" Width="400"
+        d:DataContext="{d:DesignInstance local:adskpViewModel}"
+            WindowStartupLocation="CenterScreen" 
+            Background="DarkSeaGreen"
+            Title="TNov. Параметры ADSK" ResizeMode="NoResize">
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Text="Настройки заполнения параметров" Margin="0 5 0 5" TextAlignment="Center" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Text="{Binding elemType}" Margin="0 5 0 5" TextAlignment="Center" TextWrapping="Wrap" FontWeight="Bold" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <GroupBox Header="Настройки заполнения Наименования" Padding="5">
+            <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="5">
+                
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Text="Параметр 1 (по типу)" Width="130" Margin="5" TextAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding naimPar1}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" Height="25" />
+                </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="Параметр 2" Width="80" Margin="5" TextAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <TextBox Text="{Binding naimPrefix2}" Width="60" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                        <ComboBox  VerticalAlignment="Top" Height="25" ItemsSource="{Binding paramlist}"
+      SelectedItem="{Binding Path=naimPar2, Mode=TwoWay}"
+      SelectedIndex = "0"
+      MinWidth="180" Margin="5"
+/>
+                        
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="Параметр 3" Width="80" Margin="5" TextAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <TextBox Text="{Binding naimPrefix3}" Width="60" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                        <ComboBox  VerticalAlignment="Top" Height="25" ItemsSource="{Binding paramlist}"
+      SelectedItem="{Binding Path=naimPar3, Mode=TwoWay}"
+      SelectedIndex = "0"
+      MinWidth="180" Margin="5"
+/>
+
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="Параметр 4" Width="80" Margin="5" TextAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <TextBox Text="{Binding naimPrefix4}" Width="60" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                        <ComboBox  VerticalAlignment="Top" Height="25" ItemsSource="{Binding paramlist}"
+      SelectedItem="{Binding Path=naimPar4, Mode=TwoWay}"
+      SelectedIndex = "0"
+      MinWidth="180" Margin="5"
+/>
+
+                    </StackPanel>
+
+                </StackPanel>
+            </GroupBox>
+            
+            
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <GroupBox Header="Настройки заполнения Количества" Padding="5">
+                <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="5">
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="Исходный параметр" Width="150" Margin="5" TextAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <ComboBox  VerticalAlignment="Top" Height="25" ItemsSource="{Binding paramlist2}"
+      SelectedItem="{Binding Path=countPar, Mode=TwoWay}"
+      SelectedIndex = "0"
+      MinWidth="180" Margin="5"
+/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="Коэффициент" Width="90" Margin="5" TextAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <TextBox Text="{Binding countK}" Width="60" Margin="5" TextAlignment="Left" TextWrapping="Wrap" Height="25" />
+                        <TextBlock Text="" Width="50" Margin="5" TextAlignment="Right" TextWrapping="Wrap" />
+                    </StackPanel>
+                    
+
+                </StackPanel>
+            </GroupBox>
+
+
+        </StackPanel>
+
+
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Content="Отмена" x:Name="escButton" IsCancel="True" Click="escButton_Click" Width="60" MinHeight="25" Margin="5" />
+                <Button Content="Применить" x:Name="acceptButton" IsDefault="True" Click="acceptButton_Click" Width="120" Margin="5"/>
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+    
+    
+</Window>

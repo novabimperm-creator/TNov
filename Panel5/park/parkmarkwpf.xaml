@@ -1,0 +1,35 @@
+﻿<Window x:Class="TNov.parkmarkwpf"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TNov"
+             mc:Ignorable="d" Width="290"
+        d:DataContext="{d:DesignInstance local:parkmarkViewModel}"
+            WindowStartupLocation="CenterScreen" 
+            Background="DarkSeaGreen"
+            Title="TNov. Парковки. Марка-Позиция" ResizeMode="NoResize">
+    <StackPanel VerticalAlignment="Center" Margin="5">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+            <TextBlock Margin="5" Text="Сценарий:" TextWrapping="Wrap" VerticalAlignment="Center" />
+            <ComboBox ItemsSource="{Binding paramlist}"
+                SelectedItem="{Binding Path=param1, Mode=TwoWay}"
+                SelectedIndex = "0"
+                Margin="5" MinWidth="191"
+            />
+        </StackPanel>
+        
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+            <TextBlock Name="text1" Margin="5" Text="Префикс A_Позиции:" TextWrapping="Wrap" />
+            <TextBox Name="textBox1" Text="{Binding prefix}" Margin="5" TextAlignment="Center" TextWrapping="Wrap" MinWidth="133" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+            <CheckBox x:Name="checkBox1" IsThreeState="False" IsChecked="{Binding all}" Content="Сквозное заполнение целевого параметра" Margin="5" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="Отмена" x:Name="escButton" IsCancel="True" Click="escButton_Click" MinWidth="60" MinHeight="25" Margin="5" />
+            <Button Content="Запуск" x:Name="acceptButton" IsDefault="True" Click="acceptButton_Click"  MinWidth="120" MinHeight="25" Margin="5" />
+        </StackPanel>
+    </StackPanel>
+    
+</Window>

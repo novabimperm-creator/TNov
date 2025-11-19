@@ -1,0 +1,28 @@
+﻿<Window x:Class="TNov.infowindowtextfield"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TNov"
+             mc:Ignorable="d" Width="280"
+        d:DataContext="{d:DesignInstance local:infowindowtextfieldViewModel}"
+            WindowStartupLocation="CenterScreen" 
+            Background="DarkSeaGreen"
+            Title="TNov" ResizeMode="NoResize" >
+    <StackPanel VerticalAlignment="Center" Margin="5">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Text="{Binding headtxt}" Width="250" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBox Name="textBox1" Text="{Binding ids}" Width="250" MaxHeight="500" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Text="{Binding lowtxt}" Width="250" Margin="5" TextAlignment="Left" TextWrapping="Wrap"/> 
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="Хорошо" x:Name="acceptButton" IsDefault="True" IsCancel="True" Click="acceptButton_Click" MinWidth="90" MinHeight="25" Margin="5"/>
+        </StackPanel>
+       
+    </StackPanel>
+    
+</Window>

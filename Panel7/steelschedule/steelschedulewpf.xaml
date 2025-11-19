@@ -1,0 +1,32 @@
+﻿<Window x:Class="TNov.steelschedulewpf"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TNov"
+             mc:Ignorable="d" Height="150" Width="280"
+        d:DataContext="{d:DesignInstance local:steelscheduleViewModel}"
+            WindowStartupLocation="CenterScreen" 
+            Background="DarkSeaGreen"
+            Title="TNov. ВРС подчистить" ResizeMode="NoResize">
+    <StackPanel VerticalAlignment="Center" Margin="5">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Margin="5" Text="Выберите сценарий работы:" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <RadioButton x:Name="rB1" GroupName="elems" IsThreeState="False" IsChecked="{Binding all}" Content="Все ВРС в проекте" HorizontalAlignment="Left" Width="180" Margin="5" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <RadioButton x:Name="rB2" GroupName="elems" IsThreeState="False" IsChecked="{Binding visible}" Content="Открытая ведомость" HorizontalAlignment="Left" Width="180" Margin="5" />
+        </StackPanel>
+        
+        
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="Отмена" x:Name="escButton" IsCancel="True" Click="escButton_Click" MinWidth="60" MinHeight="25" Margin="5" />
+            <Button Content="Применить" x:Name="acceptButton" IsDefault="True" Click="acceptButton_Click" MinWidth="120" Margin="5"/>
+        </StackPanel>
+       
+    </StackPanel>
+    
+</Window>

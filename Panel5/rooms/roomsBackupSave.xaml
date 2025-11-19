@@ -1,0 +1,39 @@
+﻿<Window x:Class="TNov.roomsBackupSave"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TNov"
+             mc:Ignorable="d" Width="400" MaxHeight="600"
+        
+            WindowStartupLocation="CenterScreen" 
+            Background="DarkSeaGreen"
+            Title="TNov" ResizeMode="NoResize">
+    
+    <StackPanel VerticalAlignment="Center" Margin="5">
+        
+            
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Margin="5" Text="Введите имя бэкапа" HorizontalAlignment="Center" FontWeight="Bold"/>
+            </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Margin="5" Text="(без имени проекта и даты, они добавятся автоматически)" />
+            </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Margin="5 5 0 0" Text="Примеры:" TextWrapping="Wrap"/>
+            <TextBlock Margin="5" Text="согласованные планировки" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"/>
+            <TextBlock Margin="5" Text="ПД после экспертизы" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            
+                <TextBox Name="textBox1" Text="" MinWidth="300" Margin="5" TextAlignment="Center" TextWrapping="Wrap" Height="22" />
+            
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="Отмена" x:Name="escButton" IsCancel="True" Click="escButton_Click" MinWidth="90" MinHeight="25" Margin="5" />
+            <Button Content="Сохранить" x:Name="saveButton" IsDefault="True" Click="saveButton_Click" MinWidth="90" MinHeight="25" Margin="5" />
+            
+        </StackPanel>
+    </StackPanel>
+    
+</Window>

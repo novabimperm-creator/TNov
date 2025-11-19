@@ -1,0 +1,356 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.IO;
+using System.Threading.Tasks;
+using Autodesk.Revit.Attributes;
+using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Architecture;
+using Autodesk.Revit.UI;
+using Newtonsoft.Json;
+using TNov.main;
+using System.Windows;
+using System.Windows.Threading;
+using System.Threading;
+
+namespace TNov
+{
+    public class TNovRoom
+    {
+        public string RoomCategory;
+        public int RoomGroupNumber;
+        public string RoomId;
+        public string RoomName;
+        public string RoomModelS;
+        public string RoomModelSK;
+        public string RoomBackupS;
+        public string RoomBackupSK;
+    }
+    [Transaction(TransactionMode.Manual)]
+    public class roomsBackup : IExternalCommand
+    {
+        private TNovProgressBar apartsProgressBar;
+        private void ThreadStartingPoint()
+        {
+            this.apartsProgressBar = new TNovProgressBar();
+            this.apartsProgressBar.Show();
+            Dispatcher.Run();
+        }
+        public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
+        {
+            string TNovClassName = "Помещения Резервные копии"; DateTime dateTime = DateTime.Now;
+            //подключение приложения и документа
+            if (RevitAPI.UiApplication == null) { RevitAPI.Initialize(commandData); }
+            UIDocument uidoc = RevitAPI.UiDocument; Document doc = RevitAPI.Document;
+            UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
+            
+            //проверка подключения, запись в журнал
+            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+
+            // создание log - файла
+            Logger.Initialize(TNovClassName);
+            
+
+            var viewModel0 = new aboutViewModel();
+            
+            string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
+            viewModel0 = JsonConvert.DeserializeObject<aboutViewModel>(File.ReadAllText(jsonpath0));
+            if (viewModel0.extendedLogs)
+            
+            {
+                var qViewModel = new qwindow280ViewModel();
+                qViewModel.headtxt = "Включены расширенные логи. " +
+                    "Плагин будет работать медленнее, но соберет больше данных. " +
+                    "Выключить расширенные логи для ускорения работы?";
+                var qwpfview = new qwindow280(qViewModel);
+                qViewModel.CloseRequest += (s, e) => qwpfview.Close();
+                bool? qok = qwpfview.ShowDialog();
+                if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
+            }
+
+            //Проверка актуальности шаблона
+            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
+
+            //Список используемых параметров
+
+            string N_Par_sq = "N_Площадь.Округленная";
+            if (oldProject == true) { N_Par_sq = "Площадь.Округленная"; }
+            string N_Par_sqround = "N_Площадь.ОкруглСКоэффициентом";
+            if (oldProject == true) { N_Par_sqround = "Площадь.ОкруглСКоэффициентом"; }
+            string N_Par_apartment = "N_Квартира";
+            if (oldProject == true) { N_Par_apartment = "квартира"; }
+            string N_Par_apartnum = "N_Кв.Номер";
+            if (oldProject == true) { N_Par_apartnum = "квартира.номер"; }
+            string N_Par_offnum = "N_Офис.Номер";
+            if (oldProject == true) { N_Par_offnum = "Офис.Номер"; }
+            string N_Par_LevelNum = "N_Эт.Номер";
+            if (oldProject == true) { N_Par_LevelNum = "Эт.Номер"; }
+
+            if (oldProject) Logger.Log("Используется старый шаблон", 2);
+
+            Logger.Log("Сбор элементов", 1);
+            List<Room> rooms = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Rooms)   //фильтр по категории Помещения
+                                                                         .WhereElementIsNotElementType()    //фильтр только экземпляры
+                                                                         .Cast<Room>()                     //элементы категории Помещения
+                                                                         .ToList();                         //формируем список
+            Logger.Log("Ищем неразмещенные помещения", 1);
+            int ec = 0; //счетчик неразмещенных помещений
+
+            foreach (Room room in rooms) //проверка наличия неразмещенных помещений
+            {
+                double area = room.get_Parameter(BuiltInParameter.ROOM_AREA).AsDouble();
+                if (area == 0) { ec++; }
+            }
+
+            if (ec > 0) //если есть неразмещенные помещения - прерываем процесс
+            {
+                new infowindow280("В проекте присутствуют неразмещенные или избыточные помещения в количестве " +
+                   ec + " шт. Удалите их плагином или через спецификацию.").ShowDialog();
+                Logger.Log("В проекте присутствуют неразмещенные или избыточные помещения в количестве " + ec + " шт. Завершение работы", 3);
+                return Result.Failed;
+            }
+
+            Logger.Log("Диалоговое окно", 1);
+            // Диалоговое окно
+            roomsBackupStart wpfview = new roomsBackupStart();
+            bool? ok = wpfview.ShowDialog();
+            if (wpfview.scenario>0) { } 
+            else { Logger.Log("Выполнение отменено пользователем. Завершение работы.", 3); return Result.Cancelled; }
+
+            string docName = doc.Title.ToString(); docName = docName.Replace(",", " ");
+            string userName = rvtApp.Username; string docNameUserName = "_" + userName; docName = docName.Replace(docNameUserName, "");
+            string date = DateTime.Now.ToString(); date = date.Replace(":", "-");
+
+            switch (wpfview.scenario)
+            {
+                case 1:
+                    Logger.Log("Выбран сценарий Сохранить бэкап", 1);
+
+                    roomsBackupSave wpfview1 = new roomsBackupSave();
+                    bool? ok1 = wpfview1.ShowDialog();
+                    if (ok1 != null && ok1 == true) { } 
+                    else { Logger.Log("Выполнение отменено пользователем. Завершение работы.", 3); return Result.Cancelled; }
+
+                    string backupName = "Без имени";
+                    if (wpfview1.backupName != null && wpfview1.backupName.Length > 0 ) backupName = wpfview1.backupName;
+                    Logger.Log("Имя бэкапа: "+wpfview1.backupName, 1);
+
+                    Thread thread = new Thread(new ThreadStart(this.ThreadStartingPoint));
+                    thread.SetApartmentState(ApartmentState.STA);
+                    thread.IsBackground = true;
+                    thread.Start();
+                    Thread.Sleep(100);
+
+                    int PBCount = 0;
+                    this.apartsProgressBar.TNov_ProgressBar.Dispatcher.Invoke<double>((Func<double>)(() => this.apartsProgressBar.TNov_ProgressBar.Minimum = (double)PBCount));
+                    this.apartsProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.apartsProgressBar.value.Text = PBCount.ToString()));
+                    this.apartsProgressBar.TNov_ProgressBar.Dispatcher.Invoke<double>((Func<double>)(() => this.apartsProgressBar.TNov_ProgressBar.Maximum = (double)rooms.Count));
+                    this.apartsProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.apartsProgressBar.maxvalue.Text = rooms.Count.ToString()));
+
+
+                    foreach (var room in rooms)
+                    {
+                        Logger.Log("Помещение " +room.Id.IntegerValue.ToString(),2);
+                        //тип помещения
+                        string roomType = "Прочие";
+
+                        int Квартиры = room.LookupParameter(N_Par_apartment).AsInteger();
+                        if (Квартиры == 1) roomType = "Квартиры";
+
+                        bool office = false;
+                        Parameter offnumParam = room.LookupParameter(N_Par_offnum);
+                        if (offnumParam != null && offnumParam.HasValue)
+                        {
+                            string offNumValue = offnumParam.AsString();
+                            bool isOffice = Double.TryParse(offNumValue, out double num);
+                            if (isOffice || offnumParam.AsString().Length > 0) { office = true; roomType = "Офисы"; }
+                        }
+
+                        if (room.get_Parameter(BuiltInParameter.ROOM_NAME).AsString().Contains("Кладов")&&Квартиры!=1&&office==false) 
+                            roomType = "Кладовые";
+
+                        Logger.Log("   тип: " + roomType, 2);
+
+                        //площади
+                        string roomSqStr = "0";
+                        string roomSqRStr = "0";
+                        roomSqStr = room.LookupParameter(N_Par_sq).AsDouble().ToString();
+                        roomSqRStr = room.LookupParameter(N_Par_sqround).AsDouble().ToString();
+                        Logger.Log("   площадь: " + roomSqStr, 2);
+                        Logger.Log("   площадь округл: " + roomSqRStr, 2);
+
+                        //запись в бэкап
+                        string filePath = nova.novaserver + "_TNov/roomsBackup/"+ date + "," + docName + "," + backupName + ".txt";
+                        File.AppendAllText(filePath, roomType + "|" + room.Id.IntegerValue.ToString() + "|" + roomSqStr + "|" + roomSqRStr+"\n");
+                        Logger.Log("   записано в бэкап", 2);
+
+                        //Прогресс-бар: +1
+                        PBCount++;
+                        this.apartsProgressBar.TNov_ProgressBar.Dispatcher.Invoke<double>((Func<double>)(() => this.apartsProgressBar.TNov_ProgressBar.Value = (double)PBCount));
+                        this.apartsProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.apartsProgressBar.value.Text = PBCount.ToString()));
+
+                    }
+                    this.apartsProgressBar.Dispatcher.Invoke((System.Action)(() => this.apartsProgressBar.Close()));
+                    break;
+                case 2:
+                    Logger.Log("Выбран сценарий Загрузить бэкап", 1);
+
+                    string txtPath = nova.novaserver + "_TNov/roomsBackup";
+                    string searchString = docName + ",";
+                    List<string> filesFromPath = Directory.GetFiles(txtPath).ToList();
+                    if(filesFromPath==null||filesFromPath.Count == 0)
+                    {
+                        Logger.Log("Папка бэкапов пуста. Завершение работы.", 3);
+                        return Result.Cancelled;
+                    }
+                    List<string> files = new List<string>();
+                    foreach (string file in filesFromPath)
+                    {
+                        if(file.Contains(searchString)) files.Add(file);
+                    }
+                    string[] filesArray = files.ToArray();
+
+                    if (filesArray.Length < 1)
+                    {
+                        new infowindow280("Для данной модели отсутствуют файлы резервных копий площадей помещений. " +
+                        "Чтобы создать копию, воспользуйтесь плагином TNov Помещения Резервные копии - Сохранить").ShowDialog();
+                        Logger.Log("Бэкапы отсутствуют. Завершение работы.", 3);
+                        return Result.Cancelled;
+                    }
+                    
+                    //окно выбора бэкапа
+                    Logger.Log("Запуск окна выбора бэкапа", 1);
+                    roomsBackupLoad wpfview2 = new roomsBackupLoad(filesArray, docName);
+                    bool? ok2 = wpfview2.ShowDialog();
+                    if (ok2 != null && ok2 == true) { }
+                    else { Logger.Log("Выполнение отменено пользователем. Завершение работы.", 3); return Result.Cancelled; }
+
+                    List<TNovRoom> tNovRooms = new List<TNovRoom>();
+                    string[] lines = File.ReadAllLines(wpfview2.SelectedFilePath);
+                    for (int i = 0; i < lines.Length - 1; i++)
+                    {
+                        string[] parts = lines[i].Split('|');
+                        int id = 0;
+                        int.TryParse(parts[1], out id);
+                        if (id == 0) continue;
+                        ElementId eId = new ElementId(id);
+                        Element elem = doc.GetElement(eId);
+                        string roomCategory = parts[0];
+                        string modelRoomId = parts[1];
+                        string modelRoomS = "";
+                        string modelRoomSK = "";
+                        string modelRoomName = "";
+                        int modelRoomGroupNumber = 0;
+                        if (elem != null)
+                        {
+                            modelRoomS = elem.LookupParameter(N_Par_sq).AsDouble().ToString();
+                            modelRoomSK = elem.LookupParameter(N_Par_sqround).AsDouble().ToString();
+                            modelRoomName = elem.get_Parameter(BuiltInParameter.ROOM_NAME).AsString();
+                            if (roomCategory == "Квартиры")
+                            {
+                                string gNum = elem.LookupParameter(N_Par_apartnum).AsString();
+                                if (gNum != null && gNum.Length > 0) int.TryParse (gNum, out modelRoomGroupNumber);
+                            }
+                            if (roomCategory == "Офисы")
+                            {
+                                string gNum = elem.LookupParameter(N_Par_offnum).AsString();
+                                if (gNum != null && gNum.Length > 0) int.TryParse(gNum, out modelRoomGroupNumber);
+                            }
+                            if (roomCategory == "Кладовые")
+                            {
+                                string gNum = elem.LookupParameter("Номер").AsString();
+                                if(gNum!=null&&gNum.Length>0) int.TryParse(gNum, out modelRoomGroupNumber);
+                            }
+                            if (roomCategory == "Прочие")
+                            {
+                                double gNum = elem.LookupParameter(N_Par_LevelNum).AsDouble();
+                                modelRoomGroupNumber=(int)gNum;
+                            }
+                        }
+                        else
+                        {
+                            modelRoomId = "не найдено";
+                        }
+                        TNovRoom tNovRoom = new TNovRoom()
+                        {
+                            RoomCategory = roomCategory,
+                            RoomId = modelRoomId,
+                            RoomName = modelRoomName,
+                            RoomGroupNumber = modelRoomGroupNumber,
+                            RoomModelS = modelRoomS,
+                            RoomModelSK = modelRoomSK,
+                            RoomBackupS = parts[2],
+                            RoomBackupSK = parts[3],
+                        };
+                        if(tNovRoom.RoomModelS == tNovRoom.RoomBackupS && tNovRoom.RoomModelSK == tNovRoom.RoomBackupSK) { }
+                        else tNovRooms.Add(tNovRoom);
+                    }
+
+                    if (tNovRooms==null||tNovRooms.Count==0)
+                    {
+                        new infowindow280("Все площади из резервной копии соответствуют текущим в модели").ShowDialog();
+                        Logger.Log("Площади совпадают. Завершение работы.", 3);
+                        return Result.Cancelled;
+                    }
+
+                    //сортировка
+                    tNovRooms = tNovRooms.OrderBy(x => x.RoomCategory).ThenBy(x=>x.RoomGroupNumber).ThenBy(x => x.RoomId).ToList();
+
+                    //окно анализа
+                    Logger.Log("Запуск окна анализа бэкапа", 1);
+                    string[] fileNameParts = Path.GetFileName(wpfview2.SelectedFilePath).Split(',');
+                    string backupNameToWindow = fileNameParts[0] + " " + fileNameParts[2].Replace(".txt","");
+                    roomsBackupAnalyse wpfview3 = new roomsBackupAnalyse(tNovRooms, backupNameToWindow);
+                    bool? ok3 = wpfview3.ShowDialog();
+                    if (ok3 != null && ok3 == true) { }
+                    else { Logger.Log("Выполнение отменено пользователем. Завершение работы.", 3); return Result.Cancelled; }
+
+                    Logger.Log("Сценарий: "+wpfview3.scenario,1);
+
+                    //восстановление
+                    if (wpfview3.scenario != "0") tNovRooms = tNovRooms.Where(t=>t.RoomId==wpfview3.scenario).ToList();
+
+                    using (Transaction transaction = new Transaction(doc))
+                    {
+                        transaction.Start("TNov - Резервное копирование (площади)");
+                        Logger.Log("Открываем транзакцию", 1);
+                        foreach (var tNovRoom in tNovRooms)
+                        {
+                            foreach (var room in rooms)
+                            {
+                                //добавить квартирографию и офисографию
+                                if (room.Id.IntegerValue.ToString() == tNovRoom.RoomId)
+                                {
+                                    Logger.Log("Помещение " + room.Id.IntegerValue.ToString(), 2);
+                                    double sq = 0; Double.TryParse(tNovRoom.RoomBackupS, out sq);
+                                    double sqk = 0; Double.TryParse(tNovRoom.RoomBackupSK, out sqk);
+                                    if (sq > 0)
+                                    {
+                                        try
+                                        {
+                                            room.LookupParameter(N_Par_sq).Set(sq);
+                                            room.LookupParameter(N_Par_sqround).Set(sqk);
+                                            Logger.Log("   параметры назначены", 2);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Logger.Log("Помещение " + room.Id.IntegerValue.ToString() + " ошибка: " + ex.Message, 4);
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                            
+
+                        }
+                        transaction.Commit(); Logger.Log("Закрываем транзакцию", 1);
+                    }
+
+                    break;
+            }
+
+            Logger.Log("Завершение работы.", 5);
+            return Result.Succeeded;
+        }
+    }
+}

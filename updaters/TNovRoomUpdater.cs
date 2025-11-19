@@ -1,0 +1,158 @@
+﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Architecture;
+using Autodesk.Revit.DB.Events;
+using Autodesk.Revit.UI;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+using TNov.main;
+
+namespace TNov
+{
+    [Transaction(TransactionMode.Manual)]
+    public class TNovRoomUpdater : IUpdater
+    {
+        static AddInId _appId;
+        static UpdaterId _updaterId;
+
+        public TNovRoomUpdater(AddInId id)
+        {
+            _appId = id;
+
+            _updaterId = new UpdaterId(_appId, new Guid("898f186f-c08c-4bd9-a81b-01cc3fa96f0e"));
+        }
+
+        public void Execute(UpdaterData data)
+        {
+            Guid param1Guid = new Guid("51cf9b84-e3e6-4c52-b723-340669e3c500");//N_Секция
+            Guid param2Guid = new Guid("4d2aa1b8-727c-43a1-8b1e-8c22dd484e11");//N_Эт.Номер
+            Guid paramAGuid = new Guid("155f8c55-e05f-4737-883e-1338eb722735");//N_Квартира
+            Guid param3AGuid = new Guid("7cdb6adb-756e-4e5b-b4d0-5ccaf3cee047");//N_Кв.НомерНаЭтаже
+            Guid paramOGuid = new Guid("e73bb005-9ad8-489c-bc1f-fd8c3b521ec3");//N_Офис.Номер
+            Guid paramTGuid = new Guid("5b03cee1-38d2-4e17-9f7d-a88fd3b1913b");//Т_Номер прод пом
+
+            Document doc = data.GetDocument();
+            Autodesk.Revit.ApplicationServices.Application app = doc.Application;
+
+            string prefix = "0";
+            string docName = doc.Title.ToString();
+            List<string> list = new List<string>() { "02-50ЛЕТ" , "16-НЧ", "ПОСЕЛК", "27-АВИА", "59-КОСМ1", "69-КРАС.3", "76-СУЗДАЛ.23", "76.23-18.03",
+            "59-ППРК","27-ВРН-03","27-ЛАЗО-01","27-ХГ4"};
+            foreach (string item in list) { if (docName.Contains(item)) { prefix = ""; break; } }
+
+            List<ElementId> idsA = data.GetAddedElementIds().ToList();
+            List<ElementId> idsB = data.GetModifiedElementIds().ToList();
+
+            List<ElementId> ids = new List<ElementId>();
+
+            foreach (var id in idsA) ids.Add(id);
+            foreach (var id in idsB) ids.Add(id);
+
+            foreach (ElementId id in ids)
+            {
+                Element elem = doc.GetElement(id);
+                int scenario = 0; // 1 - кладовые, 2 - квартиры, 3 - офисы
+                if (elem.get_Parameter(BuiltInParameter.ROOM_NAME).AsString().Contains("Кладов")) scenario = 1;
+                if (elem.get_Parameter(paramAGuid) != null)
+                {
+                    if(elem.get_Parameter(paramAGuid).AsInteger()==1) scenario = 2;
+                }
+                if (elem.get_Parameter(paramOGuid) != null)
+                {
+                    if (elem.get_Parameter(paramOGuid).AsString()!=null&& elem.get_Parameter(paramOGuid).AsString().Length>0)
+                    {
+                        double num = 0;
+                        bool isOffice = Double.TryParse(elem.get_Parameter(paramOGuid).AsString(), out num);
+                        if (isOffice&&num>0) scenario = 3;
+                    }
+                }
+                if (scenario > 0)
+                {
+                    string value = ""; string part1 = "";
+                    if (elem.get_Parameter(param1Guid) != null)
+                    { part1 = elem.get_Parameter(param1Guid).AsString(); if (part1 != null && part1.Length > 0) value += part1; }
+                    if (elem.get_Parameter(param2Guid) != null)
+                    {
+                        double part2 = Math.Round(elem.get_Parameter(param2Guid).AsDouble() / 10.76391);
+                        if (Math.Abs(part2) > 0)
+                        {
+                            string pt2 = part2.ToString();
+
+                            if (Math.Abs(part2) < 10)
+                            {
+                                if (pt2.StartsWith("-")) { pt2 = pt2.Replace("-", "-" + prefix); }
+                                else pt2 = prefix + pt2;
+                            }
+                            value += "-" + pt2;
+                        }
+                    }
+                    string part3 = ""; double part3double = 0;
+                    switch (scenario)
+                    {
+                        case 1:
+                            part3 = elem.get_Parameter(BuiltInParameter.ROOM_NUMBER).AsString();
+                            break;
+                        case 2:
+                            part3 = elem.get_Parameter(param3AGuid).AsValueString();
+                            break;
+                        case 3:
+                            part3 = elem.get_Parameter(paramOGuid).AsString();
+                            break;
+                    }
+
+                    if (part3 != null && part3.Length > 0) 
+                    {
+                        double.TryParse(part3, out part3double);
+                        if (part3double > 0&&part3double < 10) part3 = prefix + part3;
+                        value += "-" + part3;
+                    }
+
+                    string comments = "";
+                    Parameter roomNazn = elem.get_Parameter(BuiltInParameter.ROOM_DEPARTMENT);
+                    if (scenario == 3&& roomNazn != null) 
+                    {
+                        string nazn = "Офис"; 
+                        if(roomNazn.AsString()!=null&& roomNazn.AsString().Length > 0)
+                        {
+                            nazn = roomNazn.AsString();
+                        }
+                        comments = nazn + " (№" + value + ")";
+                    }
+                    if(comments.Length > 0)
+                        elem.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(comments);//назначаем также параметр Комментарии для спецификации офисов
+                    elem.get_Parameter(paramTGuid).Set(value); //назначение целевого параметра
+                }    
+
+                
+            }
+
+            
+
+
+        }
+
+        public string GetAdditionalInformation()
+        {
+            return "TNov, bim@pm-nova.ru";
+        }
+
+        public ChangePriority GetChangePriority()
+        {
+            return ChangePriority.FloorsRoofsStructuralWalls;
+        }
+
+        public UpdaterId GetUpdaterId()
+        {
+            return _updaterId;
+        }
+
+        public string GetUpdaterName()
+        {
+            return "TNovRoomUpdater";
+        }
+    }
+}

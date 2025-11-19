@@ -1,0 +1,1074 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{4E83D904-2213-4B0C-A4F8-56C0CD79C49E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TNov</RootNamespace>
+    <AssemblyName>TNov</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'config1|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>\\fs-nova\Distr\0.For Admin\_TNov\build\config1\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;config1</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'config2|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>\\fs-nova\Distr\0.For Admin\_TNov\build\config2\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;config2</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'config2outsource|AnyCPU'">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>\\fs-nova\Distr\0.For Admin\_TNov\build\config2outsource\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;config2outsource</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AdWindows, Version=3.1.7.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\Autodesk\Revit 2022\AdWindows.dll</HintPath>
+    </Reference>
+    <Reference Include="Autodesk.RevitServer.Social">
+      <HintPath>Panel10\ServerExport\Autodesk.RevitServer.Social.dll</HintPath>
+    </Reference>
+    <Reference Include="Castle.Core">
+      <HintPath>Panel10\ServerExport\Castle.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Castle.Windsor">
+      <HintPath>Panel10\ServerExport\Castle.Windsor.dll</HintPath>
+    </Reference>
+    <Reference Include="EPPlus">
+      <HintPath>packages\EPPlus.6.1.3\lib\net462\EPPlus.dll</HintPath>
+    </Reference>
+    <Reference Include="EPPlus.Interfaces">
+      <HintPath>packages\EPPlus.Interfaces.6.1.1\lib\net462\EPPlus.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="EPPlus.System.Drawing">
+      <HintPath>packages\EPPlus.System.Drawing.6.1.1\lib\net462\EPPlus.System.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=7.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>packages\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.IO.RecyclableMemoryStream">
+      <HintPath>packages\Microsoft.IO.RecyclableMemoryStream.1.4.1\lib\net46\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>C:\Windows\assembly\GAC_MSIL\Microsoft.Office.Interop.Excel\15.0.0.0__71e9bce111e9429c\Microsoft.Office.Interop.Excel.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="RevitAPI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2022\RevitAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2022\RevitAPIUI.dll</HintPath>
+    </Reference>
+    <Reference Include="RS.Enterprise.Common.ClientServer.DataContract">
+      <HintPath>Panel10\ServerExport\RS.Enterprise.Common.ClientServer.DataContract.dll</HintPath>
+    </Reference>
+    <Reference Include="RS.Enterprise.Common.ClientServer.Helper">
+      <HintPath>Panel10\ServerExport\RS.Enterprise.Common.ClientServer.Helper.dll</HintPath>
+    </Reference>
+    <Reference Include="RS.Enterprise.Common.ClientServer.Proxy, Version=22.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Panel10\ServerExport\RS.Enterprise.Common.ClientServer.Proxy.dll</HintPath>
+    </Reference>
+    <Reference Include="RS.Enterprise.Common.ClientServer.ServiceContract.Local">
+      <HintPath>Panel10\ServerExport\RS.Enterprise.Common.ClientServer.ServiceContract.Local.dll</HintPath>
+    </Reference>
+    <Reference Include="RS.Enterprise.Common.ClientServer.ServiceContract.Model">
+      <HintPath>Panel10\ServerExport\RS.Enterprise.Common.ClientServer.ServiceContract.Model.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="FailureAndWarningHandler.cs" />
+    <Compile Include="main\Logger.cs" />
+    <Compile Include="Panel10\bimexportViewModel.cs" />
+    <Compile Include="Panel10\revitserver.xaml.cs">
+      <DependentUpon>revitserver.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel10\revitserverViewModel.cs" />
+    <Compile Include="Panel10\TreeBuilder.cs" />
+    <Compile Include="Panel1\journal.cs" />
+    <Compile Include="main\_synchronize.cs" />
+    <Compile Include="Panel10\FolderSelectDialog.cs" />
+    <Compile Include="Panel3\changes\changes.cs" />
+    <Compile Include="Panel3\changes\changeswpf.xaml.cs">
+      <DependentUpon>changeswpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel3\excel\excelSettings.cs" />
+    <Compile Include="Panel3\links\links.cs" />
+    <Compile Include="Panel3\plw\plwwpf.xaml.cs">
+      <DependentUpon>plwwpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel3\sheets\sheetnumwpf.xaml.cs">
+      <DependentUpon>sheetnumwpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel3\sheets\sheetsstartwpf.xaml.cs">
+      <DependentUpon>sheetsstartwpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel3\sheets\sheets.cs" />
+    <Compile Include="Panel5\finishing\finishing.cs" />
+    <Compile Include="Panel5\floorimages.cs" />
+    <Compile Include="Panel5\rooms\roomsTNumber.cs" />
+    <Compile Include="Panel5\rooms\roomsBackup.cs" />
+    <Compile Include="Panel5\rooms\roomsBackupLoad.xaml.cs">
+      <DependentUpon>roomsBackupLoad.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel5\rooms\roomsBackupSave.xaml.cs">
+      <DependentUpon>roomsBackupSave.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel5\rooms\roomsBackupStart.xaml.cs">
+      <DependentUpon>roomsBackupStart.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel5\rooms\roomsBackupAnalyse.xaml.cs">
+      <DependentUpon>roomsBackupAnalyse.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel6\beamswpf.xaml.cs">
+      <DependentUpon>beamswpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel6\found\foundotm.cs" />
+    <Compile Include="Panel8\holes\holescheckdynamo.cs" />
+    <Compile Include="Panel3\excel\excelwpf.xaml.cs">
+      <DependentUpon>excelwpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel8\tasks\idselectionTasks\idselectionTasks.cs" />
+    <Compile Include="Panel8\tasks\idselectionTasks\idselectionTaskswpf.xaml.cs">
+      <DependentUpon>idselectionTaskswpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel8\tasks\taskgroups.xaml.cs">
+      <DependentUpon>taskgroups.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel8\tasks\task4.cs" />
+    <Compile Include="Panel8\tasks\task3.cs" />
+    <Compile Include="Panel9\adskg\adskgViewModel.cs" />
+    <Compile Include="Panel9\adskg\adskpViewModel.cs" />
+    <Compile Include="Panel9\adskg\adsksswpf.xaml.cs">
+      <DependentUpon>adsksswpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel9\adskg\adskpwpf.xaml.cs">
+      <DependentUpon>adskpwpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel9\adskg\adskssViewModel.cs" />
+    <Compile Include="Panel9\cableways\cablewaysSettings.cs" />
+    <Compile Include="Panel9\cableways\cableways.cs" />
+    <Compile Include="Panel9\cableways\cablewayswpf.xaml.cs">
+      <DependentUpon>cablewayswpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel9\cableways\cablewaysstartwpf.xaml.cs">
+      <DependentUpon>cablewaysstartwpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel9\ss\ssNumbererwpf.xaml.cs">
+      <DependentUpon>ssNumbererwpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel9\ss\ssNumberer.cs" />
+    <Compile Include="RelayCommand2.cs" />
+    <Compile Include="universal\param.cs" />
+    <Compile Include="updaters\TNovFloorCeilingUpdater.cs" />
+    <Compile Include="updaters\TNovRoomUpdater.cs" />
+    <Compile Include="updaters\TNovShaftUpdater.cs" />
+    <Compile Include="updaters\TNovWallUpdater.cs" />
+    <Compile Include="updaters\TNovTaskUpdater.cs" />
+    <Compile Include="updaters\TNovPileUpdater.cs" />
+    <Compile Include="updaters\TNovPinUpdater.cs" />
+    <Compile Include="updaters\TNovWorksetUpdater.cs" />
+    <Compile Include="updaters\TNovHoleUpdater.cs" />
+    <Compile Include="Panel8\tasks\task1.cs" />
+    <Compile Include="Panel8\tasks\task2.cs" />
+    <Compile Include="Panel8\tasks\taskanalysis.xaml.cs">
+      <DependentUpon>taskanalysis.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel8\tasks\gettaskwpf.xaml.cs">
+      <DependentUpon>gettaskwpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel8\tasks\gettask.cs" />
+    <Compile Include="Panel10\bimexportwpf.xaml.cs">
+      <DependentUpon>bimexportwpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel4\floors\AlphanumComparatorFastString.cs" />
+    <Compile Include="main\about.xaml.cs">
+      <DependentUpon>about.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="main\Application.cs" />
+    <Compile Include="main\appversion.cs" />
+    <Compile Include="main\nova.cs" />
+    <Compile Include="numstostring.cs" />
+    <Compile Include="Panel3\excel\excel.cs" />
+    <Compile Include="Panel3\idselection\idselection.cs" />
+    <Compile Include="Panel3\idselection\idselectionwpf.xaml.cs" />
+    <Compile Include="Panel3\plw\plwSettings.cs" />
+    <Compile Include="Panel3\paint\paint.cs" />
+    <Compile Include="Panel3\paint\paint2.cs" />
+    <Compile Include="Panel3\plw\plw.cs" />
+    <Compile Include="Panel3\paint\revitpaint.cs" />
+    <Compile Include="Panel3\paint\revitpaintdel.cs" />
+    <Compile Include="Panel3\paint\revitsplitface.cs" />
+    <Compile Include="Panel3\plw\unpinner.cs" />
+    <Compile Include="Panel3\plw\unpinnerwpf.xaml.cs">
+      <DependentUpon>unpinnerwpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel2\ParamTable.cs" />
+    <Compile Include="Panel1\CDE.cs" />
+    <Compile Include="Panel2\edu.cs" />
+    <Compile Include="Panel2\workorg.cs" />
+    <Compile Include="Panel4\floors\floors.cs" />
+    <Compile Include="Panel4\floors\floorwpf.xaml.cs" />
+    <Compile Include="Panel4\mirror.cs" />
+    <Compile Include="Panel5\rooms\aparts.cs" />
+    <Compile Include="Panel5\rooms\apartsnum.cs" />
+    <Compile Include="Panel5\rooms\apartsnumnew.cs" />
+    <Compile Include="Panel5\rooms\apartsnumnewwpf.xaml.cs" />
+    <Compile Include="Panel5\rooms\apartsnumwpf.xaml.cs" />
+    <Compile Include="Panel5\rooms\failedrooms.cs" />
+    <Compile Include="Panel5\levelnumber\levelnumber.cs" />
+    <Compile Include="Panel5\levelnumber\levelnumberwpf.xaml.cs" />
+    <Compile Include="Panel5\rooms\offices.cs" />
+    <Compile Include="Panel5\rooms\officeswpf.xaml.cs" />
+    <Compile Include="Panel5\park\park.cs" />
+    <Compile Include="Panel5\park\parkmark.cs" />
+    <Compile Include="Panel5\park\parkmarkwpf.xaml.cs" />
+    <Compile Include="Panel5\park\parknum.cs" />
+    <Compile Include="Panel5\park\parknumwpf.xaml.cs" />
+    <Compile Include="Panel5\park\parksq.cs" />
+    <Compile Include="Panel5\park\parkwpf.xaml.cs" />
+    <Compile Include="Panel5\rooms\roomsnum.cs" />
+    <Compile Include="Panel5\rooms\roomsnumwpf.xaml.cs">
+      <DependentUpon>roomsnumwpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel5\rooms\roomsround.cs" />
+    <Compile Include="Panel6\beamscut.cs" />
+    <Compile Include="Panel6\fixstructurefile\fixstructurefile.cs" />
+    <Compile Include="Panel6\found\found.cs" />
+    <Compile Include="Panel6\found\foundautonum.cs" />
+    <Compile Include="Panel6\found\foundautonumwpf.xaml.cs" />
+    <Compile Include="Panel6\found\foundcut.cs" />
+    <Compile Include="Panel6\found\foundnum.cs" />
+    <Compile Include="Panel6\found\foundnumpurge.cs" />
+    <Compile Include="Panel6\found\foundnumspec.cs" />
+    <Compile Include="Panel6\found\foundnumwpf.xaml.cs" />
+    <Compile Include="Panel6\found\foundwpf.xaml.cs" />
+    <Compile Include="Panel8\holes\holes.cs" />
+    <Compile Include="Panel8\holes\holeswpf.xaml.cs">
+      <DependentUpon>holeswpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel7\rebarimages.cs" />
+    <Compile Include="Panel7\schemespec\schemespec.cs" />
+    <Compile Include="Panel7\schemespec\schemespecwpf.xaml.cs">
+      <DependentUpon>schemespecwpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel7\steelschedule\steelschedule.cs" />
+    <Compile Include="Panel7\steelschedule\steelschedulewpf.xaml.cs">
+      <DependentUpon>steelschedulewpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel9\adskg\IsolNonModel.cs" />
+    <Compile Include="Panel9\adskg\adskg.cs" />
+    <Compile Include="Panel9\adskg\modulePEX.cs" />
+    <Compile Include="Panel9\adskstenki.cs" />
+    <Compile Include="Panel10\purgedoc.cs" />
+    <Compile Include="windows\TNovProgressBar.cs" />
+    <Compile Include="Panel9\duct3d\duct3dwpf.xaml.cs" />
+    <Compile Include="Panel9\adskg\adskgwpf.xaml.cs">
+      <DependentUpon>adskgwpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Panel9\cabletrays\cabletraycapcreate.cs" />
+    <Compile Include="Panel9\cabletrays\cabletraycapcreatewpf.xaml.cs" />
+    <Compile Include="Panel9\cabletrays\cabletraycapdelete.cs" />
+    <Compile Include="Panel9\cabletrays\cabletraycaps.cs" />
+    <Compile Include="Panel9\cabletrays\cabletraycapswpf.xaml.cs" />
+    <Compile Include="Panel9\cabletrays\cabletrays.cs" />
+    <Compile Include="Panel9\cabletrays\cabletrayssettings.cs" />
+    <Compile Include="Panel9\cabletrays\cabletrayswpf.xaml.cs" />
+    <Compile Include="Panel9\cabletrays\CTpartitioncreate.cs" />
+    <Compile Include="Panel9\cabletrays\CTpartitioncreatewpf.xaml.cs" />
+    <Compile Include="Panel9\cabletrays\CTpartitiondelete.cs" />
+    <Compile Include="Panel9\cabletrays\CTpartitions.cs" />
+    <Compile Include="Panel9\cabletrays\CTpartitions.xaml.cs" />
+    <Compile Include="Panel9\duct3d\duct3d.cs" />
+    <Compile Include="Panel9\efl\eflsettings.cs" />
+    <Compile Include="Panel9\efl\efl.cs" />
+    <Compile Include="Panel9\efl\eflwpfinput.xaml.cs" />
+    <Compile Include="Panel6\found\Pile.cs" />
+    <Compile Include="Panel10\bimexport.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="main\_json.cs" />
+    <Compile Include="main\_servercheck.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="RelayCommand.cs" />
+    <Compile Include="Settings.Designer.cs" />
+    <Compile Include="Settings1.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="TransactionHandler.cs" />
+    <Compile Include="WarningResolver.cs" />
+    <Compile Include="WarningSkipper.cs" />
+    <Compile Include="WarningSwallower.cs" />
+    <Compile Include="windows\_infowindow400scroll.xaml.cs" />
+    <Compile Include="_BoundingBoxXYZExtensions.cs" />
+    <Compile Include="windows\_infowindow280.xaml.cs">
+      <DependentUpon>_infowindow280.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="windows\_infowindow400.xaml.cs" />
+    <Compile Include="windows\_infowindowtextfield.xaml.cs" />
+    <Compile Include="windows\_infowindowtextfieldViewModel.cs" />
+    <Compile Include="_Intersections.cs" />
+    <Compile Include="Panel6\fixstructurefile\_MyParameterValue.cs" />
+    <Compile Include="Panel6\fixstructurefile\_MyProjectSharedParameter.cs" />
+    <Compile Include="Panel6\fixstructurefile\_MyRebarType.cs" />
+    <Compile Include="windows\_qwindow280.xaml.cs" />
+    <Compile Include="windows\_qwindow280ViewModel.cs" />
+    <Compile Include="_RevitAPI.cs" />
+    <Compile Include="_selectandplacegroup.cs" />
+    <Compile Include="Panel6\fixstructurefile\_SharedParamsFileTools.cs" />
+    <Compile Include="_templatecheck.cs" />
+    <None Include="packages.config" />
+    <None Include="resources\aparts.cs" />
+    <None Include="Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings1.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="main\about.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel10\revitserver.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel3\changes\changeswpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel3\excel\excelwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel3\plw\plwwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel3\sheets\sheetnumwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel3\sheets\sheetsstartwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel5\rooms\roomsBackupLoad.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel5\rooms\roomsBackupSave.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel5\rooms\roomsBackupStart.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel5\rooms\roomsBackupAnalyse.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel6\beamswpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel8\tasks\idselectionTasks\idselectionTaskswpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel8\tasks\taskgroups.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel8\tasks\taskanalysis.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel8\tasks\gettaskwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel10\bimexportwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel3\idselection\idselectionwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel3\plw\unpinnerwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel4\floors\floorwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel5\rooms\apartsnumnewwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel5\rooms\apartsnumwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel5\levelnumber\levelnumberwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel5\rooms\officeswpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel5\park\parkmarkwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel5\park\parknumwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel5\park\parkwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel5\rooms\roomsnumwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel6\found\foundautonumwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel6\found\foundnumwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel6\found\foundwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel8\holes\holeswpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel7\schemespec\schemespecwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel7\steelschedule\steelschedulewpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel9\adskg\adsksswpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel9\adskg\adskpwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel9\cableways\cablewayswpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel9\cableways\cablewaysstartwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel9\ss\ssNumbererwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="windows\TNovProgressBar.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel9\duct3d\duct3dwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel9\adskg\adskgwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel9\cabletrays\cabletraycapcreatewpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel9\cabletrays\cabletraycapswpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel9\cabletrays\cabletrayswpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel9\cabletrays\CTpartitioncreatewpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel9\cabletrays\CTpartitions.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel9\efl\eflwpfinput.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="windows\_infowindow280.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="windows\_infowindow400scroll.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="windows\_infowindow400.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="windows\_infowindowtextfield.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="windows\_qwindow280.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\floors16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\floors32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\floors64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\park16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\park32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\park64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\rooms16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\rooms32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\rooms64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\roomsnum16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\roomsnum32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\roomsnum64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\unpinner16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\unpinner32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\unpinner64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\mirror16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\mirror32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\mirror64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\grouping64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\grouping16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\grouping32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\idselection16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\adskg64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\aparts64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\apartsnum64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\worksets64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\revitpaint64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\revitpaintdel64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\revitsplitface64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\roomsround64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\steelschedule64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\plw64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\rebarimages64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\ParamTable64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\pinner64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\offices64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\paint2_64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\paint64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\idselection64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\levelnumber64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\levels64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\excel64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\failedrooms64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\fixstructurefile64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\Google64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\holes64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\beamscut64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\dynpl64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\efl64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\attention64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\steelschedule16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\steelschedule32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\worksets16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\worksets32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\levels16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\levels32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\offices16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\offices32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\paint2_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\paint2_32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\paint16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\paint32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\ParamTable16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\ParamTable32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\pinner16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\pinner32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\plw16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\plw32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\rebarimages16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\rebarimages32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\revitpaint16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\revitpaint32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\revitpaintdel16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\revitpaintdel32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\revitsplitface16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\revitsplitface32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\roomsround16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\roomsround32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\adskg16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\adskg32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\aparts16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\aparts32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\apartsnum16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\apartsnum32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\attention16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\attention32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\beamscut16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\beamscut32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\dynpl16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\dynpl32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\efl16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\efl32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\excel16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\excel32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\failedrooms16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\failedrooms32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\fixstructurefile16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\fixstructurefile32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\Google16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\Google32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\holes16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\holes32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\idselection32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\levelnumber16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\levelnumber32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\logomin.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\logo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\cabletrays16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\cabletrays32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\cabletrays64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\vent16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\vent32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\vent64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\foundcut16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\CDE16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\edu16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\CDE32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\edu32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\foundcut32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\CDE64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\edu64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\foundcut64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\nwc64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\wiki16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\wiki32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\wiki64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\nwc16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\nwc32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\gettask64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\gettask16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\gettask32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\changes64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\changes16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\changes32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\journal32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\journal64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\journal16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\adskstenki16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\adskstenki32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\adskstenki64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\floorimages16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\floorimages32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\floorimages64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\cableways16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\cableways32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\cableways64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\sheets16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\sheets32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\sheets64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\roomsbackup32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\roomsbackup64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\roomsbackup16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\idselectionTasks32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\idselectionTasks64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\idselectionTasks16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\ssNumberer64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\ssNumberer16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\ssNumberer32.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>call roaming.bat</PostBuildEvent>
+  </PropertyGroup>
+</Project>

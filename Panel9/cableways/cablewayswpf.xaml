@@ -1,0 +1,99 @@
+﻿<Window x:Class="TNov.cablewayswpf"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TNov"
+             mc:Ignorable="d" Width="800"
+        d:DataContext="{d:DesignInstance local:cablewaysViewModel}"
+            WindowStartupLocation="CenterScreen" 
+            Background="DarkSeaGreen"
+            Title="TNov. Группировка" ResizeMode="NoResize">
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="5">
+                
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Text="В параметр" Width="80" Margin="5" TextAlignment="Right" TextWrapping="Wrap" />
+                    <TextBox Text="{Binding sPar1}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                    <TextBlock Text="записать длину со способом прокладки" Width="230" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+                    <TextBox Text="{Binding sTypePar1}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Text="В параметр" Width="80" Margin="5" TextAlignment="Right" TextWrapping="Wrap" />
+                    <TextBox Text="{Binding sPar2}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                    <TextBlock Text="записать длину со способом прокладки" Width="230" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+                    <TextBox Text="{Binding sTypePar2}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Text="В параметр" Width="80" Margin="5" TextAlignment="Right" TextWrapping="Wrap" />
+                    <TextBox Text="{Binding sPar3}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                    <TextBlock Text="записать длину со способом прокладки" Width="230" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+                    <TextBox Text="{Binding sTypePar3}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Text="В параметр" Width="80" Margin="5" TextAlignment="Right" TextWrapping="Wrap" />
+                    <TextBox Text="{Binding sPar4}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                    <TextBlock Text="записать длину со способом прокладки" Width="230" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+                    <TextBox Text="{Binding sTypePar4}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Text="В параметр" Width="80" Margin="5" TextAlignment="Right" TextWrapping="Wrap" />
+                    <TextBox Text="{Binding sPar5}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                    <TextBlock Text="записать длину со способом прокладки" Width="230" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+                    <TextBox Text="{Binding sTypePar5}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                </StackPanel>
+                
+            </StackPanel>
+            
+            
+            
+        </StackPanel>
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="Выполнить соотнесение типа трубы и способа прокладки следующим образом:" TextAlignment="Center" TextWrapping="Wrap" />
+            </StackPanel>
+        </StackPanel>
+        
+        <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="5">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="тип трубы" Width="80" Margin="5" TextAlignment="Right" TextWrapping="Wrap" />
+                <TextBox Text="{Binding pipeType1}" Width="290" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                <TextBlock Text="для способа прокладки" Width="140" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+                <TextBox Text="{Binding pipeWay1}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="тип трубы" Width="80" Margin="5" TextAlignment="Right" TextWrapping="Wrap" />
+                <TextBox Text="{Binding pipeType2}" Width="290" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                <TextBlock Text="для способа прокладки" Width="140" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+                <TextBox Text="{Binding pipeWay2}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="тип трубы" Width="80" Margin="5" TextAlignment="Right" TextWrapping="Wrap" />
+                <TextBox Text="{Binding pipeType3}" Width="290" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                <TextBlock Text="для способа прокладки" Width="140" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+                <TextBox Text="{Binding pipeWay3}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="тип трубы" Width="80" Margin="5" TextAlignment="Right" TextWrapping="Wrap" />
+                <TextBox Text="{Binding pipeType4}" Width="290" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                <TextBlock Text="для способа прокладки" Width="140" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+                <TextBox Text="{Binding pipeWay4}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="тип трубы" Width="80" Margin="5" TextAlignment="Right" TextWrapping="Wrap" />
+                <TextBox Text="{Binding pipeType5}" Width="290" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+                <TextBlock Text="для способа прокладки" Width="140" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+                <TextBox Text="{Binding pipeWay5}" Width="200" Margin="5" TextAlignment="Left" TextWrapping="Wrap" />
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Content="Отмена" x:Name="escButton" IsCancel="True" Click="escButton_Click" Width="60" MinHeight="25" Margin="5" />
+                <Button Content="Применить" x:Name="acceptButton" IsDefault="True" Click="acceptButton_Click" Width="120" Margin="5"/>
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+    
+    
+</Window>

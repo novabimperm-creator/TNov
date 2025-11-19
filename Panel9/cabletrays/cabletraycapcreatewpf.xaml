@@ -1,0 +1,39 @@
+﻿<Window x:Class="TNov.cabletraycapcreatewpf"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TNov"
+             mc:Ignorable="d" Height="250" Width="280"
+        d:DataContext="{d:DesignInstance local:cabletraycapcreateViewModel}"
+            WindowStartupLocation="CenterScreen" 
+            Background="DarkSeaGreen"
+            Title="TNov. Лотки" ResizeMode="NoResize">
+    <StackPanel VerticalAlignment="Center" Margin="5">
+        
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Margin="5" Text="Типы лотков в проекте:" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBox Name="textBox1" Text="{Binding types}" MinWidth="240" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Margin="5" Text="Имя типа должно содержать:" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBox Name="textBox2" Text="{Binding filter}" MinWidth="240" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <CheckBox x:Name="checkBox1" IsThreeState="False" IsChecked="{Binding replace}" Content="Пересоздать крышки, если уже созданы" Margin="5" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <CheckBox x:Name="checkBox2" IsThreeState="False" IsChecked="{Binding remove}" Content="Удалить крышки без связи с лотками" Margin="5" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="Отмена" x:Name="escButton" IsCancel="True" Click="escButton_Click" MinWidth="60" MinHeight="25" Margin="5" />
+            <Button Content="Запуск" x:Name="acceptButton" IsDefault="True" Click="acceptButton_Click" MinWidth="120" Margin="5"/>
+        </StackPanel>
+       
+    </StackPanel>
+    
+</Window>

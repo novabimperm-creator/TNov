@@ -1,0 +1,36 @@
+﻿<Window x:Class="TNov.excelwpf"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TNov"
+             mc:Ignorable="d" Height="220" Width="400"
+        d:DataContext="{d:DesignInstance local:excelViewModel}"
+            WindowStartupLocation="CenterScreen" 
+            Background="DarkSeaGreen"
+            Title="TNov. Excel" ResizeMode="NoResize">
+    <StackPanel VerticalAlignment="Center" Margin="5">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Margin="5" Text="Выберите сценарий работы:" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <RadioButton x:Name="rB1" GroupName="elems" IsThreeState="False" IsChecked="{Binding sc1}" Content="Новая книга в отдельном Excel" HorizontalAlignment="Left" Width="250" Margin="5" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <RadioButton x:Name="rB2" GroupName="elems" IsThreeState="False" IsChecked="{Binding sc2}" Content="Новая книга в открытом Excel" HorizontalAlignment="Left" Width="250" Margin="5" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <RadioButton x:Name="rB3" GroupName="elems" IsThreeState="False" IsChecked="{Binding sc3}" Content="Новая страница в открытой книге Excel" HorizontalAlignment="Left" Width="250" Margin="5" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <CheckBox x:Name="checkBoxShow" IsThreeState="False" IsChecked="{Binding show}" Content="Показывать это окно при запуске функции" Width="270" Margin="5" Foreground="#FF008E43" BorderBrush="#FF008E43" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="Отмена" x:Name="escButton" IsCancel="True" Click="escButton_Click" MinWidth="60" MinHeight="25" Margin="5" />
+            <Button Content="Применить" x:Name="acceptButton" IsDefault="True" Click="acceptButton_Click" MinWidth="120" Margin="5"/>
+        </StackPanel>
+       
+    </StackPanel>
+    
+</Window>

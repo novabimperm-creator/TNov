@@ -1,0 +1,34 @@
+﻿<Window x:Class="TNov.roomsBackupStart"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TNov"
+             mc:Ignorable="d" Width="400" MaxHeight="600"
+        
+            WindowStartupLocation="CenterScreen" 
+            Background="DarkSeaGreen"
+            Title="TNov" ResizeMode="NoResize">
+    
+    <StackPanel VerticalAlignment="Center" Margin="5">
+        
+            
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Margin="5" Text="Выберите действие:" HorizontalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Margin="5" Text="Загрузить: выбор резервной копии и восстановление площадей" TextWrapping="Wrap"/>
+            </StackPanel>
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Margin="5" Text="Сохранить: сохранить бэкап площадей в текущем состоянии" TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="Отмена" x:Name="escButton" IsCancel="True" Click="escButton_Click" MinWidth="90" MinHeight="25" Margin="5" />
+            <Button Content="Загрузить" x:Name="loadButton" Click="loadButton_Click" MinWidth="90" MinHeight="25" Margin="5" />
+            <Button Content="Сохранить" x:Name="saveButton" IsDefault="True" Click="saveButton_Click" MinWidth="90" MinHeight="25" Margin="5" />
+            
+        </StackPanel>
+    </StackPanel>
+    
+</Window>

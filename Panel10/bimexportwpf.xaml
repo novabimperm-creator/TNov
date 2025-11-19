@@ -1,0 +1,69 @@
+﻿<Window x:Class="TNov.bimexportwpf"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TNov"
+             mc:Ignorable="d" Height="330" Width="650"
+            d:DataContext="{d:DesignInstance local:bimexportViewModel}"
+            WindowStartupLocation="CenterScreen" 
+            Background="DarkSeaGreen"
+            Title="TNov. BIM Экспорт" ResizeMode="NoResize">
+    <StackPanel VerticalAlignment="Center" Margin="5">
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Margin="5" Text="Исходный каталог _RVT:" />
+            <CheckBox x:Name="RVTcheck" IsThreeState="False" IsChecked="{Binding RVTcheck}" Content="Проверять модели в папке _RVT на актуальность*" Margin="5" VerticalAlignment="Center"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBox Name="textBox1" Text="{Binding folder}" Width="390" Margin="5" TextAlignment="Center" TextWrapping="Wrap" TextChanged="textBox1_TextChanged" />
+            <Button Content="__RVT" x:Name="browseButton" Click="browseButton_Click" Width="40" MinHeight="25" Margin="5" />
+            <RadioButton x:Name="rvt" GroupName="rvt" IsThreeState="False" IsChecked="{Binding fromRVT}" VerticalAlignment="Center"  />
+            <TextBox Name="textBox1RS" Text="{Binding folderRS}" Width="0" TextAlignment="Center" TextWrapping="Wrap" MaxHeight="25" />
+            <RadioButton x:Name="rs" GroupName="rvt" IsThreeState="False" IsChecked="{Binding fromRS}" VerticalAlignment="Center"  />
+            <Button Content="Revit Server" x:Name="browseButtonRS" Click="browseButtonRS_Click" Width="90" MinHeight="25" Margin="5" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Margin="5" Text="Целевой каталог _NWC:" />
+            <CheckBox x:Name="NWC" IsThreeState="False" IsChecked="{Binding NWC}" Margin="5" Content="Выгрузить NWC" VerticalAlignment="Center" FontWeight="Bold"/>
+            <CheckBox x:Name="NWCNova" IsThreeState="False" IsChecked="{Binding NWCNova}" Content="с вида Nova (для внутр. проверок раздела)" Margin="5" VerticalAlignment="Center"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBox Name="textBox2" Text="{Binding folder2}" Width="520" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+            <Button Content="__NWC" x:Name="browseButton2" Click="browseButton2_Click" Width="40" MinHeight="25" Margin="5" />
+
+        </StackPanel>
+
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Margin="5" Text="Целевой каталог для очищенных Revit-моделей:" />
+            <CheckBox x:Name="RVT" IsThreeState="False" IsChecked="{Binding RVT}" Content="Сформировать очищенные RVT" Margin="5" VerticalAlignment="Center" FontWeight="Bold"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBox Name="textBox3" Text="{Binding folder3}" Width="520" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+            <Button Content="__rvt" x:Name="browseButton3" Click="browseButton3_Click" Width="40" MinHeight="25" Margin="5" />
+
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Margin="5 0 0 0" Text="Разделы:" VerticalAlignment="Center" FontWeight="Bold"/>
+            <CheckBox x:Name="AR" IsThreeState="False" IsChecked="{Binding AR}" Content="АР" Margin="5" VerticalAlignment="Center"/>
+            <CheckBox x:Name="ST" IsThreeState="False" IsChecked="{Binding ST}" Content="КЖ" Margin="5" VerticalAlignment="Center"/>
+            <CheckBox x:Name="VK" IsThreeState="False" IsChecked="{Binding VK}" Content="ВК" Margin="5" VerticalAlignment="Center"/>
+            <CheckBox x:Name="OV" IsThreeState="False" IsChecked="{Binding OV}" Content="ОВ" Margin="5" VerticalAlignment="Center"/>
+            <CheckBox x:Name="EL" IsThreeState="False" IsChecked="{Binding EL}" Content="ЭЛ" Margin="5" VerticalAlignment="Center"/>
+            <CheckBox x:Name="SS" IsThreeState="False" IsChecked="{Binding SS}" Content="СС" Margin="5" VerticalAlignment="Center"/>
+            <TextBlock Margin="5 0 0 0" Text="Фильтр по имени:" VerticalAlignment="Center" FontWeight="Bold"/>
+            <TextBox Name="textBox4" Text="{Binding namefilter}" Width="125" MinHeight="25" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="*Открыть папку RevitServerToolCommand (BIM-менеджер)" x:Name="rvtExportButton" Click="rvtExportButton_Click" Width="350" MinHeight="25" Margin="5" />
+
+            <Button Content="Отмена" x:Name="escButton" IsCancel="True" Click="escButton_Click" MinWidth="60" MinHeight="25" Margin="20 5 5 5" />
+            <Button Content="Запуск" x:Name="acceptButton" IsDefault="True" Click="acceptButton_Click" MinWidth="110" Margin="5"/>
+        </StackPanel>
+
+    </StackPanel>
+
+</Window>

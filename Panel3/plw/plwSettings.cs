@@ -1,0 +1,70 @@
+﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
+using Autodesk.Revit.Attributes;
+using System.Collections.Generic;
+using System.Linq;
+using System;
+using System.Windows.Threading;
+using System.Threading;
+using System.IO;
+using Newtonsoft.Json;
+using TNov.main;
+
+namespace TNov
+{
+    [Transaction(TransactionMode.Manual)]
+    public class plwSettings : IExternalCommand
+    {
+        private TNovProgressBar levelsProgressBar;
+        private void ThreadStartingPoint()
+        {
+            this.levelsProgressBar = new TNovProgressBar();
+            this.levelsProgressBar.Show();
+            Dispatcher.Run();
+        }
+        public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
+        {
+            string TNovClassName = "Закреплятор Уровни Наборы"; DateTime dateTime = DateTime.Now;
+            //подключение приложения и документа
+            if (RevitAPI.UiApplication == null) { RevitAPI.Initialize(commandData); }
+            UIDocument uidoc = RevitAPI.UiDocument; Document doc = RevitAPI.Document;
+            UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
+            
+            //проверка подключения, запись в журнал
+            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+
+            // создание log - файла
+            Logger.Initialize(TNovClassName);
+            Logger.Log("Старт работы (настройки)", 0);
+
+            //Диалог
+            var viewModel = new plwViewModel();
+            // Десериализация
+            bool forProject = false;
+            json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
+            if (canserialize)
+            {
+                viewModel = JsonConvert.DeserializeObject<plwViewModel>(File.ReadAllText(jsonpath));
+                Logger.Log("Десериализация прошла успешно",1);
+            }
+
+            
+            var wpfview = new plwwpf(viewModel);
+            viewModel.CloseRequest += (s, e) => wpfview.Close();
+            bool? ok = wpfview.ShowDialog();
+            if (ok != null && ok == true) { }
+            else { Logger.Log("Отменено пользователем. Завершение работы", 3); return Result.Cancelled; }
+            //Сериализация
+            try
+            {
+                File.WriteAllText(jsonpath, JsonConvert.SerializeObject(viewModel));
+                Logger.Log("Сериализация прошла успешно",1);
+            }
+            catch (Exception ex) { Logger.Log("Ошибка при сериализации: " + ex.Message,4); }
+            
+
+            Logger.Log("Завершение работы.",5);
+            return Result.Succeeded;
+        }
+    }
+}
