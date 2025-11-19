@@ -1,29 +1,30 @@
-﻿using System;
-using System.IO;
+﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Events;
+using Autodesk.Revit.UI;
+using Autodesk.Revit.UI.Events;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Drawing.Imaging;
 using System.Diagnostics;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Autodesk.Revit.UI;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.UI.Events;
-using Autodesk.Revit.DB.Events;
 using TNov.main;
-using SplitButton = Autodesk.Revit.UI.SplitButton;
 using TNov.Panel8;
+using static System.Windows.Forms.LinkLabel;
 using adWin = Autodesk.Windows;
-using Newtonsoft.Json;
+using SplitButton = Autodesk.Revit.UI.SplitButton;
 
 namespace TNov
 {
-
+    [Regeneration(RegenerationOption.Manual)]
     internal class Application : IExternalApplication
     {
-
         static AddInId addinId = new AddInId(new Guid("83403DB6-EA74-4E10-85B3-508AE241A743"));
 
         private BasicFileInfo info;
@@ -34,6 +35,9 @@ namespace TNov
         
         public Result OnStartup(UIControlledApplication application)
         {
+            // Подписываемся на событие создания нового документа
+            application.ControlledApplication.DocumentCreated += OnDocumentCreated;
+
             //Подгрузка настроек времени раскраски вкладок
             var viewModel0 = new aboutViewModel();
             string jsonpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
@@ -1148,8 +1152,36 @@ namespace TNov
 
             return Result.Succeeded;
         }
-        
+
         //Обработчики событий
+
+        private void OnDocumentCreated(object sender, Autodesk.Revit.DB.Events.DocumentCreatedEventArgs e)
+        {
+            
+            //имя пользователя
+            Application revitApp = sender as Application;
+            UIApplication uiApp = new UIApplication(e.Document.Application);
+            string userName = uiApp.Application.Username;
+            string[] rolesFile = File.ReadAllLines("//fs-nova/Distr/0.For Admin/_TNov/roles.txt");
+            bool correctUserName = false;
+            foreach (string role in rolesFile)
+            {
+                if (role.Contains(userName))
+                {
+                    correctUserName = true; break;
+                }
+            }
+
+            if(!correctUserName) new infowindow280("Ваше имя пользователя в Revit: "+userName+"\n" +
+                "Имя должно соответствовать вашему логину в компании (пример: kadysheva.n). Измените имя в настройках Revit.").ShowDialog();
+
+            string link = "https://portal.talan.group/knowledge/proektirovanie/startraboty/";
+            string commandText = @link;
+            var proc = new System.Diagnostics.Process();
+            proc.StartInfo.FileName = commandText;
+            proc.StartInfo.UseShellExecute = true;
+            proc.Start();
+        }
 
         void a_DialogBoxShowing(object sender, DialogBoxShowingEventArgs e)
         {
