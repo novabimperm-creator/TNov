@@ -89,9 +89,18 @@ namespace TNov
 
             foreach (RebarBarType rbt in rebarTypes)
             {
+                Logger.Log("Тип " + rbt.Name,2);
+                try
+                {
+                    ParameterMap parameterMap = rbt.ParametersMap; //обход ошибки в API
+                }
+                catch (Exception ex) 
+                {
+                    Logger.Log("   ошибка: "+ex.Message,4); continue;
+                }
                 _MyRebarType mrt = new _MyRebarType(rbt);
                 myrebarTypes.Add(mrt);
-                Logger.Log("Тип сохранен: "+ mrt.bartype.Name,2);
+                Logger.Log("   _MyRebarType сохранен",2);
             }
 
             Logger.Log("Открываем ФОП",1);

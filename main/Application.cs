@@ -1157,7 +1157,7 @@ namespace TNov
 
         private void OnDocumentCreated(object sender, Autodesk.Revit.DB.Events.DocumentCreatedEventArgs e)
         {
-            
+#if config1
             //имя пользователя
             Application revitApp = sender as Application;
             UIApplication uiApp = new UIApplication(e.Document.Application);
@@ -1171,7 +1171,7 @@ namespace TNov
                     correctUserName = true; break;
                 }
             }
-
+            /*
             if(!correctUserName) new infowindow280("Ваше имя пользователя в Revit: "+userName+"\n" +
                 "Имя должно соответствовать вашему логину в компании (пример: kadysheva.n). Измените имя в настройках Revit.").ShowDialog();
 
@@ -1181,6 +1181,8 @@ namespace TNov
             proc.StartInfo.FileName = commandText;
             proc.StartInfo.UseShellExecute = true;
             proc.Start();
+            */
+#endif
         }
 
         void a_DialogBoxShowing(object sender, DialogBoxShowingEventArgs e)
