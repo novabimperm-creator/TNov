@@ -29,19 +29,20 @@
             <CheckBox x:Name="NWCNova" IsThreeState="False" IsChecked="{Binding NWCNova}" Content="с вида Nova (для внутр. проверок раздела)" Margin="5" VerticalAlignment="Center"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBox Name="textBox2" Text="{Binding folder2}" Width="520" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
-            <Button Content="__NWC" x:Name="browseButton2" Click="browseButton2_Click" Width="40" MinHeight="25" Margin="5" />
+            <TextBox Name="textBox2" Text="{Binding folder2}" Width="500" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+            <Button Content="__NWC" x:Name="browseButton2" Click="browseButton2_Click" Width="60" MinHeight="25" Margin="5" />
 
         </StackPanel>
 
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBlock Margin="5" Text="Целевой каталог для очищенных Revit-моделей:" />
-            <CheckBox x:Name="RVT" IsThreeState="False" IsChecked="{Binding RVT}" Content="Сформировать очищенные RVT" Margin="5" VerticalAlignment="Center" FontWeight="Bold"/>
+            <TextBlock Margin="5" Text="Целевой каталог для моделей на выдачу:" />
+            <CheckBox x:Name="RVT" IsThreeState="False" IsChecked="{Binding RVT}" Content="очищ. RVT" Margin="5" VerticalAlignment="Center" FontWeight="Bold"/>
+            <CheckBox x:Name="NWC2" IsThreeState="False" IsChecked="{Binding NWC2}" Content="NWC в папку выдачи" Margin="5" VerticalAlignment="Center" FontWeight="Bold"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBox Name="textBox3" Text="{Binding folder3}" Width="520" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
-            <Button Content="__rvt" x:Name="browseButton3" Click="browseButton3_Click" Width="40" MinHeight="25" Margin="5" />
+            <TextBox Name="textBox3" Text="{Binding folder3}" Width="500" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+            <Button Content="__выдача" x:Name="browseButton3" Click="browseButton3_Click" Width="60" MinHeight="25" Margin="5" />
 
         </StackPanel>
 

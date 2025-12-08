@@ -52,7 +52,12 @@ namespace TNov
                 if (wall == null) continue;
 
                 Element type = doc.GetElement(wall.GetTypeId());
-                if (type.get_Parameter(BuiltInParameter.ALL_MODEL_MODEL).AsString().Contains("Отделка"))
+
+                bool gmHasValue = type.get_Parameter(BuiltInParameter.ALL_MODEL_MODEL).HasValue;
+                string gMvalue = "-";
+                if (gmHasValue) gMvalue = type.get_Parameter(BuiltInParameter.ALL_MODEL_MODEL).AsString();
+
+                if (gMvalue.Contains("Отделка"))
                 {
                     try
                     {

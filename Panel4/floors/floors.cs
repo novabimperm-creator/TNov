@@ -1,19 +1,20 @@
-﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
-using Autodesk.Revit.Attributes;
-using System.Collections.Generic;
-using System.Linq;
-using System;
+﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
-using Floor = Autodesk.Revit.DB.Floor;
+using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
-using System.IO;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+using Microsoft.Office.Interop.Excel;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using Parameter = Autodesk.Revit.DB.Parameter;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using TNov.main;
+using Floor = Autodesk.Revit.DB.Floor;
+using Parameter = Autodesk.Revit.DB.Parameter;
 
 namespace TNov
 {
@@ -320,6 +321,20 @@ namespace TNov
                             Element felem = (Element)floor1;
                             Parameter fhal = felem.get_Parameter(hal);
                             fhal.Set(offset); //назначаем смещение от уровня
+                            
+                            //параметры отделки
+                            Parameter roomParam = felem.LookupParameter("N_Отделка.Помещение");
+                            Parameter roomParam2 = felem.LookupParameter("Отделка.Помещение.Назначение");
+                            Parameter roomParam3 = felem.LookupParameter("N_Отделка.ГруппаТекст");
+
+                            string roomName = room.get_Parameter(BuiltInParameter.ROOM_NAME).AsString();
+                            string roomNazn = room.LookupParameter("Назначение")?.AsString() ?? "";
+                            string roomGroup = room.LookupParameter("N_Отделка.Группа")?.AsInteger().ToString() ?? "";
+
+                            if (roomParam != null) roomParam.Set(roomName);
+                            if (roomParam2 != null) roomParam2.Set(roomNazn);
+                            if (roomParam3 != null) roomParam3.Set(roomGroup);
+
                             FailureHandlingOptions failureHandlingOptions = transaction.GetFailureHandlingOptions();
                             failureHandlingOptions.SetFailuresPreprocessor((IFailuresPreprocessor)new FloorIntersectionWarningSwallower());
                             transaction.SetFailureHandlingOptions(failureHandlingOptions);

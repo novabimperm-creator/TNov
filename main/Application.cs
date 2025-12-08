@@ -20,6 +20,11 @@ using static System.Windows.Forms.LinkLabel;
 using adWin = Autodesk.Windows;
 using SplitButton = Autodesk.Revit.UI.SplitButton;
 
+/*
+git add .
+git commit -m "3.5.6"
+git push origin main
+ */
 namespace TNov
 {
     [Regeneration(RegenerationOption.Manual)]
@@ -110,15 +115,15 @@ namespace TNov
             //объявление апдейтеров
 
             TNovHoleUpdater holeUpdater = new TNovHoleUpdater(application.ActiveAddInId); //отверстия
-            UpdaterRegistry.RegisterUpdater(holeUpdater);
+            UpdaterRegistry.RegisterUpdater(holeUpdater, true);
             UpdaterRegistry.AddTrigger(holeUpdater.GetUpdaterId(), filterGM, Element.GetChangeTypeAny());
 
             TNovShaftUpdater shaftUpdater = new TNovShaftUpdater(application.ActiveAddInId); //другие задания
-            UpdaterRegistry.RegisterUpdater(shaftUpdater);
+            UpdaterRegistry.RegisterUpdater(shaftUpdater, true);
             UpdaterRegistry.AddTrigger(shaftUpdater.GetUpdaterId(), filterGM, Element.GetChangeTypeAny());
 
             TNovWorksetUpdater worksetUpdater = new TNovWorksetUpdater(application.ActiveAddInId); //рабочие наборы
-            UpdaterRegistry.RegisterUpdater(worksetUpdater);
+            UpdaterRegistry.RegisterUpdater(worksetUpdater, true);
             UpdaterRegistry.AddTrigger(worksetUpdater.GetUpdaterId(), filterGM, Element.GetChangeTypeAny());
             UpdaterRegistry.AddTrigger(worksetUpdater.GetUpdaterId(), filterWalls, Element.GetChangeTypeAny());
             UpdaterRegistry.AddTrigger(worksetUpdater.GetUpdaterId(), filterF, Element.GetChangeTypeAny());
@@ -138,24 +143,24 @@ namespace TNov
             UpdaterRegistry.AddTrigger(worksetUpdater.GetUpdaterId(), filterFound, Element.GetChangeTypeAny());
 
             TNovPinUpdater pinUpdater = new TNovPinUpdater(application.ActiveAddInId); //закрепление связей
-            UpdaterRegistry.RegisterUpdater(pinUpdater);
+            UpdaterRegistry.RegisterUpdater(pinUpdater, true);
             UpdaterRegistry.AddTrigger(pinUpdater.GetUpdaterId(), filterLinks, Element.GetChangeTypeElementAddition());
 
             TNovPileUpdater pileUpdater = new TNovPileUpdater(application.ActiveAddInId); //отметки свай
-            UpdaterRegistry.RegisterUpdater(pileUpdater);
+            UpdaterRegistry.RegisterUpdater(pileUpdater,true);
             UpdaterRegistry.AddTrigger(pileUpdater.GetUpdaterId(), filterFound, Element.GetChangeTypeAny());
 
             TNovTaskUpdater taskUpdater = new TNovTaskUpdater(application.ActiveAddInId); //задания
-            UpdaterRegistry.RegisterUpdater(taskUpdater);
+            UpdaterRegistry.RegisterUpdater(taskUpdater, true);
             UpdaterRegistry.AddTrigger(taskUpdater.GetUpdaterId(), filterGroups, Element.GetChangeTypeAny());
-
+            
             TNovWallUpdater wallUpdater = new TNovWallUpdater(application.ActiveAddInId); //отделка стен
-            UpdaterRegistry.RegisterUpdater(wallUpdater);
+            UpdaterRegistry.RegisterUpdater(wallUpdater, true);
             UpdaterRegistry.AddTrigger(wallUpdater.GetUpdaterId(), filterWalls, Element.GetChangeTypeElementAddition());
             UpdaterRegistry.AddTrigger(wallUpdater.GetUpdaterId(), filterWalls, Element.GetChangeTypeAny());
-
+            
             TNovRoomUpdater roomUpdater = new TNovRoomUpdater(application.ActiveAddInId); //помещения
-            UpdaterRegistry.RegisterUpdater(roomUpdater);
+            UpdaterRegistry.RegisterUpdater(roomUpdater, true);
             UpdaterRegistry.AddTrigger(roomUpdater.GetUpdaterId(), filterRooms, Element.GetChangeTypeElementAddition());
             UpdaterRegistry.AddTrigger(roomUpdater.GetUpdaterId(), filterRooms, Element.GetChangeTypeAny());
 
@@ -707,7 +712,7 @@ namespace TNov
                 ToolTip = "Ускорить работу модели КЖ путем манипуляций с параметрами несущей арматуры."
             };
             ContextualHelp fixstructurefilehelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://docs.google.com/document/d/1f9kZ1Bb8-JFfD1Xq7uGUdH2mB4EQyx3V/edit#bookmark=id.bqupbwr2cnej");
+                "https://portal.talan.group/knowledge/proektirovanie/uskorenierabotyfaylovmodeli_posu/");
             buttonDatafixstructurefile.SetContextualHelp(fixstructurefilehelp);
                   
             // сгруппированная кнопка "Перемычки"
@@ -717,10 +722,10 @@ namespace TNov
             PushButtonData buttonDatabeamscut = new PushButtonData(nameof(beamscut), "Перемычки", assemblyLocation, typeof(beamscut).FullName)
             {
                 Image = GetImageSource(imgbeamscutmin),
-                ToolTip = "Вырезать объем бетонных перемычек из стен."
+                ToolTip = "Вырезать объем бетонных перемычек из стен, сформировать эскизы ПР."
             };
             ContextualHelp beamshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://docs.google.com/document/d/1QQFa0FwaTMTnxm2ifdMfiZ9Hae0tbcPq/edit#bookmark=id.u6rnwo56f0rw");
+                "https://portal.talan.group/knowledge/proektirovanie/vedomostperemychek/");
             buttonDatabeamscut.SetContextualHelp(beamshelp);
 
             // сгруппированная кнопка "Сваи"
@@ -733,7 +738,7 @@ namespace TNov
                 ToolTip = "Пакет функций по работе со сваями."
             };
             ContextualHelp pileshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://docs.google.com/document/d/1f9kZ1Bb8-JFfD1Xq7uGUdH2mB4EQyx3V/edit#bookmark=id.kp3p0q2tmhhq");
+                "https://portal.talan.group/knowledge/proektirovanie/svai_xmqe/");
             buttonDatapiles.SetContextualHelp(pileshelp);
 
             // группа кнопок "Ускорить файл", "Перемычки", "Сваи"
@@ -755,7 +760,7 @@ namespace TNov
                 ToolTip = "Заполнить параметр A_Арм Эскиз формы у системной арматуры для ведомости деталей."
             };
             ContextualHelp rebarimageshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://docs.google.com/document/d/1f9kZ1Bb8-JFfD1Xq7uGUdH2mB4EQyx3V/edit#bookmark=id.5falgedwz6na");
+                "https://portal.talan.group/knowledge/proektirovanie/vedomostdetaley/");
             buttonDatarebarimages.SetContextualHelp(rebarimageshelp);
 
             // сгруппированная кнопка "ВРС подчистить"
@@ -768,7 +773,7 @@ namespace TNov
                 ToolTip = "Подчистить все ведомости расхода стали в проекте (скрыть столбцы с нулевыми значениями)."
             };
             ContextualHelp steelschedulehelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://docs.google.com/document/d/1f9kZ1Bb8-JFfD1Xq7uGUdH2mB4EQyx3V/edit#bookmark=id.em8ajl8ir0ux");
+                "https://portal.talan.group/knowledge/proektirovanie/vedomostraskhodastali/");
             buttonDatasteelschedule.SetContextualHelp(steelschedulehelp);
 
             // сгруппированная кнопка "Группировка"
@@ -781,7 +786,7 @@ namespace TNov
                 ToolTip = "Заполнить параметр A_Группирование для сортировки спецификаций)."
             };
             ContextualHelp schemespechelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://docs.google.com/document/d/1f9kZ1Bb8-JFfD1Xq7uGUdH2mB4EQyx3V/edit#bookmark=id.pcn59nf6vbm5");
+                "https://portal.talan.group/knowledge/proektirovanie/skhemaraspolozheniyakonstruktsiy/");
             buttonDataschemespec.SetContextualHelp(schemespechelp);
 
             // группа кнопок "Эскизы деталей", "ВРС подчистить", "Группировка"
@@ -852,7 +857,7 @@ namespace TNov
                 ToolTip = "Вырезать отверстия из стен и плит, заполнить отметки отверстий."
             };
             ContextualHelp holeshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://docs.google.com/document/d/1f9kZ1Bb8-JFfD1Xq7uGUdH2mB4EQyx3V/edit#bookmark=id.wbqsmsgy8992");
+                "https://portal.talan.group/knowledge/proektirovanie/samostoyatelnoemodelirovanieotverstiy/");
             buttonDataholes.SetContextualHelp(holeshelp);
             panel8.AddItem(buttonDataholes);
 
@@ -868,7 +873,7 @@ namespace TNov
             {
                 LargeImage = GetImageSource(imgadskg),
                 Image = GetImageSource(imgadskgmin),
-                ToolTip = "Заполнить параметры у элементов ВК ОВ / СС ПС для формирования сводной спецификации."
+                ToolTip = "Заполнить параметры у элементов ВК ОВ / ЭЛ / СС ПС для формирования сводной спецификации."
             };
             ContextualHelp adskghelp = new ContextualHelp(ContextualHelpType.Url,
                 "https://portal.talan.group/knowledge/proektirovanie/MEPspec/");
@@ -1171,17 +1176,19 @@ namespace TNov
                     correctUserName = true; break;
                 }
             }
-            /*
-            if(!correctUserName) new infowindow280("Ваше имя пользователя в Revit: "+userName+"\n" +
+
+            if (!correctUserName)
+            {
+                new infowindow280("Ваше имя пользователя в Revit: " + userName + "\n" +
                 "Имя должно соответствовать вашему логину в компании (пример: kadysheva.n). Измените имя в настройках Revit.").ShowDialog();
 
-            string link = "https://portal.talan.group/knowledge/proektirovanie/startraboty/";
-            string commandText = @link;
-            var proc = new System.Diagnostics.Process();
-            proc.StartInfo.FileName = commandText;
-            proc.StartInfo.UseShellExecute = true;
-            proc.Start();
-            */
+                string link = "https://portal.talan.group/knowledge/proektirovanie/startraboty/";
+                string commandText = @link;
+                var proc = new System.Diagnostics.Process();
+                proc.StartInfo.FileName = commandText;
+                proc.StartInfo.UseShellExecute = true;
+                proc.Start();
+            }
 #endif
         }
 
@@ -1192,7 +1199,7 @@ namespace TNov
             if (e2.Message == "RICOH MP C2011 PCL 6_2 - не может быть использовано с настройками печати А2А. Будут установлены <сеансные> настройки.") { e.OverrideResult(1); }
             if (e2.Message == "RustDesk Printer - не может быть использовано с настройками печати А2А. Будут установлены <сеансные> настройки.") { e.OverrideResult(1); }
             if (e2.Message == "При импорте не обнаружено подходящих элементов в пространстве Бумага. Импортировать их из пространства модели?") { e.OverrideResult(1); }
-
+            if (e2.DialogId== "TaskDialog_Missing_Third_Party_Updater") { e.OverrideResult(1); }
         }
 
         public void OnDocumentOpened(object sender, DocumentOpenedEventArgs e)

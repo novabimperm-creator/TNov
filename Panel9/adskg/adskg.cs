@@ -1,4 +1,12 @@
-﻿using System;
+﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Electrical;
+using Autodesk.Revit.DB.Structure;
+using Autodesk.Revit.UI;
+using Autodesk.Revit.UI.Selection;
+using Microsoft.Office.Interop.Excel;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -9,14 +17,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Input;
 using System.Windows.Threading;
-using Autodesk.Revit.Attributes;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.Electrical;
-using Autodesk.Revit.DB.Structure;
-using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Selection;
-using Microsoft.Office.Interop.Excel;
-using Newtonsoft.Json;
 using TNov.main;
 using Parameter = Autodesk.Revit.DB.Parameter;
 
@@ -29,8 +29,21 @@ namespace TNov
         public List<string> StringValues;
         public List<double> DoubleValues;
     }
-    
-    
+
+    public class ElNonModelCube
+    {
+        public string adskGroup;
+        public string adskNaim;
+        public string adskMark;
+        public string adskObozn;
+        public string adskCode;
+        public string adskManuf;
+        public string adskEd;
+        public string NEGroup;
+        public string NSort;
+        public double adskC;
+    }
+
     [Transaction(TransactionMode.Manual)]
     public class adskg : IExternalCommand
     {
@@ -40,8 +53,15 @@ namespace TNov
         Guid NCatparamGuid = new Guid("e71ab526-6b0b-4c3f-9b52-ba7f61a83d46");//N_Категория
         Guid adskGparamGuid = new Guid("3de5f1a4-d560-4fa8-a74f-25d250fb3401");//ADSK_Группирование
         Guid adskNparamGuid = new Guid("e6e0f5cd-3e26-485b-9342-23882b20eb43");//ADSK_Наименование
+        Guid adskMarkparamGuid = new Guid("2204049c-d557-4dfc-8d70-13f19715e46d");//ADSK_Марка
+        Guid adskOboznparamGuid = new Guid("9c98831b-9450-412d-b072-7d69b39f4029");//ADSK_Обозначение
+        Guid adskCodeparamGuid = new Guid("2fd9e8cb-84f3-4297-b8b8-75f444e124ed");//ADSK_Код изделия
+        Guid adskManufparamGuid = new Guid("a8cdbf7b-d60a-485e-a520-447d2055f351");//ADSK_Завод-изготовитель
+        Guid adskEdparamGuid = new Guid("4289cb19-9517-45de-9c02-5a74ebf5c86d");//ADSK_Единица измерения
         Guid adskCparamGuid = new Guid("8d057bb3-6ccd-4655-9165-55526691fe3a");//ADSK_Количество
-        string[] conduitStringParams = new string[] 
+        Guid NEGparamGuid = new Guid("837842da-379d-496f-9ef3-be8886a0161f");//N_ЭЛ.Группирование ЭЛ
+        Guid NSortparamGuid = new Guid("dbd21888-5efd-4e29-8722-2fe8c6d4f799");//N_Сортировка
+        string[] conduitStringParams = new string[]
         {
             "RBZ_Пучок1_Ед.измерения","RBZ_Пучок1_Марка","RBZ_Пучок1_Описание","RBZ_Пучок1_Производитель",
             "RBZ_Пучок2_Ед.измерения","RBZ_Пучок2_Марка","RBZ_Пучок2_Описание","RBZ_Пучок2_Производитель",
@@ -49,7 +69,7 @@ namespace TNov
             "RBZ_Пучок4_Ед.измерения","RBZ_Пучок4_Марка","RBZ_Пучок4_Описание","RBZ_Пучок4_Производитель",
             "RBZ_Пучок5_Ед.измерения","RBZ_Пучок5_Марка","RBZ_Пучок5_Описание","RBZ_Пучок5_Производитель",
             "RBZ_Крепеж_Ед.измерения","RBZ_Крепеж_Марка","RBZ_Крепеж_Описание","RBZ_Крепеж_Производитель","RBZ_Крепеж_Артикул",
-            "RBZ_Труба_Ед.измерения","RBZ_Труба_Марка","RBZ_Труба_Описание","RBZ_Труба_Производитель","RBZ_Труба_Артикул" 
+            "RBZ_Труба_Ед.измерения","RBZ_Труба_Марка","RBZ_Труба_Описание","RBZ_Труба_Производитель","RBZ_Труба_Артикул"
         };
         string[] esystemStringParams = new string[]
         {
@@ -71,8 +91,8 @@ namespace TNov
             "Лоток_Кабель_1_Количество","Лоток_Кабель_2_Количество","Лоток_Кабель_3_Количество","Лоток_Кабель_4_Количество",
             "Лоток_Кабель_5_Количество"
         };
+        private const string TargetScheduleName = "СО_Общая для ТЗ";
 
-        
         private void ThreadStartingPoint()
         {
             this.adskgProgressBar = new TNovProgressBar();
@@ -86,7 +106,7 @@ namespace TNov
             {
                 viewModel2.naimPrefix2 = " ø";
                 if (fileName.Contains("-ОВ") || fileName.Contains("_ОВ")) viewModel2.naimPrefix3 = "х";
-                if(fileName.Contains("-ОВ")||fileName.Contains("_ОВ")) viewModel2.naimPar3 = "ADSK_Толщина стенки";
+                if (fileName.Contains("-ОВ") || fileName.Contains("_ОВ")) viewModel2.naimPar3 = "ADSK_Толщина стенки";
                 if (mark.Contains("Днар")) viewModel2.naimPar2 = "Внешний диаметр";
                 else viewModel2.naimPar2 = "Диаметр";
                 viewModel2.countK = "1.1";
@@ -155,7 +175,7 @@ namespace TNov
         {
             string eid = elemid.ToString();
             Element elem = RevitAPI.Document.GetElement(elemid);
-            Logger.Log("   Элемент " + eid + ":",2);
+            Logger.Log("   Элемент " + eid + ":", 2);
             string system = elem.LookupParameter(paramname).AsValueString(); //получаем значение исходного параметра
             success = false;
             bool runG = true;
@@ -163,31 +183,31 @@ namespace TNov
             if (param2exist)
             {
                 int noRun = elem.get_Parameter(NGNparamGuid).AsInteger(); //получаем значение параметра "Не перезаполнять"
-                if (noRun == 1) { runG = false; success = true;  Logger.Log("      не перезаполнять", 2);  }
+                if (noRun == 1) { runG = false; success = true; Logger.Log("      не перезаполнять", 2); }
             }
-            
+
             bool adskNparamexist = param.ParamExistByGuid(adskNparamGuid, elem);
 
             string adskN;
             if (adskNparamexist) { adskN = elem.get_Parameter(adskNparamGuid).AsString(); }
             else { Element aType = RevitAPI.Document.GetElement(elem.GetTypeId()); adskN = aType.get_Parameter(adskNparamGuid).AsString(); }
             bool hasValue = elem.LookupParameter("Имя системы").HasValue;
-            if (adskN == null||adskN=="") adskN = "нет"; 
-            else if (!hasValue || adskN.Contains("!Не учитывать")) 
+            if (adskN == null || adskN == "") adskN = "нет";
+            else if (!hasValue || adskN.Contains("!Не учитывать"))
             {
                 runG = false;
                 success = true;
-                Logger.Log("      пропуск", 2); 
+                Logger.Log("      пропуск", 2);
             }
             if (runG) //ADSK_Группирование
             {
                 if (systemcut && system.Contains(","))
                 {
                     string[] systemParts = system.Split(',');
-                    system=systemParts[0];
+                    system = systemParts[0];
                 }
                 bool adskgParamExist = param.ParamExistByGuid(adskGparamGuid, elem);
-                if (adskgParamExist) 
+                if (adskgParamExist)
                 {
                     bool isReadOnly = elem.get_Parameter(adskGparamGuid).IsReadOnly;
                     if (!isReadOnly)
@@ -205,7 +225,7 @@ namespace TNov
                     }
                     else success = true;
                 }
-                
+
             }
         }
         private void SetNCategory(ElementId elemid, out bool success)
@@ -214,7 +234,7 @@ namespace TNov
             Element elem = RevitAPI.Document.GetElement(elemid);
             Logger.Log("   Элемент " + eid + ":", 2);
             success = false;
-            
+
             bool runCat = param.ParamExistByGuid(NCatparamGuid, elem);  //ищем параметр N_Категория
 
             if (runCat) //N_Категория
@@ -268,12 +288,12 @@ namespace TNov
 
             }
 
-            
+
         }
         public void Setadskpparam(ElementId elemid, in string category, in string fileName, out bool success)
         {
             success = false;
-            
+
             string eid = elemid.ToString();
             Element elem = RevitAPI.Document.GetElement(elemid);
             Logger.Log("   Элемент " + eid + ":", 2);
@@ -281,12 +301,12 @@ namespace TNov
             //вьюмодель
             Element type = RevitAPI.Document.GetElement(elem.GetTypeId());
             string mark = type.get_Parameter(BuiltInParameter.WINDOW_TYPE_ID).AsString();
-            if (mark == null|| mark.Length==0)
+            if (mark == null || mark.Length == 0)
             {
                 mark = "пустая маркировка";
             }
             if (mark.Contains("PEX")) { success = true; }
-            else 
+            else
             {
                 mark = category + "_" + mark;
                 adskpViewModel viewModel2 = new adskpViewModel();
@@ -315,7 +335,7 @@ namespace TNov
                 //вычисление Наименования
                 string naimValue = "";
                 string param1 = "";
-                if(param.ParamExist(viewModel2.naimPar1, type))
+                if (param.ParamExist(viewModel2.naimPar1, type))
                 {
                     param1 = type.LookupParameter(viewModel2.naimPar1).AsString();
                     if (param1 == null || param1.Length == 0) param1 = "";
@@ -325,14 +345,22 @@ namespace TNov
                     param1 = elem.LookupParameter(viewModel2.naimPar1).AsString();
                     if (param1 == null || param1.Length == 0) param1 = "";
                 }
-                
+
                 naimValue = param1;
+
                 if (viewModel2.naimPar2 != "выкл")
                 {
                     bool param2exist = param.ParamExist(viewModel2.naimPar2, elem);
                     if (param2exist)
                     {
-                        string param2 = elem.LookupParameter(viewModel2.naimPar2).AsValueString();
+                        string param2 = "";
+                        if (elem.LookupParameter(viewModel2.naimPar2).StorageType == StorageType.Double)
+                        {
+                            double paramDoubleValue = elem.LookupParameter(viewModel2.naimPar2).AsDouble() * 0.3048 * 1000;
+                            paramDoubleValue = Math.Round(paramDoubleValue, 1);
+                            param2 = paramDoubleValue.ToString().Replace(',', '.');
+                        }
+                        else param2 = elem.LookupParameter(viewModel2.naimPar2).AsValueString();
                         if (param2 != null && param2.Length > 0)
                         {
                             if (viewModel2.naimPrefix2 != null && viewModel2.naimPrefix2.Length > 0) naimValue = naimValue + viewModel2.naimPrefix2;
@@ -346,7 +374,14 @@ namespace TNov
                     bool param3exist = param.ParamExist(viewModel2.naimPar3, elem);
                     if (param3exist)
                     {
-                        string param3 = elem.LookupParameter(viewModel2.naimPar3).AsValueString();
+                        string param3 = "";
+                        if (elem.LookupParameter(viewModel2.naimPar3).StorageType == StorageType.Double)
+                        {
+                            double paramDoubleValue = elem.LookupParameter(viewModel2.naimPar3).AsDouble() * 0.3048 * 1000;
+                            paramDoubleValue = Math.Round(paramDoubleValue, 1);
+                            param3 = paramDoubleValue.ToString().Replace(',', '.');
+                        }
+                        else param3 = elem.LookupParameter(viewModel2.naimPar3).AsValueString();
                         if (param3 != null && param3.Length > 0)
                         {
                             if (viewModel2.naimPrefix3 != null && viewModel2.naimPrefix3.Length > 0) naimValue = naimValue + viewModel2.naimPrefix3;
@@ -354,13 +389,20 @@ namespace TNov
                         }
                     }
                 }
-                    
+
                 if (viewModel2.naimPar4 != "выкл")
                 {
                     bool param4exist = param.ParamExist(viewModel2.naimPar4, elem);
                     if (param4exist)
                     {
-                        string param4 = elem.LookupParameter(viewModel2.naimPar4).AsValueString();
+                        string param4 = "";
+                        if (elem.LookupParameter(viewModel2.naimPar4).StorageType == StorageType.Double)
+                        {
+                            double paramDoubleValue = elem.LookupParameter(viewModel2.naimPar4).AsDouble() * 0.3048 * 1000;
+                            paramDoubleValue = Math.Round(paramDoubleValue, 1);
+                            param4 = paramDoubleValue.ToString().Replace(',', '.');
+                        }
+                        else param4 = elem.LookupParameter(viewModel2.naimPar4).AsValueString();
                         if (param4 != null && param4.Length > 0)
                         {
                             if (viewModel2.naimPrefix4 != null && viewModel2.naimPrefix4.Length > 0) naimValue = naimValue + viewModel2.naimPrefix4;
@@ -368,7 +410,7 @@ namespace TNov
                         }
                     }
                 }
-                    
+
                 //вычисление Количества
                 double countValue = 0;
                 switch (viewModel2.countPar)
@@ -378,15 +420,15 @@ namespace TNov
                         break;
                     case "Длина":
                         Parameter paramL = elem.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH);
-                        if (paramL != null) countValue = paramL.AsDouble(); 
+                        if (paramL != null) countValue = paramL.AsDouble();
                         countValue = countValue * 0.3048;
                         break;
-                    case "Площадь": 
+                    case "Площадь":
                         Parameter paramA = elem.get_Parameter(BuiltInParameter.RBS_CURVE_SURFACE_AREA);
                         if (paramA != null) countValue = paramA.AsDouble();
                         countValue = countValue * 0.3048 * 0.3048;
                         break;
-                    case "Объем": 
+                    case "Объем":
                         Parameter paramV = elem.get_Parameter(BuiltInParameter.RBS_INSULATION_LINING_VOLUME);
                         if (paramV != null) countValue = paramV.AsDouble();
                         countValue = countValue * 0.3048 * 0.3048 * 0.3048;
@@ -415,14 +457,14 @@ namespace TNov
                         }
                         catch (Exception ex)
                         {
-                            Logger.Log("      Ошибка: " + ex.Message,4);
+                            Logger.Log("      Ошибка: " + ex.Message, 4);
                         }
                     }
                     else success1 = true;
                 }
                 else
                 {
-                    bool adskCparamexistType = param.ParamExistByGuid(adskNparamGuid, type); 
+                    bool adskCparamexistType = param.ParamExistByGuid(adskNparamGuid, type);
                     if (adskCparamexistType) //наименование назначено по типу
                     {
                         success1 = true;
@@ -434,7 +476,7 @@ namespace TNov
                 if (adskCparamexist)
                 {
                     double currentC = elem.get_Parameter(adskCparamGuid).AsDouble();
-                    if(currentC==1&& countValue == 1) //количество назначено 1 по экз
+                    if (currentC == 1 && countValue == 1) //количество назначено 1 по экз
                     {
                         success2 = true;
                     }
@@ -448,10 +490,10 @@ namespace TNov
                         }
                         catch (Exception ex)
                         {
-                            Logger.Log("      Ошибка: " + ex.Message,4);
+                            Logger.Log("      Ошибка: " + ex.Message, 4);
                         }
                     }
-                        
+
                 }
                 else
                 {
@@ -468,8 +510,9 @@ namespace TNov
                 success = success1 && success2;
             }
 
-                
+
         }
+        
         
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -478,7 +521,7 @@ namespace TNov
             if (RevitAPI.UiApplication == null) { RevitAPI.Initialize(commandData); }
             UIDocument uidoc = RevitAPI.UiDocument; Document doc = RevitAPI.Document; string fileName = doc.Title.ToString();
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
-            
+
             //проверка подключения, запись в журнал
             bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
 
@@ -486,11 +529,11 @@ namespace TNov
             Logger.Initialize(TNovClassName);
 
             var viewModel0 = new aboutViewModel();
-            
-            string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json"); 
+
+            string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
             viewModel0 = JsonConvert.DeserializeObject<aboutViewModel>(File.ReadAllText(jsonpath0));
             if (viewModel0.extendedLogs)
-            
+
             {
                 var qViewModel = new qwindow280ViewModel();
                 qViewModel.headtxt = "Включены расширенные логи. " +
@@ -499,138 +542,68 @@ namespace TNov
                 var qwpfview = new qwindow280(qViewModel);
                 qViewModel.CloseRequest += (s, e) => qwpfview.Close();
                 bool? qok = qwpfview.ShowDialog();
-                if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
+                if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log("Расширенные логи вкл", 2);
             }
 
-            Logger.Log("Сбор элементов",1);
-            //Получаем элементы модели
+            Logger.Log("Сбор элементов", 1);
 
-            List<Element> ArmVozd = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_DuctAccessory)
-                .WhereElementIsNotElementType()
-                .Cast<Element>()
-                .ToList();
-            
-            List<Element> Vozdrasp = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_DuctTerminal)
-                .WhereElementIsNotElementType()
-                .Cast<Element>()
-                .ToList();
-            
-            List<Element> GibkVozd = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_FlexDuctCurves)
-                .WhereElementIsNotElementType()
-                .Cast<Element>()
-                .ToList();
-            
-            List<Element> VnIsolVozd = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_DuctLinings)
-                .WhereElementIsNotElementType()
-                .Cast<Element>()
-                .ToList();
-            
-            List<Element> Vozd = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_DuctCurves)
-                .WhereElementIsNotElementType()
-                .Cast<Element>()
-                .ToList();
-            
-            List<Element> IsolVozd = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_DuctInsulations)
-                .WhereElementIsNotElementType()
-                .Cast<Element>()
-                .ToList();
-            
-            List<Element> FitVozd = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_DuctFitting)
-                .WhereElementIsNotElementType()
-                .Cast<Element>()
-                .ToList();
-           
-            List<Element> Obor = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_MechanicalEquipment)
-                .WhereElementIsNotElementType()
-                .Cast<Element>()
-                .ToList();
-            
-            List<Element> ArmTrub = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_PipeAccessory)
-                .WhereElementIsNotElementType()
-                .Cast<Element>()
-                .ToList();
-            
-            List<Element> GibkTrub = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_FlexPipeCurves)
-                .WhereElementIsNotElementType()
-                .Cast<Element>()
-                .ToList();
-            
-            List<Element> Trub = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_PipeCurves)
-                .WhereElementIsNotElementType()
-                .Cast<Element>()
-                .ToList();
-           
-            List<Element> IsolTrub = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_PipeInsulations)
-                .WhereElementIsNotElementType()
-                .Cast<Element>()
-                .ToList();
-            
-            List<Element> FitTrub = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_PipeFitting)
-                .WhereElementIsNotElementType()
-                .Cast<Element>()
-                .ToList();
-            
-            List<Element> Santeh = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_PlumbingFixtures)
-                .WhereElementIsNotElementType()
-                .Cast<Element>()
-                .ToList();
-            
-            List<Element> GMs = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_GenericModel)   //фильтр по категории Об модели
-                                                                         .WhereElementIsNotElementType()
-                                                                         .OfClass(typeof(FamilyInstance))
-                                                                         .Cast<Element>()
-                                                                         .ToList();
 
-            List<Element> rebar = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Rebar)   //Несущая арматура семействами
-                                                                         .WhereElementIsNotElementType()
-                                                                         .OfClass(typeof(FamilyInstance))
-                                                                         .Cast<Element>()
-                                                                         .ToList();
 
-            //сбор категорий для СС ПС
 
-            List<FamilyInstance> elEq = new FilteredElementCollector(doc)
-                .OfCategory(BuiltInCategory.OST_ElectricalEquipment)
-                .WhereElementIsNotElementType()
-                .Cast<FamilyInstance>()
-                .ToList();
-
-            List<CableTray> CableTrays = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_CableTray)
-                                                             .WhereElementIsNotElementType()
-                                                             .Cast<CableTray>()
-                                                             .ToList();
-
-            List<FamilyInstance> CableTrayFittings = new FilteredElementCollector(doc)
-                .OfCategory(BuiltInCategory.OST_CableTrayFitting)
-                .WhereElementIsNotElementType()
-                .Cast<FamilyInstance>()
-                .ToList();
-
-            List<Conduit> Conduit = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Conduit)
-                                                             .WhereElementIsNotElementType()
-                                                             .Cast<Conduit>()
-                                                             .ToList();
-
-            List<FamilyInstance> FireAlarmDevices = new FilteredElementCollector(doc)
-                .OfCategory(BuiltInCategory.OST_FireAlarmDevices)
-                .WhereElementIsNotElementType()
-                .Cast<FamilyInstance>()
-                .ToList();
-
-            List<ElectricalSystem> ElectricalSystems = new FilteredElementCollector(doc)
-                .OfCategory(BuiltInCategory.OST_ElectricalCircuit)
-                .WhereElementIsNotElementType()
-                .Cast<ElectricalSystem>()
-                .ToList();
-
-            //СЦЕНАРИЙ ВК ОВ / СС ПС
-            bool ss = false;
+            //СЦЕНАРИЙ ВК ОВ / СС ПС / ЭЛ
+            bool ss = false; bool el = false; bool vkov = false;
             string docName = doc.Title.ToString();
-            if (docName.Contains("СС") || docName.Contains("-СС") || docName.Contains("_СС")) ss = true;
+            if (docName.Contains("-СС") || docName.Contains("_СС")) ss = true;
+            if (docName.Contains("-ЭЛ") || docName.Contains("_ЭЛ") || docName.Contains("-ЭО") || docName.Contains("_ЭО")
+                || docName.Contains("-ЭС") || docName.Contains("_ЭС")) el = true;
+            if (docName.Contains("-ВК") || docName.Contains("_ВК") || docName.Contains("-ПТ") || docName.Contains("_ПТ")
+                || docName.Contains("-ОВ") || docName.Contains("_ОВ") || docName.Contains("-ТС") || docName.Contains("_ТС")) vkov = true;
 
             if (ss)
             {
                 //СС ПС
+
+                //сбор категорий для СС ПС
+
+                List<FamilyInstance> elEq = new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_ElectricalEquipment)
+                    .WhereElementIsNotElementType()
+                    .Cast<FamilyInstance>()
+                    .ToList();
+
+                List<CableTray> CableTrays = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_CableTray)
+                                                                 .WhereElementIsNotElementType()
+                                                                 .Cast<CableTray>()
+                                                                 .ToList();
+
+                List<FamilyInstance> CableTrayFittings = new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_CableTrayFitting)
+                    .WhereElementIsNotElementType()
+                    .Cast<FamilyInstance>()
+                    .ToList();
+
+                List<Conduit> Conduit = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Conduit)
+                                                                 .WhereElementIsNotElementType()
+                                                                 .Cast<Conduit>()
+                                                                 .ToList();
+
+                List<FamilyInstance> FireAlarmDevices = new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_FireAlarmDevices)
+                    .WhereElementIsNotElementType()
+                    .Cast<FamilyInstance>()
+                    .ToList();
+
+                List<ElectricalSystem> ElectricalSystems = new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_ElectricalCircuit)
+                    .WhereElementIsNotElementType()
+                    .Cast<ElectricalSystem>()
+                    .ToList();
+
+                List<Element> GMs = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_GenericModel)   //фильтр по категории Об модели
+                                                                             .WhereElementIsNotElementType()
+                                                                             .OfClass(typeof(FamilyInstance))
+                                                                             .Cast<Element>()
+                                                                             .ToList();
 
                 //коэффициенты 
                 Logger.Log("Диалог", 1);
@@ -638,7 +611,7 @@ namespace TNov
 
                 // Десериализация
                 bool forProject = true;
-                string VMName = TNovClassName+"_СС";
+                string VMName = TNovClassName + "_СС";
                 json js = new json(in VMName, in forProject, out bool canserialize, out string jsonpath);
                 if (canserialize)
                 {
@@ -657,7 +630,7 @@ namespace TNov
                 }
                 catch (Exception ex) { Logger.Log("Ошибка при сериализации: " + ex.Message, 4); }
 
-                double conduitCoeff = 1.3; 
+                double conduitCoeff = 1.3;
                 string vmk1 = viewModel.ConduitCoeff.Replace('.', ',');
                 Double.TryParse(vmk1, out conduitCoeff);
 
@@ -727,9 +700,9 @@ namespace TNov
                     group.Start();
 
                     //короба
-                    
 
-                    int allcount = elEq.Count + CableTrays.Count + CableTrayFittings.Count + ConduitTypes.Count + CableTrayTypes.Count+ FireAlarmDevices.Count + ElectricalSystems.Count;
+
+                    int allcount = elEq.Count + CableTrays.Count + CableTrayFittings.Count + ConduitTypes.Count + CableTrayTypes.Count + FireAlarmDevices.Count + ElectricalSystems.Count;
 
                     Thread thread = new Thread(new ThreadStart(this.ThreadStartingPoint));
                     thread.SetApartmentState(ApartmentState.STA);
@@ -789,7 +762,7 @@ namespace TNov
                             transactionCubes.Commit();
                         }
 
-                            
+
                     }
                     else if (j == 0)
                     {
@@ -843,7 +816,7 @@ namespace TNov
                         {
                             string conduitParam = conduitStringParams[i];
                             Logger.Log("   " + conduitParam, 2);
-                            string value = ""; 
+                            string value = "";
                             //получаем значение текстового параметра с первого короба в списке коробов данного типа
                             bool cParamExist = param.ParamExist(conduitParam, cTypeElems.First());
                             if (cParamExist)
@@ -883,7 +856,7 @@ namespace TNov
                                 cableCounter++;
                                 string cableCountParam = "Кабель тип " + cableCounter.ToString() + " колво";
                                 bool cableCountParamExist = param.ParamExist(cableCountParam, cTypeElems.First());
-                                
+
                                 double dValue = 0;
                                 if (value.Length > 0)
                                 {
@@ -892,9 +865,9 @@ namespace TNov
                                         int cableCount = 1;
                                         if (cableCountParamExist)
                                         {
-                                            if(c.LookupParameter(cableCountParam).HasValue) cableCount = c.LookupParameter(cableCountParam).AsInteger();
+                                            if (c.LookupParameter(cableCountParam).HasValue) cableCount = c.LookupParameter(cableCountParam).AsInteger();
                                         }
-                                        
+
                                         dValue += c.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH).AsDouble() * 0.3048 * cableCount * conduitCoeff;
                                     }
                                 }
@@ -908,7 +881,7 @@ namespace TNov
                                 {
                                     foreach (var c in cTypeElems)
                                     {
-                                        dValue += (int)Math.Round(c.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH).AsDouble() * 0.3048 * 1000/conduitStep);
+                                        dValue += (int)Math.Round(c.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH).AsDouble() * 0.3048 * 1000 / conduitStep);
                                     }
                                 }
                                 doubleValues.Add(dValue);
@@ -961,7 +934,7 @@ namespace TNov
                                 newElem.LookupParameter(conduitStringParams[i])?.Set(cc.StringValues[i]);
                                 Logger.Log("      " + conduitStringParams[i] + ": " + cc.StringValues[i], 2);
                             }
-                            for (int i = 0; i < cubeConduitDoubleParams.Length; i++) 
+                            for (int i = 0; i < cubeConduitDoubleParams.Length; i++)
                             {
                                 newElem.LookupParameter(cubeConduitDoubleParams[i])?.Set(Math.Round(cc.DoubleValues[i], 1));
                                 Logger.Log("      " + cubeConduitDoubleParams[i] + ": " + Math.Round(cc.DoubleValues[i], 1).ToString(), 2);
@@ -978,7 +951,7 @@ namespace TNov
 
 
 
-                        
+
                     }
 
                     //цепи
@@ -1095,7 +1068,7 @@ namespace TNov
                                 if (value.Length > 0)
                                 {
                                     dValue += ElectricalSystem.get_Parameter(BuiltInParameter.RBS_ELEC_CIRCUIT_LENGTH_PARAM).AsDouble() * 0.3048 * elSystemCoeffCable;
-                                    
+
                                 }
                                 doubleValues.Add(dValue);
                                 Logger.Log("      " + dValue.ToString(), 2);
@@ -1106,7 +1079,7 @@ namespace TNov
                                 if (value.Length > 0) //4 крепежа на 1 метр с каждого элемента
                                 {
                                     dValue += (int)Math.Round(ElectricalSystem.get_Parameter(BuiltInParameter.RBS_ELEC_CIRCUIT_LENGTH_PARAM).AsDouble() * 0.3048 * 1000 / elSystemStep);
-                                    
+
                                 }
                                 doubleValues.Add(dValue);
                                 Logger.Log("      " + dValue.ToString(), 2);
@@ -1124,8 +1097,13 @@ namespace TNov
                             }
                         }
 
-                        cubes2.Add(new ConduitCube { Name = ElectricalSystem.Id.IntegerValue.ToString(), 
-                            StringValues = stringValues, DoubleValues = doubleValues, ADSKGroup = gvalue });
+                        cubes2.Add(new ConduitCube
+                        {
+                            Name = ElectricalSystem.Id.IntegerValue.ToString(),
+                            StringValues = stringValues,
+                            DoubleValues = doubleValues,
+                            ADSKGroup = gvalue
+                        });
 
 
                     }
@@ -1159,7 +1137,7 @@ namespace TNov
                                 newElem.LookupParameter(esystemStringParams[i])?.Set(cc.StringValues[i]);
                                 Logger.Log("      " + esystemStringParams[i] + ": " + cc.StringValues[i], 2);
                             }
-                            for (int i = 0; i < cubeElSystemDoubleParams.Length; i++) 
+                            for (int i = 0; i < cubeElSystemDoubleParams.Length; i++)
                             {
                                 newElem.LookupParameter(cubeElSystemDoubleParams[i])?.Set(Math.Round(cc.DoubleValues[i], 1));
                                 Logger.Log("      " + cubeElSystemDoubleParams[i] + ": " + Math.Round(cc.DoubleValues[i], 1).ToString(), 2);
@@ -1180,7 +1158,7 @@ namespace TNov
 
                     }
                     //лотки (кабель)
-                                        
+
                     Logger.Log("Лотки (кабель). Ищем кубики", 1);
 
                     List<FamilyInstance> GMs3 = new FilteredElementCollector(RevitAPI.Document).OfCategory(BuiltInCategory.OST_GenericModel)   //фильтр по категории Об модели
@@ -1197,7 +1175,7 @@ namespace TNov
                         Element e = RevitAPI.Document.GetElement(GM0.Id);
                         string familyName0 = GM0.Symbol.FamilyName;
                         Element eType0 = RevitAPI.Document.GetElement(e.GetTypeId());
-                        if (familyName0.Contains("pmN.Условное семейство СС ПС") && eType0.Name.Contains("Лоток")) 
+                        if (familyName0.Contains("pmN.Условное семейство СС ПС") && eType0.Name.Contains("Лоток"))
                         {
                             k++;
                             if (k == 1) //первый кубик данного типа - очищаем параметры
@@ -1338,7 +1316,7 @@ namespace TNov
                                 doubleValues.Add(dValue);
                                 Logger.Log("      " + dValue.ToString(), 2);
                             }
-                            
+
                         }
 
                         cubes3.Add(new ConduitCube { Name = cType, StringValues = stringValues, DoubleValues = doubleValues, ADSKGroup = gvalue });
@@ -1373,7 +1351,7 @@ namespace TNov
                                 newElem.LookupParameter(conduitStringParams[i])?.Set(cc.StringValues[i]);
                                 Logger.Log("      " + conduitStringParams[i] + ": " + cc.StringValues[i], 2);
                             }
-                            for (int i = 0; i < cubeCableTrayDoubleParams.Length ; i++)  
+                            for (int i = 0; i < cubeCableTrayDoubleParams.Length; i++)
                             {
                                 newElem.LookupParameter(cubeCableTrayDoubleParams[i])?.Set(Math.Round(cc.DoubleValues[i], 1));
                                 Logger.Log("      " + cubeCableTrayDoubleParams[i] + ": " + Math.Round(cc.DoubleValues[i], 1).ToString(), 2);
@@ -1406,7 +1384,7 @@ namespace TNov
                         transactionCT.Start("TNov - Сводная спека Лотки");
                         foreach (var elem in CTelems)
                         {
-                            Logger.Log("   "+ elem.Id.IntegerValue.ToString(), 2);
+                            Logger.Log("   " + elem.Id.IntegerValue.ToString(), 2);
                             Element type = RevitAPI.Document.GetElement(elem.GetTypeId());
 
                             //вычисление Наименования и Марки
@@ -1415,12 +1393,12 @@ namespace TNov
 
                             string manuf = "-";
                             if (elem.Category.Name.Contains("детали") && param.ParamExist("ADSK_Завод-изготовитель", type))
-                            { 
-                                if(type.LookupParameter("ADSK_Завод-изготовитель").HasValue) manuf = type.LookupParameter("ADSK_Завод-изготовитель").AsString(); 
+                            {
+                                if (type.LookupParameter("ADSK_Завод-изготовитель").HasValue) manuf = type.LookupParameter("ADSK_Завод-изготовитель").AsString();
                             }
                             bool IEK = manuf.Contains("IEK") || manuf.Contains("«Интерэлектрокомплект");
 
-                            if (elem.Category.Name.Contains("детали")&& IEK && param.ParamExist("Наименование (IEK)", elem) && param.ParamExist("Марка (IEK)", elem)) //фитинги IEK
+                            if (elem.Category.Name.Contains("детали") && IEK && param.ParamExist("Наименование (IEK)", elem) && param.ParamExist("Марка (IEK)", elem)) //фитинги IEK
                             {
                                 naimValue = elem.LookupParameter("Наименование (IEK)").AsString();
                                 markValue = elem.LookupParameter("Марка (IEK)").AsString();
@@ -1432,7 +1410,7 @@ namespace TNov
                                 string param2 = elem.get_Parameter(BuiltInParameter.RBS_CALCULATED_SIZE).AsString().Replace("мм", "").Replace(" ", "");
                                 naimValue = param1 + " " + param2;
                             }
-                                
+
 
                             //вычисление Количества
                             double countValue = 0;
@@ -1444,7 +1422,7 @@ namespace TNov
                                 countValue = Math.Round(countValue, 1);
                             }
                             else countValue = 1;
-                                
+
                             //заполнение параметров
                             //наименование
                             bool success = false;
@@ -1479,7 +1457,7 @@ namespace TNov
                             bool success2 = false;
                             //марка
                             bool adskMparamexist = param.ParamExist("ADSK_Марка", elem);
-                            if (adskMparamexist&& elem.Category.Name.Contains("детали") && IEK)
+                            if (adskMparamexist && elem.Category.Name.Contains("детали") && IEK)
                             {
                                 bool isReadOnly = elem.LookupParameter("ADSK_Марка").IsReadOnly;
                                 if (!isReadOnly)
@@ -1557,10 +1535,10 @@ namespace TNov
                         {
                             Logger.Log("   " + elem.Id.IntegerValue.ToString(), 2);
                             Element type = RevitAPI.Document.GetElement(elem.GetTypeId());
-                                  
+
                             //заполнение параметров
                             bool success = false;
-                            
+
                             bool adskCparamexist = param.ParamExist("ADSK_Количество", elem);
                             if (adskCparamexist)
                             {
@@ -1610,18 +1588,18 @@ namespace TNov
                     this.adskgProgressBar.Dispatcher.Invoke((System.Action)(() => this.adskgProgressBar.Close()));
 
                     if (allcount == 0) new infowindow280("Нечего обрабатывать.").ShowDialog();
-                    
+
                     group.Assimilate();
                 }
 
-                
 
-                
+
+
 
                 if (failscount > 0)
                 {
                     string messageF = "";
-                    
+
                     string failed3str = "Не заполнились параметры ADSK_Наименование или ASDK_Количество: ";
                     if (failed.Count > 0) { failed3str = failed3str + String.Join(",", failed); messageF = messageF + failed3str + ". "; }
 
@@ -1639,9 +1617,296 @@ namespace TNov
 
 
             }
-            else
+            else if (el)
+            {
+                // ЭЛ
+                
+                // Найти все спецификации категории "Типовые аннотации"
+                List<ViewSchedule> schedules = new FilteredElementCollector(doc)
+                    .OfClass(typeof(ViewSchedule))
+                    .Cast<ViewSchedule>()
+                    .Where(s => s.Definition.CategoryId.IntegerValue == (int)BuiltInCategory.OST_GenericAnnotation)
+                    .Where(s => s.Name.Equals(TargetScheduleName))
+                    .ToList();
+
+                if (schedules.Count == 0)
+                {
+                    new infowindow280($"Спецификация с именем '{TargetScheduleName}' не найдена.").ShowDialog();
+                    Logger.Log($"Спецификация с именем '{TargetScheduleName}' не найдена. Завершение работы.", 4);
+                    return Result.Failed;
+                }
+
+                ViewSchedule targetSchedule = schedules.First();
+                //IList<ElementId> filteredElementIds = GetFilteredElementIdsFromSchedule(doc, targetSchedule);
+
+                FilteredElementCollector collector = new FilteredElementCollector(doc, targetSchedule.Id)
+    .WhereElementIsNotElementType()
+    .OfCategory(BuiltInCategory.OST_GenericAnnotation); // для типовых аннотаций
+
+                if (collector.Count() < 1 || collector == null) {Logger.Log("Типовых аннотаций в проекте не обнаружено!",4); return Result.Cancelled; }
+
+                List<ElementId> elementIds = collector.ToElementIds().ToList();
+
+                Logger.Log($"Найдено элементов: {elementIds.Count} : " + string.Join(", ", elementIds.Select(id => id.ToString())), 1);
+
+                // Создаем фильтр для категории "Обобщенные модели"
+                ElementCategoryFilter categoryFilter = new ElementCategoryFilter(BuiltInCategory.OST_GenericModel);
+
+                // Получаем все элементы категории
+                FilteredElementCollector collector1 = new FilteredElementCollector(doc);
+                IList<Element> genericModels = collector1.WherePasses(categoryFilter).WhereElementIsNotElementType().ToElements();
+
+                // Фильтруем по семейству и типу
+                List<Element> targetElements = new List<Element>();
+                foreach (Element element in genericModels)
+                {
+                    FamilyInstance familyInstance = element as FamilyInstance;
+                    if (familyInstance != null)
+                    {
+                        string familyName = familyInstance.Symbol.Family.Name;
+                        string typeName = familyInstance.Name;
+
+                        if (familyName == "pmN.Неспецифицируемый материал" &&
+                            typeName == "Экспортированный материал")
+                        {
+                            targetElements.Add(element);
+                        }
+                    }
+                }
+
+                if(genericModels.Count()<1|| genericModels==null) { Logger.Log("Размещенных кубиков в проекте не обнаружено!", 4); return Result.Cancelled; }
+
+                //заполнение списка ElNonModelCube + проверка максимального колва
+                Logger.Log("Заполняем список ElNonModelCube", 1);
+                List<ElNonModelCube> elCubes = new List<ElNonModelCube>();
+
+                //Сортируем элементы типовых аннотаций из collector
+
+                int gmCounter = 0; //счетчик заполняемых семейств из collector2
+
+                // Сортировка 1 - ADSK_Группирование (по типу)
+                var elemsSortByGroup = from i in collector
+                                       let type = doc.GetElement(i.GetTypeId()) //as ElementType
+                                       let paramValue = type?.get_Parameter(adskGparamGuid)?.AsString() ?? ""
+                                       orderby paramValue
+                                       select i;
+                var adskGgroups = from i in elemsSortByGroup
+                                  let type = doc.GetElement(i.GetTypeId()) //as ElementType
+                                  let paramValue = type?.get_Parameter(adskGparamGuid)?.AsString() ?? ""
+                                  group i by paramValue;
+                foreach (var adskGgroup in adskGgroups)
+                {
+                    //тип первого элемента
+                    Element firstElemType = doc.GetElement(adskGgroup.First().GetTypeId());
+                    Logger.Log("1 : "+firstElemType.get_Parameter(adskGparamGuid)?.AsString(), 2);
+                    // Сортировка 2 - N_ЭЛ. Группирование ЭЛ
+                    var elemsSortByEGroup = from i in adskGgroup
+                                            orderby i.get_Parameter(NEGparamGuid)?.AsString() ?? ""
+                                            select i;
+                    var NEGgroups = from i in elemsSortByEGroup
+                                    group i by i.get_Parameter(NEGparamGuid)?.AsString() ?? "";
+                    foreach (var NEGgroup in NEGgroups)
+                    {
+                        //тип первого элемента
+                        Element firstElem2 = doc.GetElement(NEGgroup.First().Id);
+                        Logger.Log("2 : "+firstElem2.get_Parameter(NEGparamGuid)?.AsString(), 2);
+                        // Сортировка 3 - N_Сортировка (по типу)
+                        var elemsSortByNSort = from i in NEGgroup
+                                               let type = doc.GetElement(i.GetTypeId()) //as ElementType
+                                               let paramValue = type?.get_Parameter(NSortparamGuid)?.AsString() ?? ""
+                                               orderby paramValue descending //обратная
+                                               select i;
+                        var Nsortgroups = from i in elemsSortByNSort
+                                          let type = doc.GetElement(i.GetTypeId()) //as ElementType
+                                          let paramValue = type?.get_Parameter(NSortparamGuid)?.AsString() ?? ""
+                                          group i by paramValue;
+                        foreach (var Nsortgroup in Nsortgroups)
+                        {
+                            //тип первого элемента
+                            Element firstElemType3 = doc.GetElement(Nsortgroup.First().GetTypeId());
+                            Logger.Log("3 : " + firstElemType3.get_Parameter(NSortparamGuid)?.AsString(), 2);
+                            // Сортировка 4 - ADSK_Наименование 
+                            var elemsSortByNaim = from i in Nsortgroup
+                                                  orderby i.get_Parameter(adskNparamGuid)?.AsString() ?? ""
+                                                  select i;
+                            var adskNgroups = from i in elemsSortByNaim
+                                              group i by i.get_Parameter(adskNparamGuid)?.AsString() ?? "";
+
+                            foreach (var adskNgroup in adskNgroups)
+                            {
+                                Element firstElem = adskNgroup.First();
+                                Element firstElementType = doc.GetElement(firstElem.GetTypeId());
+                                Logger.Log("4 : " + firstElem.get_Parameter(adskNparamGuid)?.AsString(), 2);
+
+                                double adskNgroupCount = 0;
+                                foreach(var elem in adskNgroup)
+                                {
+                                    adskNgroupCount += elem.get_Parameter(adskCparamGuid)?.AsDouble() ?? 0;
+                                }
+
+                                string naim = firstElem.get_Parameter(adskNparamGuid)?.AsString() ?? "";
+                                string mrk = firstElem.get_Parameter(adskMarkparamGuid)?.AsString() ?? "";
+                                if (mrk.Contains("ВВГ")) naim = naim.Replace(".", ",");
+
+                                ElNonModelCube elCube = new ElNonModelCube
+                                {
+                                    adskGroup = firstElementType.get_Parameter(adskGparamGuid)?.AsString() ?? "",
+                                    adskNaim = naim,
+                                    adskMark = firstElem.get_Parameter(adskMarkparamGuid)?.AsString() ?? "",
+                                    adskObozn = firstElem.get_Parameter(adskOboznparamGuid)?.AsString() ?? "",
+                                    adskCode = firstElem.get_Parameter(adskCodeparamGuid)?.AsString() ?? "",
+                                    adskManuf = firstElem.get_Parameter(adskManufparamGuid)?.AsString() ?? "",
+                                    adskEd = firstElem.get_Parameter(adskEdparamGuid)?.AsString() ?? "",
+                                    NEGroup = firstElem.get_Parameter(NEGparamGuid)?.AsString() ?? "",
+                                    NSort = firstElementType.get_Parameter(NSortparamGuid)?.AsString() ?? "",
+                                    adskC = adskNgroupCount,
+                                };
+                                Logger.Log("№ "+gmCounter.ToString()+" : "+elCube.adskGroup + " "+elCube.NEGroup + " "+elCube.NSort+ " " + elCube.adskNaim + " " + elCube.adskMark + " " + elCube.adskObozn +
+                                    " " + elCube.adskCode + " " + elCube.adskEd + " " + elCube.adskC.ToString(), 2);
+                                elCubes.Add(elCube);
+
+                                gmCounter++;
+                            }
+                        }
+                    }
+                }
+
+                if (gmCounter > collector1.Count())
+                {
+                    Logger.Log("Размещенных кубиков недостаточно. Завершение работы.", 4);
+                    new infowindow280("В модели размещено " + collector1.Count().ToString() + " кубиков, а требуется не менее " + gmCounter.ToString() + ". Разместите больше кубиков.").ShowDialog();
+                    return Result.Cancelled;
+                }
+
+                //транзакция
+                using (Transaction transaction = new Transaction(doc))
+                {
+                    transaction.Start("TNov Сводная спека");
+                    Logger.Log("Открываем транзакцию", 1);
+
+                    for (int i = 0; i < elCubes.Count(); i++)
+                    {
+                        Logger.Log("индекс "+i.ToString()+" ", 2);
+                        //ищем в targetElements элемент с индексом i
+                        Element targetElem = doc.GetElement(targetElements[i].Id);
+                        targetElem.get_Parameter(adskGparamGuid)?.Set(elCubes[i].adskGroup);//ADSK_Группирование
+                        targetElem.get_Parameter(adskNparamGuid)?.Set(elCubes[i].adskNaim);//ADSK_Наименование
+                        targetElem.get_Parameter(adskMarkparamGuid)?.Set(elCubes[i].adskMark);//ADSK_Марка
+                        //targetElem.get_Parameter(adskOboznparamGuid)?.Set(elCubes[i].adskObozn);//ADSK_Обозначение
+                        targetElem.get_Parameter(adskCodeparamGuid)?.Set(elCubes[i].adskCode);//ADSK_Код изделия
+                        targetElem.get_Parameter(adskManufparamGuid)?.Set(elCubes[i].adskManuf);//ADSK_Завод-изготовитель
+                        targetElem.get_Parameter(adskEdparamGuid)?.Set(elCubes[i].adskEd);//ADSK_Единица измерения
+                        targetElem.get_Parameter(adskCparamGuid)?.Set(elCubes[i].adskC);//ADSK_Количество
+                        targetElem.get_Parameter(NEGparamGuid)?.Set(elCubes[i].NEGroup);//N_ЭЛ.Группирование ЭЛ
+                        targetElem.get_Parameter(NSortparamGuid)?.Set(elCubes[i].NSort);//N_Сортировка
+                    }
+                    Logger.Log("Обнуление оставшихся элементов", 1);
+                    for (int i = elCubes.Count(); i < targetElements.Count(); i++) //обнуляем оставшиеся элементы
+                    {
+                        Element targetElem = doc.GetElement(targetElements[i].Id);
+                        targetElem.get_Parameter(adskGparamGuid)?.Set("");//ADSK_Группирование
+                        targetElem.get_Parameter(adskNparamGuid)?.Set("");//ADSK_Наименование
+                        targetElem.get_Parameter(adskMarkparamGuid)?.Set("");//ADSK_Марка
+                        //targetElem.get_Parameter(adskOboznparamGuid)?.Set("");//ADSK_Обозначение
+                        targetElem.get_Parameter(adskCodeparamGuid)?.Set("");//ADSK_Код изделия
+                        targetElem.get_Parameter(adskManufparamGuid)?.Set("");//ADSK_Завод-изготовитель
+                        targetElem.get_Parameter(adskEdparamGuid)?.Set("");//ADSK_Единица измерения
+                        targetElem.get_Parameter(adskCparamGuid)?.Set(0);//ADSK_Количество
+                        targetElem.get_Parameter(NEGparamGuid)?.Set("");//N_ЭЛ.Группирование ЭЛ
+                        targetElem.get_Parameter(NSortparamGuid)?.Set("");//N_Сортировка
+                    }
+
+                    Logger.Log("Закрываем транзакцию", 1);
+                    transaction.Commit();
+                }
+            }
+            else if (vkov)
             {
                 //ВК ОВ
+
+                //Получаем элементы модели
+
+                List<Element> ArmVozd = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_DuctAccessory)
+                    .WhereElementIsNotElementType()
+                    .Cast<Element>()
+                    .ToList();
+
+                List<Element> Vozdrasp = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_DuctTerminal)
+                    .WhereElementIsNotElementType()
+                    .Cast<Element>()
+                    .ToList();
+
+                List<Element> GibkVozd = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_FlexDuctCurves)
+                    .WhereElementIsNotElementType()
+                    .Cast<Element>()
+                    .ToList();
+
+                List<Element> VnIsolVozd = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_DuctLinings)
+                    .WhereElementIsNotElementType()
+                    .Cast<Element>()
+                    .ToList();
+
+                List<Element> Vozd = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_DuctCurves)
+                    .WhereElementIsNotElementType()
+                    .Cast<Element>()
+                    .ToList();
+
+                List<Element> IsolVozd = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_DuctInsulations)
+                    .WhereElementIsNotElementType()
+                    .Cast<Element>()
+                    .ToList();
+
+                List<Element> FitVozd = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_DuctFitting)
+                    .WhereElementIsNotElementType()
+                    .Cast<Element>()
+                    .ToList();
+
+                List<Element> Obor = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_MechanicalEquipment)
+                    .WhereElementIsNotElementType()
+                    .Cast<Element>()
+                    .ToList();
+
+                List<Element> ArmTrub = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_PipeAccessory)
+                    .WhereElementIsNotElementType()
+                    .Cast<Element>()
+                    .ToList();
+
+                List<Element> GibkTrub = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_FlexPipeCurves)
+                    .WhereElementIsNotElementType()
+                    .Cast<Element>()
+                    .ToList();
+
+                List<Element> Trub = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_PipeCurves)
+                    .WhereElementIsNotElementType()
+                    .Cast<Element>()
+                    .ToList();
+
+                List<Element> IsolTrub = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_PipeInsulations)
+                    .WhereElementIsNotElementType()
+                    .Cast<Element>()
+                    .ToList();
+
+                List<Element> FitTrub = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_PipeFitting)
+                    .WhereElementIsNotElementType()
+                    .Cast<Element>()
+                    .ToList();
+
+                List<Element> Santeh = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_PlumbingFixtures)
+                    .WhereElementIsNotElementType()
+                    .Cast<Element>()
+                    .ToList();
+
+                List<Element> GMs = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_GenericModel)   //фильтр по категории Об модели
+                                                                             .WhereElementIsNotElementType()
+                                                                             .OfClass(typeof(FamilyInstance))
+                                                                             .Cast<Element>()
+                                                                             .ToList();
+
+                List<Element> rebar = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Rebar)   //Несущая арматура семействами
+                                                                             .WhereElementIsNotElementType()
+                                                                             .OfClass(typeof(FamilyInstance))
+                                                                             .Cast<Element>()
+                                                                             .ToList();
 
                 //собираем типы для заполнения наим и колва
                 List<string> typeMarks = new List<string>();
@@ -1663,9 +1928,9 @@ namespace TNov
                             else pipeTypeMarks.Add(str0 + "_пустая маркировка");
                         }
                     }
-                    if(pipeTypeMarks.Count == 0) pipeTypeMarks.Add("Трубы" + "_пустая маркировка");
+                    if (pipeTypeMarks.Count == 0) pipeTypeMarks.Add("Трубы" + "_пустая маркировка");
                 }
-                pipeTypeMarks= pipeTypeMarks.Distinct().ToList(); foreach(var t in pipeTypeMarks) typeMarks.Add(t);
+                pipeTypeMarks = pipeTypeMarks.Distinct().ToList(); foreach (var t in pipeTypeMarks) typeMarks.Add(t);
 
                 List<string> pipeInsulationTypeMarks = new List<string>();
                 List<Element> pipeInsulationTypes = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_PipeInsulations) //типы изоляции труб
@@ -2306,7 +2571,7 @@ namespace TNov
                                 {
                                     if (p.IsShared)
                                     {
-                                        if(p.GUID == NCatparamGuid) { runCat1 = true; break; }
+                                        if (p.GUID == NCatparamGuid) { runCat1 = true; break; }
                                     }
                                 }
                                 if (GMs.Count > 0 && runCat1)
@@ -2420,10 +2685,16 @@ namespace TNov
                     Logger.Log(viewModel1.ids, 1);
                 }
             }
+            else
+            {
+                new infowindow280("Плагин работает по разным сценариям в зависимости от раздела. Похоже, ваш файл не относится к" +
+                " разделу ВК/ПТ/ОВ/ЭЛ/СС. Раздел должен содержаться в имени модели.").ShowDialog();
+                Logger.Log("Раздел не является ВК/ПТ/ОВ/ЭЛ/СС. Завершение работы.", 3);
 
-            
-            
-            Logger.Log("Завершение работы.",5);
+
+                
+            }
+            Logger.Log("Завершение работы.", 5);
             return Result.Succeeded;
         }
     }

@@ -137,7 +137,7 @@ namespace TNov
             }
             catch (Exception ex) { Logger.Log("Ошибка при сериализации: " + ex.Message, 4); }
 
-            if (viewModel.NWC == false && viewModel.RVT == false) 
+            if (viewModel.NWC == false && viewModel.RVT == false && viewModel.NWC2 == false) 
             { Logger.Log("Все галочки сняты. Завершение работы.", 3); return Result.Cancelled; }
 
             string log = "Журнал запуска:";
@@ -259,7 +259,7 @@ namespace TNov
                 ModelPath modelPath1 = ModelPathUtils.ConvertUserVisiblePathToModelPath(filePath);
                 Document document = uiApp.Application.OpenDocumentFile(modelPath1, openOptions);
 
-                if (viewModel.NWC)
+                if (viewModel.NWC||viewModel.NWC2)
                 {
                     this.bimExportProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.bimExportProgressBar.info.Text = fileName +
                     ": экспорт NWC"));
@@ -362,6 +362,7 @@ namespace TNov
 
                     bool canOverwriteNwc = true;
                     string nwcPath1 = nwcPath;
+                    if (viewModel.NWC == false) nwcPath1 = rvtPath2;
                     string path = nwcPath1 + @"\" + fileName + ".nwc"; if(viewModel.NWCNova) path = nwcPath1 + @"\" + fileName + " внутр.nwc";
                     bool nwcFileExists = File.Exists(path);
                     if (nwcFileExists)
@@ -436,22 +437,27 @@ namespace TNov
                             {
                                 navisworksExportOptions.ViewId = list[0].Id;
                                 document.Export(nwcPath1, nwcFileName, navisworksExportOptions);
+                                if (viewModel.NWC && viewModel.NWC2) 
+                                { 
+                                    //копирование nwc в папку выдачи
+                                    File.Copy(nwcPath1 + @"\" + nwcFileName + ".nwc", rvtPath2 + @"\" + nwcFileName + ".nwc"); 
+                                }
                                 if (nwcPath1 == nwcPathD)
                                 {
-                                    log += "\nМодель " + fileName + " - NWC занят другим приложением, поэтому сохранен на рабочий стол";
-                                    Logger.Log("Модель " + fileName + " - NWC успешно (рабочий стол)",1);
+                                    log += "\nМодель " + nwcFileName + " - NWC занят другим приложением, поэтому сохранен на рабочий стол";
+                                    Logger.Log("Модель " + nwcFileName + " - NWC успешно (рабочий стол)",1);
                                 }
                                 else
                                 {
-                                    log += "\nМодель " + fileName + " - успешно создан NWC"; 
-                                    Logger.Log("Модель " + fileName + " - NWC успешно", 1);
+                                    log += "\nМодель " + nwcFileName + " - успешно создан NWC"; 
+                                    Logger.Log("Модель " + nwcFileName + " - NWC успешно", 1);
                                 }
                                 
                             }
                             catch (Exception ex)
                             {
                                 Logger.Log("ошибка: " + ex.Message,4);  
-                                log += "\nМодель " + fileName + " - ошибка: " + ex.Message;
+                                log += "\nМодель " + nwcFileName + " - ошибка: " + ex.Message;
                             }
                                 
                             
@@ -544,7 +550,7 @@ namespace TNov
             new infowindow400(log).ShowDialog();
             if (viewModel.NWC) Process.Start("explorer.exe", nwcPath);
             if (viewModel.NWC&& desktopNWCcount>0) Process.Start("explorer.exe", nwcPathD);
-            if (viewModel.RVT) Process.Start("explorer.exe", rvtPath2);
+            if (viewModel.RVT||viewModel.NWC2) Process.Start("explorer.exe", rvtPath2);
 
             rvtApp.FailuresProcessing -= new EventHandler<FailuresProcessingEventArgs>(andWarningHandler.OnFailuresProcessing);
 

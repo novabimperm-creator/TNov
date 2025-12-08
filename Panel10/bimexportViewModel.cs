@@ -37,6 +37,9 @@ namespace TNov
         private bool _NWC = true;
         public bool NWC { get => _NWC; set { _NWC = value; OnPropertyChanged(); } }
 
+        private bool _NWC2 = true;
+        public bool NWC2 { get => _NWC2; set { _NWC2 = value; OnPropertyChanged(); } }
+
         private bool _NWCNova = false;
         public bool NWCNova { get => _NWCNova; set { _NWCNova = value; OnPropertyChanged(); } }
 
