@@ -15,6 +15,7 @@ using System.Threading;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using TNov.main;
+using TNov.Panel3.typefilter;
 using TNov.Panel8;
 using static System.Windows.Forms.LinkLabel;
 using adWin = Autodesk.Windows;
@@ -187,7 +188,7 @@ namespace TNov
                 ToolTip = "Открыть замечания по проекту в среде общих данных Vitro."
             };
             ContextualHelp CDEhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/plaginyiskriptynovatsiya/");
+                "https://portal.talan.group/knowledge/proektirovanie/reestrzamechaniy/");
             buttonDataCDE.SetContextualHelp(CDEhelp);
 
             panel1.AddItem(buttonDataCDE);
@@ -206,26 +207,30 @@ namespace TNov
 
             panel1.AddItem(buttonDataJournal);
 
-            // Панель "Ссылочки"
+            
 
-            RibbonPanel panel2 = application.CreateRibbonPanel(tabName, "Ссылочки");
+            
+
+            // Панель "Общие"
+
+            RibbonPanel panel3 = application.CreateRibbonPanel(tabName, "Общие");
 
             // сгруппированная кнопка "Таблица параметров"
 
             System.Drawing.Image imgParamTable = Properties.Resources.ParamTable32;
             System.Drawing.Image imgParamTablemin = Properties.Resources.ParamTable16;
-            PushButtonData buttonDataParamTable = new PushButtonData(nameof(ParamTable), "Таблица параметров", assemblyLocation, typeof(ParamTable).FullName)
+            PushButtonData buttonDataParamTable = new PushButtonData(nameof(ParamTable), ".", assemblyLocation, typeof(ParamTable).FullName)
             {
                 Image = GetImageSource(imgParamTablemin),
                 ToolTip = "Открыть таблицу требований к модели."
-            };            
+            };
             buttonDataParamTable.SetContextualHelp(CDEhelp);
 
             // сгруппированная кнопка "Методички"
 
             System.Drawing.Image imgwiki = Properties.Resources.wiki32;
             System.Drawing.Image imgwikimin = Properties.Resources.wiki16;
-            PushButtonData buttonDatawiki = new PushButtonData(nameof(workorg), "База знаний", assemblyLocation, typeof(workorg).FullName)
+            PushButtonData buttonDatawiki = new PushButtonData(nameof(workorg), ".", assemblyLocation, typeof(workorg).FullName)
             {
                 Image = GetImageSource(imgwikimin),
                 ToolTip = "Wiki по работе в Revit и не только."
@@ -238,7 +243,7 @@ namespace TNov
 
             System.Drawing.Image imgedu = Properties.Resources.edu32;
             System.Drawing.Image imgedumin = Properties.Resources.edu16;
-            PushButtonData buttonDataedu = new PushButtonData(nameof(edu), "Учебный портал", assemblyLocation, typeof(edu).FullName)
+            PushButtonData buttonDataedu = new PushButtonData(nameof(edu), ".", assemblyLocation, typeof(edu).FullName)
             {
                 Image = GetImageSource(imgedumin),
                 ToolTip = "Перейти на учебный портал (moodle.talan.group)."
@@ -249,11 +254,8 @@ namespace TNov
 
             // группа кнопок "Таблица параметров", "Методички", "Учебный портал"
 
-            panel2.AddStackedItems(buttonDataParamTable, buttonDatawiki, buttonDataedu);
+            panel3.AddStackedItems(buttonDataParamTable, buttonDatawiki, buttonDataedu);
 
-            // Панель "Общие"
-
-            RibbonPanel panel3 = application.CreateRibbonPanel(tabName, "Общие");
             /*
             // кнопка "Связной"
 
@@ -270,6 +272,7 @@ namespace TNov
             buttonDatalinks.SetContextualHelp(linkshelp);
             panel3.AddItem(buttonDatalinks);
             */
+
             // кнопка с выпадающим списком "Закреплятор Уровни Наборы"
 
             // - подкнопка "Закреплятор Уровни Наборы"
@@ -393,6 +396,21 @@ namespace TNov
                 "https://portal.talan.group/knowledge/proektirovanie/listynumeratsiyaikomplektynaeksport/");
             buttonDatasheets.SetContextualHelp(sheetshelp);
             panel3.AddItem(buttonDatasheets);
+
+            // кнопка "Типофильтр"
+
+            System.Drawing.Image imgfilter = Properties.Resources.typefilter32;
+            System.Drawing.Image imgfiltermin = Properties.Resources.typefilter16;
+            PushButtonData buttonDatafilter = new PushButtonData(nameof(typefilter), "Типофильтр", assemblyLocation, typeof(typefilter).FullName)
+            {
+                LargeImage = GetImageSource(imgfilter),
+                Image = GetImageSource(imgfiltermin),
+                ToolTip = "Фильтрация на виде по типам элементов, создание фильтров в проекте."
+            };
+            ContextualHelp filterhelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/tipofiltr/");
+            buttonDatafilter.SetContextualHelp(filterhelp);
+            panel3.AddItem(buttonDatafilter);
 
             // Панель "АР Модель"
 

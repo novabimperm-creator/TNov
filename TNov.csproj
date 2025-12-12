@@ -144,6 +144,14 @@
       <DependentUpon>sheetsstartwpf.xaml</DependentUpon>
     </Compile>
     <Compile Include="Panel3\sheets\sheets.cs" />
+    <Compile Include="Panel3\typefilter\ElementTypeComparer.cs" />
+    <Compile Include="Panel3\typefilter\typefilter.cs" />
+    <Compile Include="Panel3\typefilter\CategoryComparer.cs" />
+    <Compile Include="Panel3\typefilter\typeFilterCategoryViewModel.cs" />
+    <Compile Include="Panel3\typefilter\typeFilterElementTypeViewModel.cs" />
+    <Compile Include="Panel3\typefilter\typefilterwpf.xaml.cs">
+      <DependentUpon>typefilterwpf.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Panel5\finishing\finishing.cs" />
     <Compile Include="Panel5\floorimages.cs" />
     <Compile Include="Panel5\rooms\roomsTNumber.cs" />
@@ -242,10 +250,10 @@
     <Compile Include="Panel3\plw\unpinnerwpf.xaml.cs">
       <DependentUpon>unpinnerwpf.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Panel2\ParamTable.cs" />
+    <Compile Include="Panel3\ParamTable.cs" />
     <Compile Include="Panel1\CDE.cs" />
-    <Compile Include="Panel2\edu.cs" />
-    <Compile Include="Panel2\workorg.cs" />
+    <Compile Include="Panel3\edu.cs" />
+    <Compile Include="Panel3\workorg.cs" />
     <Compile Include="Panel4\floors\floors.cs" />
     <Compile Include="Panel4\floors\floorwpf.xaml.cs" />
     <Compile Include="Panel4\mirror.cs" />
@@ -343,19 +351,25 @@
     <Compile Include="WarningResolver.cs" />
     <Compile Include="WarningSkipper.cs" />
     <Compile Include="WarningSwallower.cs" />
-    <Compile Include="windows\_infowindow400scroll.xaml.cs" />
+    <Compile Include="windows\_infowindow400scroll.xaml.cs">
+      <DependentUpon>_infowindow400scroll.xaml</DependentUpon>
+    </Compile>
     <Compile Include="_BoundingBoxXYZExtensions.cs" />
     <Compile Include="windows\_infowindow280.xaml.cs">
       <DependentUpon>_infowindow280.xaml</DependentUpon>
     </Compile>
-    <Compile Include="windows\_infowindow400.xaml.cs" />
+    <Compile Include="windows\_infowindow400.xaml.cs">
+      <DependentUpon>_infowindow400.xaml</DependentUpon>
+    </Compile>
     <Compile Include="windows\_infowindowtextfield.xaml.cs" />
     <Compile Include="windows\_infowindowtextfieldViewModel.cs" />
     <Compile Include="_Intersections.cs" />
     <Compile Include="Panel6\fixstructurefile\_MyParameterValue.cs" />
     <Compile Include="Panel6\fixstructurefile\_MyProjectSharedParameter.cs" />
     <Compile Include="Panel6\fixstructurefile\_MyRebarType.cs" />
-    <Compile Include="windows\_qwindow280.xaml.cs" />
+    <Compile Include="windows\_qwindow280.xaml.cs">
+      <DependentUpon>_qwindow280.xaml</DependentUpon>
+    </Compile>
     <Compile Include="windows\_qwindow280ViewModel.cs" />
     <Compile Include="_RevitAPI.cs" />
     <Compile Include="_selectandplacegroup.cs" />
@@ -394,6 +408,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Panel3\sheets\sheetsstartwpf.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Panel3\typefilter\typefilterwpf.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -1065,6 +1083,18 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\ssNumberer32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Panel2\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\typefilter32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\typefilter64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\typefilter16.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
