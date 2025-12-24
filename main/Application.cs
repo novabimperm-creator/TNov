@@ -165,6 +165,13 @@ namespace TNov
             UpdaterRegistry.AddTrigger(roomUpdater.GetUpdaterId(), filterRooms, Element.GetChangeTypeElementAddition());
             UpdaterRegistry.AddTrigger(roomUpdater.GetUpdaterId(), filterRooms, Element.GetChangeTypeAny());
 
+            TNovFloorCeilingUpdater floorCeilingUpdater = new TNovFloorCeilingUpdater(application.ActiveAddInId); //отделка полов потолков
+            UpdaterRegistry.RegisterUpdater(floorCeilingUpdater, true);
+            UpdaterRegistry.AddTrigger(floorCeilingUpdater.GetUpdaterId(), filterFloors, Element.GetChangeTypeElementAddition());
+            UpdaterRegistry.AddTrigger(floorCeilingUpdater.GetUpdaterId(), filterFloors, Element.GetChangeTypeAny());
+            UpdaterRegistry.AddTrigger(floorCeilingUpdater.GetUpdaterId(), filterCeilings, Element.GetChangeTypeElementAddition());
+            UpdaterRegistry.AddTrigger(floorCeilingUpdater.GetUpdaterId(), filterCeilings, Element.GetChangeTypeAny());
+
             // Создание вкладок, панелей, кнопок
 
             string assemblyLocation = Assembly.GetExecutingAssembly().Location,
@@ -626,9 +633,9 @@ namespace TNov
             panel5.AddStackedItems(buttonDatalevelnumber, buttonDatapark, buttonDatafloorspec);
 
             // кнопка "Ведомость отделки"
-            /*
-            System.Drawing.Image imgfinishing = Properties.Resources.logo;
-            System.Drawing.Image imgfinishingmin = Properties.Resources.logomin;
+            
+            System.Drawing.Image imgfinishing = Properties.Resources.finishing32;
+            System.Drawing.Image imgfinishingmin = Properties.Resources.finishing16;
             PushButtonData buttonDatafinishing = new PushButtonData(nameof(finishing), "Ведомость\nотделки", assemblyLocation, typeof(finishing).FullName)
             {
                 LargeImage = GetImageSource(imgfinishing),
@@ -636,10 +643,10 @@ namespace TNov
                 ToolTip = "Заполнение параметров для ведомости отделки у стен, полов, потолков."
             };
             ContextualHelp finishinghelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/");
+                "https://portal.talan.group/knowledge/proektirovanie/vedomostotdelkipomeshcheniy/");
             buttonDatafinishing.SetContextualHelp(finishinghelp);
             panel5.AddItem(buttonDatafinishing);
-            */
+            
             // Панель "КЖ Модель"
 
             RibbonPanel panel6 = application.CreateRibbonPanel(tabName, "КЖ Модель");
@@ -1164,6 +1171,9 @@ namespace TNov
 
             TNovRoomUpdater roomUpdater = new TNovRoomUpdater(application.ActiveAddInId);
             UpdaterRegistry.UnregisterUpdater(roomUpdater.GetUpdaterId());
+
+            TNovFloorCeilingUpdater floorCeilingUpdater = new TNovFloorCeilingUpdater(application.ActiveAddInId);
+            UpdaterRegistry.UnregisterUpdater(floorCeilingUpdater.GetUpdaterId());
 
             application.ControlledApplication.DocumentOpened -= OnDocumentOpened;
             application.ControlledApplication.DocumentSynchronizingWithCentral -= OnSyncCentralStart;

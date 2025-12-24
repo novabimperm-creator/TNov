@@ -15,6 +15,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Threading;
 using TNov.main;
@@ -199,6 +200,7 @@ namespace TNov
                 success = true;
                 Logger.Log("      пропуск", 2);
             }
+            if (elem.get_Parameter(adskNparamGuid).IsReadOnly) runG = false;
             if (runG) //ADSK_Группирование
             {
                 if (systemcut && system.Contains(","))
@@ -236,6 +238,8 @@ namespace TNov
             success = false;
 
             bool runCat = param.ParamExistByGuid(NCatparamGuid, elem);  //ищем параметр N_Категория
+
+            if (runCat) { if (elem.get_Parameter(NCatparamGuid).IsReadOnly) runCat = false; }
 
             if (runCat) //N_Категория
             {

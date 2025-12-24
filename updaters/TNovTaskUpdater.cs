@@ -35,6 +35,7 @@ namespace TNov
             //параметры
             ElementId familyNameParamId = new ElementId(-1002002); //id параметра Имя семейства
             BuiltInParameter mrk = BuiltInParameter.ALL_MODEL_MARK; //Марка
+            Guid adskGparamGuid = new Guid("3de5f1a4-d560-4fa8-a74f-25d250fb3401");//ADSK_Группирование
 
             //проверка имени файла
             string docName = doc.Title.ToString();
@@ -52,7 +53,7 @@ namespace TNov
                     List<ElementId> idsM = data.GetModifiedElementIds().ToList();
                     List<ElementId> ids = new List<ElementId>();
 
-                    /*
+                    
                     foreach (var id in idsA)
                     {
                         Element elem = doc.GetElement(id);
@@ -69,21 +70,41 @@ namespace TNov
                         Element elem = doc.GetElement(id);
                         if (null != elem)
                         {
+                            string adskGvalue = "";
+                            if (elem.Name.Contains("КЖ"))
+                            {
+                                if (elem.Name.Contains("Стены") || elem.Name.Contains("стены")) adskGvalue = "КЖ.Стены";
+                                else if (elem.Name.Contains("Плиты") || elem.Name.Contains("плиты")) adskGvalue = "КЖ.Плиты";
+                            }
+                            else if (elem.Name.Contains("КР"))
+                            {
+                                if (elem.Name.Contains("Стены") || elem.Name.Contains("стены")) adskGvalue = "КР.Стены";
+                            }
+                            if (elem.Name.Contains("Шахты")) adskGvalue = "КР.Шахты";
+                            if (elem.Name.Contains("Рамы")) adskGvalue = "КР.Рамы";
+                            if (elem.Name.Contains("Приямки")) adskGvalue = "КЖ.Приямки";
+
+                            if (adskGvalue.Length > 0&& elem.get_Parameter(adskGparamGuid).IsReadOnly!=true)
+                            {
+                                elem.get_Parameter(adskGparamGuid)?.Set(adskGvalue);
+                            }
+                            /*
                             string[] nameParts = elem.Name.Split('_');
                             string shortName = elem.Name;
                             if (nameParts.Length < 3)
                             { 
                                 new infowindow280("Некорректное имя группы " + elem.Name + " - необходимо наличие блоков ОтКого_Кому_Этаж.").ShowDialog();
-                                string commandText = @"https://portal.talan.group/knowledge/proektirovanie/MEPtasks/";
+                                string commandText = @"https://portal.talan.elem/knowledge/proektirovanie/MEPtasks/";
                                 var proc = new System.Diagnostics.Process();
                                 proc.StartInfo.FileName = commandText;
                                 proc.StartInfo.UseShellExecute = true;
                                 proc.Start();
                             }
+                            */
                         }
 
                     }
-                    */
+                    
                 }
             }
 

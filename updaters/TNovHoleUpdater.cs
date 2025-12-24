@@ -25,7 +25,10 @@ namespace TNov
             _updaterId = new UpdaterId(_appId, new Guid(
                                                    "43f11663-995f-4542-a756-0f4a400a813b"));
         }
-
+        Guid adskGparamGuid = new Guid("3de5f1a4-d560-4fa8-a74f-25d250fb3401");//ADSK_Группирование
+        Guid adskElev0paramGuid = new Guid("6ec2f9e9-3d50-4d75-a453-26ef4e6d1625");//ADSK_Отверстие_Отметка от нуля
+        Guid adskElevLevelparamGuid = new Guid("e4793a44-6050-45b3-843e-cfb49d9191c5");//ADSK_Отверстие_Отметка от этажа
+        Guid adskElevLevel2paramGuid = new Guid("44f7ce8a-2926-4514-bacb-423bd4ac3847");//ADSK_Отверстие_Отметка этажа
         public void Execute(UpdaterData data)
         {
             Document doc = data.GetDocument();
@@ -39,6 +42,35 @@ namespace TNov
             string docName = doc.Title.ToString();
             bool taskModel = false; if (docName.Contains("Задани") || docName.Contains("задани") || docName.Contains("-ЗД") || docName.Contains("_ЗД") || docName.Contains("ЗАДАНИЕ")) taskModel = true;
 
+            List<ElementId> idsA = data.GetAddedElementIds().ToList();
+            List<ElementId> idsM = data.GetModifiedElementIds().ToList();
+            List<ElementId> ids = new List<ElementId>();
+
+            ElementFilter elementFilter = (ElementFilter)new ElementParameterFilter(ParameterFilterRuleFactory.CreateContainsRule(familyNameParamId, "pmN.Отверстие", true));
+
+
+            foreach (var id in idsA)
+            {
+                Element elem = doc.GetElement(id);
+                if (elementFilter.PassesFilter(elem)) ids.Add(id);
+            }
+            foreach (var id in idsM)
+            {
+                Element elem = doc.GetElement(id);
+                if (elementFilter.PassesFilter(elem)) ids.Add(id);
+            }
+
+            foreach (ElementId id in ids) //заполнение отметки
+            {
+                Element elem = doc.GetElement(id);
+                double otm = elem.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).AsDouble();
+                elem.get_Parameter(adskElevLevelparamGuid)?.Set(otm); //Отметка от уровня
+                Element level = doc.GetElement(elem.LevelId);
+                double elev = level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
+                elem.get_Parameter(adskElevLevel2paramGuid)?.Set(elev); //Отметка уровня
+                elem.get_Parameter(adskElev0paramGuid)?.Set(otm + elev); //Отметка от нуля
+            }
+
             if (taskModel) 
             {
                 //проверка подключения к серверу
@@ -47,32 +79,37 @@ namespace TNov
 
                 if (servercheck)
                 {
-                    List<ElementId> idsA = data.GetAddedElementIds().ToList();
-                    List<ElementId> idsM = data.GetModifiedElementIds().ToList();
-                    List<ElementId> ids = new List<ElementId>();
-
-                    ElementFilter elementFilter = (ElementFilter)new ElementParameterFilter(ParameterFilterRuleFactory.CreateContainsRule(familyNameParamId, "pmN.Отверстие", true));
-
-
-                    foreach (var id in idsA)
-                    {
-                        Element elem = doc.GetElement(id);
-                        if (elementFilter.PassesFilter(elem)) ids.Add(id);
-                    }
-                    foreach (var id in idsM)
-                    {
-                        Element elem = doc.GetElement(id);
-                        if (elementFilter.PassesFilter(elem)) ids.Add(id);
-                    }
-
-                    
-
-
                     foreach (ElementId id in ids)
                     {
                         Element elem = doc.GetElement(id);
                         if (null != elem)
                         {
+                            //заполнение группирования
+                            if (elem.GroupId.IntegerValue != -1) //отверстие - в группе
+                            {
+                                Element group = doc.GetElement(elem.GroupId);
+                                if (group != null) 
+                                {
+                                    string adskGvalue = "";
+                                    if (group.Name.Contains("КЖ"))
+                                    {
+                                        if (group.Name.Contains("Стены") || group.Name.Contains("стены")) adskGvalue = "КЖ.Стены";
+                                        else if (group.Name.Contains("Плиты")|| group.Name.Contains("плиты")) adskGvalue = "КЖ.Плиты";
+                                    }
+                                    else if (group.Name.Contains("КР"))
+                                    {
+                                        if (group.Name.Contains("Стены") || group.Name.Contains("стены")) adskGvalue = "КР.Стены";
+                                    }
+                                    if (group.Name.Contains("Шахты")) adskGvalue = "КР.Шахты";
+                                    if (group.Name.Contains("Рамы")) adskGvalue = "КР.Рамы";
+                                    if (group.Name.Contains("Приямки")) adskGvalue = "КЖ.Приямки";
+
+                                    if (adskGvalue.Length > 0) elem.get_Parameter(adskGparamGuid)?.Set(adskGvalue);
+                                }
+                            }
+                            
+                            //система отслеживания
+
                             //имя и роль пользователя
                             string userName = app.Username;
                             string userDepartment = "-"; string userDepRole = "-";

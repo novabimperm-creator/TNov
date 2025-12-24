@@ -33,7 +33,7 @@ namespace TNov
 
             //параметры
             ElementId familyNameParamId = new ElementId(-1002002); //id параметра Имя семейства
-
+            Guid adskGparamGuid = new Guid("3de5f1a4-d560-4fa8-a74f-25d250fb3401");//ADSK_Группирование
 
             //проверка имени файла
             string docName = doc.Title.ToString();
@@ -78,6 +78,34 @@ namespace TNov
                         Element elem = doc.GetElement(id);
                         if (null != elem)
                         {
+                            //заполнение группирования
+                            if (elem.GroupId.IntegerValue != -1) //отверстие - в группе
+                            {
+                                Element group = doc.GetElement(elem.GroupId);
+                                if (group != null)
+                                {
+                                    string adskGvalue = "";
+                                    if (group.Name.Contains("КЖ"))
+                                    {
+                                        if (group.Name.Contains("Стены") || group.Name.Contains("стены")) adskGvalue = "КЖ.Стены";
+                                        else if (group.Name.Contains("Плиты") || group.Name.Contains("плиты")) adskGvalue = "КЖ.Плиты";
+                                    }
+                                    else if (group.Name.Contains("КР"))
+                                    {
+                                        if (group.Name.Contains("Стены") || group.Name.Contains("стены")) adskGvalue = "КР.Стены";
+                                    }
+                                    if (group.Name.Contains("Шахты")) adskGvalue = "КР.Шахты";
+                                    if (group.Name.Contains("Рамы")) adskGvalue = "КР.Рамы";
+                                    if (group.Name.Contains("Приямки")) adskGvalue = "КЖ.Приямки";
+
+                                    if (adskGvalue.Length > 0)
+                                    {
+                                        elem.get_Parameter(adskGparamGuid)?.Set(adskGvalue);
+                                        //group.get_Parameter(adskGparamGuid)?.Set(adskGvalue);
+                                    }
+                                }
+                            }
+
                             //имя и роль пользователя
                             string userName = app.Username;
                             string userDepartment = "-"; string userDepRole = "-";

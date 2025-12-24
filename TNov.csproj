@@ -208,6 +208,7 @@
     <Compile Include="Panel9\ss\ssNumberer.cs" />
     <Compile Include="RelayCommand2.cs" />
     <Compile Include="universal\param.cs" />
+    <Compile Include="updaters\TNovFloorCeilingUpdater.cs" />
     <Compile Include="updaters\TNovRoomUpdater.cs" />
     <Compile Include="updaters\TNovShaftUpdater.cs" />
     <Compile Include="updaters\TNovWallUpdater.cs" />
