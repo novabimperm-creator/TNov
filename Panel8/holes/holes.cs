@@ -1,62 +1,28 @@
-﻿using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Autodesk.Revit.Attributes;
-using System.Collections.Generic;
-using System.Linq;
-using System;
-using Parameter = Autodesk.Revit.DB.Parameter;
-using Outline = Autodesk.Revit.DB.Outline;
-using View = Autodesk.Revit.DB.View;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
-using System.Windows.Threading;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Windows.Documents;
+using System.Windows.Forms;
+using System.Windows.Threading;
 using TNov.main;
+using Outline = Autodesk.Revit.DB.Outline;
+using Parameter = Autodesk.Revit.DB.Parameter;
+using View = Autodesk.Revit.DB.View;
 
 namespace TNov
 {
-    public class holesViewModel : INotifyPropertyChanged
-    {
-
-        private bool _all = true;
-        public bool all
-        {
-            get => _all; set { _all = value; OnPropertyChanged(); }
-        }
-        private bool _visible = false;
-        public bool visible
-        {
-            get => _visible; set { _visible = value; OnPropertyChanged(); }
-        }
-        private bool _cut = true;
-        public bool cut
-        {
-            get => _cut; set { _cut = value; OnPropertyChanged(); }
-        }
-        private bool _pars = true;
-        public bool pars
-        {
-            get => _pars; set { _pars = value; OnPropertyChanged(); }
-        }
-
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-
-    }
+    
     
     [Transaction(TransactionMode.Manual)]
-    public class holes : IExternalCommand
+    public class Holes : IExternalCommand
     {
         private TNovProgressBar holesProgressBar;
         private void ThreadStartingPoint()
@@ -113,9 +79,7 @@ namespace TNov
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log("Расширенные логи вкл",2);
             }
 
-            //Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
-
+            
             //сценарий работы
             int scenario = 1; //1 - работа в модели КЖ/АР, 2 - работа в самой модели заданий
 
@@ -123,14 +87,10 @@ namespace TNov
             if (docName.Contains("Задани") || docName.Contains("задани") || docName.Contains("-ЗД") || docName.Contains("_ЗД") || docName.Contains("ЗАДАНИЕ")) scenario = 2;
 
 
-            //Список используемых параметров
-
-            string holeelevationfromlevel = "A_Отверстие_Отметка от этажа";
-            if (oldProject == true) { holeelevationfromlevel = "ADSK_Отверстие_Отметка от этажа"; }
-            string holelevelelevation = "A_Отверстие_Отметка этажа";
-            if (oldProject == true) { holelevelelevation = "ADSK_Отверстие_Отметка этажа"; }
-            string holeelevationfromzero = "A_Отверстие_Отметка от нуля";
-            if (oldProject == true) { holeelevationfromzero = "ADSK_Отверстие_Отметка от нуля"; }
+            //параметры
+            Guid adskElev0paramGuid = new Guid("6ec2f9e9-3d50-4d75-a453-26ef4e6d1625");//ADSK_Отверстие_Отметка от нуля
+            Guid adskElevLevelparamGuid = new Guid("e4793a44-6050-45b3-843e-cfb49d9191c5");//ADSK_Отверстие_Отметка от этажа
+            Guid adskElevLevel2paramGuid = new Guid("44f7ce8a-2926-4514-bacb-423bd4ac3847");//ADSK_Отверстие_Отметка этажа
             BuiltInParameter gm = BuiltInParameter.ALL_MODEL_MODEL; //параметр Группа модели
             ElementId familyNameParamId = new ElementId(-1002002); //id параметра Имя семейства
 
@@ -138,7 +98,7 @@ namespace TNov
             List<ElementId> catIds = new List<ElementId>();
             ElementId id1 = new ElementId(-2000032); catIds.Add(id1); //плиты
             ElementId id2 = new ElementId(-2000011); catIds.Add(id2); //стены
-            ElementId id3 = new ElementId(-2001320); catIds.Add(id3); //каркас несущий
+            //ElementId id3 = new ElementId(-2001320); catIds.Add(id3); //каркас несущий
             ElementId id4 = new ElementId(-2001300); catIds.Add(id4); //фунд
 
             Logger.Log("Сбор элементов",1);
@@ -286,16 +246,16 @@ namespace TNov
 
             Logger.Log("Диалоговое окно",1);
             //Диалог
-            var viewModel = new holesViewModel();
+            var viewModel = new HolesViewModel();
             // Десериализация
             bool forProject = true;
             json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
             if (canserialize)
             {
-                viewModel = JsonConvert.DeserializeObject<holesViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<HolesViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
-            var wpfview = new holeswpf(viewModel);
+            var wpfview = new HolesWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { }
@@ -387,8 +347,8 @@ namespace TNov
                 Logger.Log("Вид TNov настроен для работы",1);
             }
 
-            //итоговый список отверстий в работу
-            List<FamilyInstance> holesFinalList = new List<FamilyInstance>();
+            //список отверстий, кроме "плохих", в работу
+            List<FamilyInstance> goodHolesList = new List<FamilyInstance>();
             foreach(var h in holesGM)
             {
                 int hId = h.Id.IntegerValue; int b = 0;
@@ -396,7 +356,22 @@ namespace TNov
                 {
                     if (hId == badHole) b++;
                 }
-                if (b == 0) holesFinalList.Add(h);
+                if (b == 0) goodHolesList.Add(h);
+            }
+
+            //список отверстий на активном виде (если включена галочка только видимые)
+            List<FamilyInstance> holesFinalList = new List<FamilyInstance>();
+            if (visible == true)
+            {
+                FilteredElementCollector collector = new FilteredElementCollector(doc, doc.ActiveView.Id);
+                foreach(FamilyInstance familyInstance in goodHolesList)
+                {
+                    if(collector.ToElementIds().Contains(familyInstance.Id)) holesFinalList.Add(familyInstance);
+                }
+            }
+            else
+            {
+                foreach (FamilyInstance familyInstance in goodHolesList) holesFinalList.Add(familyInstance);
             }
 
             int allcount = holesFinalList.Count;
@@ -510,21 +485,18 @@ namespace TNov
                             Logger.Log("   Элемент" + eid, 2);
                             try
                             {
-                                double otm = hole.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).AsDouble();
-                                Parameter efl = hole.LookupParameter(holeelevationfromlevel);
-                                double efl_val = otm;
-                                efl.Set(efl_val); //Отметка от уровня
-                                Logger.Log("      параметр " + holeelevationfromlevel + ": значение " + efl_val.ToString(), 2);
-                                Element level = doc.GetElement(hole.LevelId);
-                                double elev = level.LookupParameter("Фасад").AsDouble();
-                                Parameter ele = hole.LookupParameter(holelevelelevation);
-                                double ele_val = elev;
-                                ele.Set(ele_val); //Отметка уровня
-                                Logger.Log("      параметр " + holelevelelevation + ": значение " + ele_val.ToString(), 2);
-                                Parameter eefz = hole.LookupParameter(holeelevationfromzero);
-                                double eefz_val = efl_val + ele_val;
-                                eefz.Set(eefz_val); //Отметка от нуля
-                                Logger.Log("      параметр " + holeelevationfromzero + ": значение " + eefz_val.ToString(), 2);
+                                Element elem = doc.GetElement(hole.Id);
+                                double otm = elem.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).AsDouble();
+                                elem.get_Parameter(adskElevLevelparamGuid)?.Set(otm); //Отметка от уровня
+                                Element level = doc.GetElement(elem.LevelId);
+                                double elev = level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
+                                elem.get_Parameter(adskElevLevel2paramGuid)?.Set(elev); //Отметка уровня
+                                elem.get_Parameter(adskElev0paramGuid)?.Set(otm + elev); //Отметка от нуля
+
+                                double ze = otm + elev;
+                                Logger.Log("      параметр ADSK_Отверстие_Отметка от этажа: значение " + otm.ToString(), 2);
+                                Logger.Log("      параметр ADSK_Отверстие_Отметка этажа: значение " + elev.ToString(), 2);
+                                Logger.Log("      параметр ADSK_Отверстие_Отметка от нуля: значение " + ze.ToString(), 2);
                             }
                             catch (Exception ex)
                             {
@@ -544,21 +516,18 @@ namespace TNov
                             Logger.Log("   Элемент" + eid, 2);
                             try
                             {
-                                double otm = hole.LookupParameter("Высота нижнего бруса").AsDouble();
-                                Parameter efl = hole.LookupParameter(holeelevationfromlevel);
-                                double efl_val = otm;
-                                efl.Set(efl_val); //Отметка от уровня
-                                Logger.Log("      параметр " + holeelevationfromlevel + ": значение " + efl_val.ToString(), 2);
-                                Element level = doc.GetElement(hole.LevelId);
-                                double elev = level.LookupParameter("Фасад").AsDouble();
-                                Parameter ele = hole.LookupParameter(holelevelelevation);
-                                double ele_val = elev;
-                                ele.Set(ele_val); //Отметка уровня
-                                Logger.Log("      параметр " + holelevelelevation + ": значение " + ele_val.ToString(), 2);
-                                Parameter eefz = hole.LookupParameter(holeelevationfromzero);
-                                double eefz_val = efl_val + ele_val;
-                                eefz.Set(eefz_val); //Отметка от нуля
-                                Logger.Log("      параметр " + holeelevationfromzero + ": значение " + eefz_val.ToString(), 2);
+                                Element elem = doc.GetElement(hole.Id);
+                                double otm = elem.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).AsDouble();
+                                elem.get_Parameter(adskElevLevelparamGuid)?.Set(otm); //Отметка от уровня
+                                Element level = doc.GetElement(elem.LevelId);
+                                double elev = level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
+                                elem.get_Parameter(adskElevLevel2paramGuid)?.Set(elev); //Отметка уровня
+                                elem.get_Parameter(adskElev0paramGuid)?.Set(otm + elev); //Отметка от нуля
+
+                                double ze = otm + elev;
+                                Logger.Log("      параметр ADSK_Отверстие_Отметка от этажа: значение " + otm.ToString(), 2);
+                                Logger.Log("      параметр ADSK_Отверстие_Отметка этажа: значение " + elev.ToString(), 2);
+                                Logger.Log("      параметр ADSK_Отверстие_Отметка от нуля: значение " + ze.ToString(), 2);
                             }
                             catch (Exception ex)
                             {

@@ -22,7 +22,7 @@ namespace TNov
 {
     
     [Transaction(TransactionMode.Manual)]
-    public class floorimages : IExternalCommand
+    public class FloorImages : IExternalCommand
     {
         private TNovProgressBar floorimagesProgressBar;
         private void ThreadStartingPoint()
@@ -130,7 +130,7 @@ namespace TNov
                 {
                     if (dView.Name.StartsWith("Пол_Тип"))
                     {
-                        bool viewCatParamExist = param.ParamExist("Орг.КатегорияВида", dView);
+                        bool viewCatParamExist = Param.ParamExist("Орг.КатегорияВида", dView);
                         if (!viewCatParamExist) continue;
                         else
                         {

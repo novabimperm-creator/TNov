@@ -11,7 +11,7 @@ using System.Collections.Generic;
 namespace TNov
 {
     [Transaction(TransactionMode.Manual)]
-    public class journal : IExternalCommand
+    public class Journal : IExternalCommand
     {
         
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)

@@ -13,7 +13,7 @@ using TNov.main;
 namespace TNov.Panel3.typefilter
 {
     [Transaction(TransactionMode.Manual)]
-    internal class typefilter : IExternalCommand
+    internal class TypeFilter : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -62,23 +62,23 @@ namespace TNov.Panel3.typefilter
                 .Where<Element>((Func<Element, bool>)(e => !ignoreCategoryId.Contains(e.Category.Id.IntegerValue)))
                 .Select<Element, Category>((Func<Element, Category>)(e => e.Category))
                 .Distinct<Category>((IEqualityComparer<Category>)new CategoryComparer()).OrderBy<Category, string>((Func<Category, string>)(c => c.Name), (IComparer<string>)new AlphanumComparatorFastString()).ToList<Category>();
-            List<typeFilterCategoryViewModel> categories = new List<typeFilterCategoryViewModel>();
+            List<TypeFilterCategoryViewModel> categories = new List<TypeFilterCategoryViewModel>();
             foreach (Category category1 in list1)
             {
                 Category category = category1;
-                typeFilterCategoryViewModel categoryViewModel = new typeFilterCategoryViewModel()
+                TypeFilterCategoryViewModel categoryViewModel = new TypeFilterCategoryViewModel()
                 {
                     Category = category,
                     Name = category.Name,
                     IsSelected = false,
-                    ElementTypes = new List<typeFilterElementTypeViewModel>()
+                    ElementTypes = new List<TypeFilterElementTypeViewModel>()
                 };
                 foreach (ElementType elementType in new FilteredElementCollector(doc, activeView.Id).WhereElementIsNotElementType()
                     .Where<Element>((Func<Element, bool>)(e => e.Category != null && e.Category.Id == category.Id))
                     .Where<Element>((Func<Element, bool>)(e => doc.GetElement(e.GetTypeId()) != null))
                     .Select<Element, Element>((Func<Element, Element>)(e => doc.GetElement(e.GetTypeId())))
                     .Cast<ElementType>().Distinct<ElementType>((IEqualityComparer<ElementType>)new ElementTypeComparer()).ToList<ElementType>())
-                    categoryViewModel.ElementTypes.Add(new typeFilterElementTypeViewModel()
+                    categoryViewModel.ElementTypes.Add(new TypeFilterElementTypeViewModel()
                     {
                         ElementType = elementType,
                         Name = elementType.Name,
@@ -86,14 +86,14 @@ namespace TNov.Panel3.typefilter
                     });
                 categories.Add(categoryViewModel);
             }
-            typefilterwpf visibilityFilterWpf = new typefilterwpf(categories);
+            TypeFilterWPF visibilityFilterWpf = new TypeFilterWPF(categories);
             visibilityFilterWpf.ShowDialog();
             if (!visibilityFilterWpf.DialogResult.GetValueOrDefault())
                 return Result.Cancelled;
             string btnName = visibilityFilterWpf.BTNName;
             string filterName = visibilityFilterWpf.FilterName;
             string uniqueFilterName = this.GetUniqueFilterName(doc, filterName);
-            List<typeFilterElementTypeViewModel> selectedElementTypes = visibilityFilterWpf.SelectedElementTypes;
+            List<TypeFilterElementTypeViewModel> selectedElementTypes = visibilityFilterWpf.SelectedElementTypes;
             switch (btnName)
             {
                 case "btn_Hide":
@@ -102,9 +102,9 @@ namespace TNov.Panel3.typefilter
                     {
                         int num1 = (int)transaction.Start("Фильтр");
                         List<ElementId> elementIdSet = new List<ElementId>();
-                        foreach (typeFilterElementTypeViewModel elementTypeViewModel1 in selectedElementTypes)
+                        foreach (TypeFilterElementTypeViewModel elementTypeViewModel1 in selectedElementTypes)
                         {
-                            typeFilterElementTypeViewModel elementTypeViewModel = elementTypeViewModel1;
+                            TypeFilterElementTypeViewModel elementTypeViewModel = elementTypeViewModel1;
                             elementIdSet.AddRange((IEnumerable<ElementId>)new FilteredElementCollector(doc, activeView.Id).WhereElementIsNotElementType().Where<Element>((Func<Element, bool>)(e => e.GetTypeId() == elementTypeViewModel.ElementType.Id)).Select<Element, ElementId>((Func<Element, ElementId>)(e => e.Id)).ToList<ElementId>());
                         }
                         activeView.HideElementsTemporary((ICollection<ElementId>)elementIdSet);
@@ -118,9 +118,9 @@ namespace TNov.Panel3.typefilter
                     {
                         int num3 = (int)transaction.Start("Фильтр");
                         List<ElementId> elementIdList = new List<ElementId>();
-                        foreach (typeFilterElementTypeViewModel elementTypeViewModel2 in selectedElementTypes)
+                        foreach (TypeFilterElementTypeViewModel elementTypeViewModel2 in selectedElementTypes)
                         {
-                            typeFilterElementTypeViewModel elementTypeViewModel = elementTypeViewModel2;
+                            TypeFilterElementTypeViewModel elementTypeViewModel = elementTypeViewModel2;
                             elementIdList.AddRange((IEnumerable<ElementId>)new FilteredElementCollector(doc, activeView.Id).WhereElementIsNotElementType().Where<Element>((Func<Element, bool>)(e => e.GetTypeId() == elementTypeViewModel.ElementType.Id)).Select<Element, ElementId>((Func<Element, ElementId>)(e => e.Id)).ToList<ElementId>());
                         }
                         activeView.IsolateElementsTemporary((ICollection<ElementId>)elementIdList);
@@ -134,9 +134,9 @@ namespace TNov.Panel3.typefilter
                     {
                         int num5 = (int)transaction.Start("Фильтр");
                         List<ElementId> elementIdList = new List<ElementId>();
-                        foreach (typeFilterElementTypeViewModel elementTypeViewModel3 in selectedElementTypes)
+                        foreach (TypeFilterElementTypeViewModel elementTypeViewModel3 in selectedElementTypes)
                         {
-                            typeFilterElementTypeViewModel elementTypeViewModel = elementTypeViewModel3;
+                            TypeFilterElementTypeViewModel elementTypeViewModel = elementTypeViewModel3;
                             elementIdList.AddRange((IEnumerable<ElementId>)new FilteredElementCollector(doc, activeView.Id).WhereElementIsNotElementType().Where<Element>((Func<Element, bool>)(e => e.GetTypeId() == elementTypeViewModel.ElementType.Id)).Select<Element, ElementId>((Func<Element, ElementId>)(e => e.Id)).ToList<ElementId>());
                         }
                         selection.SetElementIds((ICollection<ElementId>)elementIdList);
@@ -150,10 +150,10 @@ namespace TNov.Panel3.typefilter
                         using (Transaction transaction = new Transaction(doc))
                         {
                             int num7 = (int)transaction.Start("Фильтр");
-                            List<ElementId> list2 = selectedElementTypes.Where<typeFilterElementTypeViewModel>((Func<typeFilterElementTypeViewModel, bool>)(et => et.ElementType.Category.Id.IntegerValue != -2001352)).Select<typeFilterElementTypeViewModel, ElementId>((Func<typeFilterElementTypeViewModel, ElementId>)(et => et.ElementType.Category.Id)).ToList<ElementId>();
+                            List<ElementId> list2 = selectedElementTypes.Where<TypeFilterElementTypeViewModel>((Func<TypeFilterElementTypeViewModel, bool>)(et => et.ElementType.Category.Id.IntegerValue != -2001352)).Select<TypeFilterElementTypeViewModel, ElementId>((Func<TypeFilterElementTypeViewModel, ElementId>)(et => et.ElementType.Category.Id)).ToList<ElementId>();
                             IList<FilterRule> filterRules = (IList<FilterRule>)new List<FilterRule>();
                             ElementId parameter = new ElementId(BuiltInParameter.SYMBOL_NAME_PARAM);
-                            foreach (typeFilterElementTypeViewModel elementTypeViewModel in selectedElementTypes)
+                            foreach (TypeFilterElementTypeViewModel elementTypeViewModel in selectedElementTypes)
                             {
                                 if (elementTypeViewModel.ElementType.Category.Id.IntegerValue != -2001352)
                                     filterRules.Add(ParameterFilterRuleFactory.CreateEqualsRule(parameter, elementTypeViewModel.ElementType.Name, true));

@@ -14,7 +14,7 @@ using TNov.main;
 namespace TNov
 {
     [Transaction(TransactionMode.Manual)]
-    public class finishing : IExternalCommand
+    public class Finishing : IExternalCommand
     {
         private TNovProgressBar levnumProgressBar;
         private void ThreadStartingPoint()
@@ -33,6 +33,9 @@ namespace TNov
 
             //проверка подключения, запись в журнал
             bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+
+            //параметры
+            Guid NFinishRoomParamGuid = new Guid("8b9d4aff-a6c8-4ad5-b0f5-442f2b87c765"); //N_Отделка.Помещение
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
@@ -88,8 +91,8 @@ namespace TNov
                 foreach(var elem in elems)
                 {
                     Logger.Log("Элемент " + elem.Id.IntegerValue.ToString(), 2);
-                    Parameter roomParam = elem.LookupParameter("N_Отделка.Помещение");
-                    if (roomParam != null) roomParam.Set(""); //очищаем параметр, чтобы отработали апдейтеры
+                    Parameter roomParam = elem.get_Parameter(NFinishRoomParamGuid);
+                    roomParam?.Set(""); //очищаем параметр, чтобы отработали апдейтеры
                 }
 
 

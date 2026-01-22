@@ -15,32 +15,9 @@ using Newtonsoft.Json;
 
 namespace TNov
 {
-    public class apartsnumViewModel : INotifyPropertyChanged
-    {
-        private string _parameterName = "N_Кв.Номер";
-        public string parameterName { get => _parameterName; set { _parameterName = value; OnPropertyChanged(); } }
-        private string _first = "1";
-        public string first { get => _first; set { _first = value; } }
-
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-
-        
-
-    }
-
-
+    
     [Transaction(TransactionMode.Manual)]
-    public class apartsnum : IExternalCommand
+    public class ApartsNum : IExternalCommand
     {
         private TNovProgressBar apartsnumProgressBar;
         private void ThreadStartingPoint()
@@ -81,20 +58,13 @@ namespace TNov
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
             }
 
-            //Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
-            
-            //Список используемых параметров
+            //параметры
+            Guid NLevelNumberParamGuid = new Guid("4d2aa1b8-727c-43a1-8b1e-8c22dd484e11"); //N_Эт.Номер
+            Guid NRoomIsApartParamGuid = new Guid("155f8c55-e05f-4737-883e-1338eb722735"); //N_Квартира
+            Guid NRoomApartNumberParamGuid = new Guid("2f2edd07-cd47-4e30-b091-c1ceb5e6ff63"); //N_Кв.Номер
+            Guid NRoomApartNumAtLevelParamGuid = new Guid("7cdb6adb-756e-4e5b-b4d0-5ccaf3cee047"); //N_Кв.НомерНаЭтаже
 
-            string apartment = "N_Квартира";
-            if (oldProject == true) { apartment = "квартира"; }
-            string levelnumber = "N_Эт.Номер";
-            if (oldProject == true) { levelnumber = "Эт.Номер"; }
-            string numAtLevel = "N_Кв.НомерНаЭтаже";
-            if (oldProject == true) { numAtLevel = "Квартира.Номер.ПоЭтажам"; }
-            string apartNumber = "N_Кв.Номер";
-            if (oldProject == true) { apartNumber = "квартира.номер"; }
-            
+
 
             Logger.Log( "Сбор элементов",1);
             List<Room> rooms = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Rooms)   //фильтр по категории Помещения
@@ -106,16 +76,15 @@ namespace TNov
 
             foreach (Room room in rooms) //заполнение списка помещений квартир
             {
-                int aBool = (int)(room.LookupParameter(apartment)?.AsInteger());
-                if (aBool == 1) { roomsA.Add(room); }
+                if (room.get_Parameter(NRoomIsApartParamGuid)?.AsInteger() == 1) roomsA.Add(room); 
             }
             
             var roomsAF = from room in roomsA //сортировка квартир по Эт.Номеру и номеру на этаже
-                                      orderby (double)(room.LookupParameter(levelnumber)?.AsDouble())*1000+ (int)(room.LookupParameter(numAtLevel)?.AsInteger())
+                                      orderby (double)(room.get_Parameter(NLevelNumberParamGuid)?.AsDouble())*1000+ (int)(room.get_Parameter(NRoomApartNumAtLevelParamGuid)?.AsInteger())
                                       select room;
 
-            var floors = from room in roomsAF //группирование по Эт.Номеру
-                        group room by ((double)(room.LookupParameter(levelnumber)?.AsDouble()) * 0.3048 * 0.3048 * 1000 + (int)(room.LookupParameter(numAtLevel)?.AsInteger())).ToString();
+            var floors = from room in roomsAF //группирование по Эт.Номеру и номеру на этаже
+                         group room by ((double)(room.get_Parameter(NLevelNumberParamGuid)?.AsDouble()) * 0.3048 * 0.3048 * 1000 + (int)(room.get_Parameter(NRoomApartNumAtLevelParamGuid)?.AsInteger())).ToString();
             
             List<Room>roomsToSet = new List<Room>(); //итоговый список помещений
             List<int>values = new List<int>(); //итоговый список значений параметра
@@ -124,9 +93,8 @@ namespace TNov
 
             // Диалоговое окно
             Logger.Log( "Диалоговое окно - ввод первого номера",1);
-            var viewModel = new apartsnumViewModel();
-            viewModel.parameterName = apartNumber;
-            var wpfview = new apartsnumwpf(viewModel);
+            var viewModel = new ApartsNumViewModel();
+            var wpfview = new ApartsNumWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { } else { Logger.Log("Запуск отменен пользователем. Завершение работы.", 3); return Result.Cancelled; }
@@ -141,7 +109,7 @@ namespace TNov
 
             foreach (var f in floors)
             {
-                Logger.Log( "Этаж " +f.First().LookupParameter(levelnumber)?.AsDouble().ToString(),2);
+                Logger.Log( "Этаж " +f.First().get_Parameter(NLevelNumberParamGuid)?.AsDouble().ToString(),2);
                 foreach (Room room in f)
                 {
                     roomsToSet.Add(room); //заполняем итоговый список помещений
@@ -172,7 +140,7 @@ namespace TNov
                 {
                     try
                     {
-                        room.LookupParameter(apartNumber)?.Set(values[i].ToString());
+                        room.get_Parameter(NRoomApartNumberParamGuid)?.Set(values[i].ToString());
                         i++;
                         PBCount++;
                         Logger.Log("   Помещение " + room.Id + " успешно", 2);

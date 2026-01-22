@@ -16,23 +16,23 @@ using System.Windows.Threading;
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для typefilterwpf.xaml
+    /// Логика взаимодействия для TypeFilterWPF.xaml
     /// </summary>
-    public partial class typefilterwpf : Window, IComponentConnector, IStyleConnector
+    public partial class TypeFilterWPF : Window, IComponentConnector, IStyleConnector
     {
         public string BTNName;
         public string FilterName;
-        public List<typeFilterElementTypeViewModel> SelectedElementTypes;
-        private readonly List<typeFilterCategoryViewModel> _allCategories;
+        public List<TypeFilterElementTypeViewModel> SelectedElementTypes;
+        private readonly List<TypeFilterCategoryViewModel> _allCategories;
         private readonly ICollectionView _categoriesView;
         private string _currentSearch = string.Empty;
 
-        public typefilterwpf(List<typeFilterCategoryViewModel> categories)
+        public TypeFilterWPF(List<TypeFilterCategoryViewModel> categories)
         {
             this.InitializeComponent();
-            this._allCategories = categories ?? new List<typeFilterCategoryViewModel>();
-            foreach (typeFilterCategoryViewModel allCategory in this._allCategories)
-                allCategory.ElementTypes = allCategory.ElementTypes ?? new List<typeFilterElementTypeViewModel>();
+            this._allCategories = categories ?? new List<TypeFilterCategoryViewModel>();
+            foreach (TypeFilterCategoryViewModel allCategory in this._allCategories)
+                allCategory.ElementTypes = allCategory.ElementTypes ?? new List<TypeFilterElementTypeViewModel>();
             this._categoriesView = CollectionViewSource.GetDefaultView((object)this._allCategories);
             this._categoriesView.Filter = new Predicate<object>(this.CategoryFilter);
             this.categoryTreeView.ItemsSource = (IEnumerable)this._categoriesView;
@@ -40,7 +40,7 @@ namespace TNov
 
         private bool CategoryFilter(object obj)
         {
-            if (!(obj is typeFilterCategoryViewModel categoryViewModel))
+            if (!(obj is TypeFilterCategoryViewModel categoryViewModel))
                 return false;
             categoryViewModel.SetFilter(this._currentSearch);
             return categoryViewModel.HasAnyVisible;
@@ -64,21 +64,21 @@ namespace TNov
             if (!(sender is CheckBox checkBox))
                 return;
 
-            var dataContext = checkBox.DataContext as typeFilterCategoryViewModel;
+            var dataContext = checkBox.DataContext as TypeFilterCategoryViewModel;
             if (dataContext == null)
                 return;
 
-            IEnumerable<typeFilterElementTypeViewModel> items;
+            IEnumerable<TypeFilterElementTypeViewModel> items;
 
             if (!string.IsNullOrWhiteSpace(this._currentSearch) && dataContext.ElementTypesView?.Filter != null)
             {
                 items = dataContext.ElementTypesView
-                    .Cast<typeFilterElementTypeViewModel>()
+                    .Cast<TypeFilterElementTypeViewModel>()
                     .ToList();
             }
             else
             {
-                items = dataContext.ElementTypes ?? Enumerable.Empty<typeFilterElementTypeViewModel>();
+                items = dataContext.ElementTypes ?? Enumerable.Empty<TypeFilterElementTypeViewModel>();
             }
 
             foreach (var elementTypeViewModel in items)
@@ -114,9 +114,9 @@ namespace TNov
         private void GetSelectedElementTypes()
         {
             this.SelectedElementTypes = this._allCategories
-                .SelectMany<typeFilterCategoryViewModel, typeFilterElementTypeViewModel>((Func<typeFilterCategoryViewModel, IEnumerable<typeFilterElementTypeViewModel>>)(c => (IEnumerable<typeFilterElementTypeViewModel>)c.ElementTypes ?? Enumerable.Empty<typeFilterElementTypeViewModel>()))
-                .Where<typeFilterElementTypeViewModel>((Func<typeFilterElementTypeViewModel, bool>)(t => t.IsSelected))
-                .ToList<typeFilterElementTypeViewModel>();
+                .SelectMany<TypeFilterCategoryViewModel, TypeFilterElementTypeViewModel>((Func<TypeFilterCategoryViewModel, IEnumerable<TypeFilterElementTypeViewModel>>)(c => (IEnumerable<TypeFilterElementTypeViewModel>)c.ElementTypes ?? Enumerable.Empty<TypeFilterElementTypeViewModel>()))
+                .Where<TypeFilterElementTypeViewModel>((Func<TypeFilterElementTypeViewModel, bool>)(t => t.IsSelected))
+                .ToList<TypeFilterElementTypeViewModel>();
         }
 
         private void btn_Hide_Click(object sender, RoutedEventArgs e)
@@ -191,6 +191,9 @@ namespace TNov
             ((ToggleButton)target).Unchecked += new RoutedEventHandler(this.CategoryCheckBox_Checked);
         }
 
-        
+        private void Border_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+
+        }
     }
 }

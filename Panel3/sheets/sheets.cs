@@ -24,138 +24,20 @@ using TNov.main;
 
 namespace TNov
 {
-    public class TNovSheet : INotifyPropertyChanged
-    {
-        //"Чистый" номер листа
-        private string _TNovSheetCleanNumber;
-        public string TNovSheetCleanNumber { get => _TNovSheetCleanNumber; set { _TNovSheetCleanNumber = value; OnPropertyChanged(); } }
-        //Номер листа
-        private string _TNovSheetNumber;
-        public string TNovSheetNumber { get => _TNovSheetNumber; set { _TNovSheetNumber = value; OnPropertyChanged(); } }
-        //ШНомер
-        private string _TNovSheetNumberCustom;
-        public string TNovSheetNumberCustom { get => _TNovSheetNumberCustom; set { _TNovSheetNumberCustom = value; OnPropertyChanged(); } }
-        //Имя листа
-        private string _TNovSheetName;
-        public string TNovSheetName { get => _TNovSheetName; set { _TNovSheetName = value; OnPropertyChanged(); } }
-        //Комплект чертежей
-        private string _TNovSheetSet;
-        public string TNovSheetSet { get => _TNovSheetSet; set { _TNovSheetSet = value; OnPropertyChanged(); } }
-        //Номер листа после перенумерации
-        private string _TNovSheetNewNumber;
-        public string TNovSheetNewNumber
-        {
-            get => _TNovSheetNewNumber;
-            set
-            {
-                if (_TNovSheetNewNumber != value) _TNovSheetNewNumber = value; OnPropertyChanged();
-            }
-        }
-        //Проверочный параметр - можно ли распарсить новый номер в int (заполняется в основном коде)
-        public bool TNovSheetCanRenum { get; set; }
-        //Целочисленный номер
-        private int _TNovSheetNumericNumber;
-        public int TNovSheetNumericNumber 
-        {
-            get => _TNovSheetNumericNumber;
-            set
-            {
-                _TNovSheetNumericNumber = value; OnPropertyChanged();
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
-    }
-    public class sheetsstartViewModel : INotifyPropertyChanged
-    {
-
-        public int selection { get; set; }
-
-        private ICommand _scenario1;
-        public ICommand scenario1
-        {
-            get
-            {
-                if (_scenario1 == null)
-                {
-                    _scenario1 = new RelayCommand(param => { selection = 1; }, CanExecute);
-                }
-                return _scenario1;
-            }
-        }
-        private ICommand _scenario2;
-        public ICommand scenario2
-        {
-            get
-            {
-                if (_scenario2 == null)
-                {
-                    _scenario2 = new RelayCommand(param => { selection = 2; }, CanExecute);
-                }
-                return _scenario2;
-            }
-        }
-        private bool _prefix = false;
-        public bool prefix
-        {
-            get => _prefix; set { _prefix = value; OnPropertyChanged(); }
-        }
-        private bool CanExecute(object param)
-        {
-            return true;
-        }
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-
-    }
-    public class sheetsnumViewModel : INotifyPropertyChanged
-    {
-        public ObservableCollection<TNovSheet> TNovSheets { get; } = new ObservableCollection<TNovSheet>();
-        
-
-        
-
-        private bool CanExecute(object param)
-        {
-            return true;
-        }
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-
-    }
+    
+    
+    
     
     [Transaction(TransactionMode.Manual)]
-    public class sheets : IExternalCommand
+    public class Sheets : IExternalCommand
     {
-        public TNovSheet getTNovSheet(in ViewSheet sheet, in string sheetSetParam, in bool sSetParamExist)
+        private TNovSheet GetTNovSheet(in ViewSheet sheet, in Guid sheetSetParamGuid, in bool sSetParamExist)
         {
             
             string sNumber = sheet.get_Parameter(BuiltInParameter.SHEET_NUMBER).AsString();
             Logger.Log("      Номер "+ sNumber,2);
             string sSet = "без комплекта";
-            if (sSetParamExist) sSet = sheet.LookupParameter(sheetSetParam).AsString();
+            if (sSetParamExist) sSet = sheet.get_Parameter(sheetSetParamGuid).AsString();
             if (sSet == "----" || sSet == null || sSet.Length == 0) sSet = "без комплекта";
             Logger.Log("      Набор " + sSet,2);
             
@@ -253,9 +135,7 @@ namespace TNov
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
             }
 
-            // Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
-
+            
             Logger.Log("Получаем листы",1);
             //получаем элементы
 
@@ -265,24 +145,24 @@ namespace TNov
             .ToList();
 
             //параметры
-            string sheetSetParam = "A_Комплект чертежей"; if (oldProject) sheetSetParam = "ADSK_Комплект чертежей";
-            string sheetCustomNumberParam = "N_Ш.НомерЛиста"; if (oldProject) sheetCustomNumberParam = "Ш.НомерЛиста";
+            Guid NSheetNumberParamGuid = new Guid("b6e73342-b6cd-42c5-86c5-64b04b5b88de"); //N_Ш.НомерЛиста
+            Guid adskSheetSetParamGuid = new Guid("e1b06433-f527-403c-8986-af9a01e6be7f"); //A_Комплект чертежей
             string symbol = "QAZ";
             string symbol1 = "\u202a";
 
             Logger.Log("Диалоговое окно", 1);
             //Стартовое окно
-            var viewModel = new sheetsstartViewModel();
+            var viewModel = new SheetsStartViewModel();
             // Десериализация
             bool forProject = true;
             json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
             if (canserialize)
             {
-                viewModel = JsonConvert.DeserializeObject<sheetsstartViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<SheetsStartViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
             //окно
-            var wpfview = new sheetsstartwpf(viewModel);
+            var wpfview = new SheetsStartWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { }
@@ -307,8 +187,8 @@ namespace TNov
 
             //проверяем наличие параметров
             Element elem = doc.GetElement(sheets.First().Id);
-            bool sSetParamExist = param.ParamExist(sheetSetParam, elem);
-            bool sCustomNumberParamExist = param.ParamExist(sheetCustomNumberParam, elem);
+            bool sSetParamExist = Param.ParamExistByGuid(adskSheetSetParamGuid, elem);
+            bool sCustomNumberParamExist = Param.ParamExistByGuid(NSheetNumberParamGuid, elem);
 
 
             Logger.Log("Создаем список элементов класса TNovSheet",1);
@@ -319,10 +199,10 @@ namespace TNov
             foreach (var sheet in sheets)
             {
                 string sSet = "без комплекта";
-                if (sSetParamExist) sSet = sheet.LookupParameter(sheetSetParam).AsString();
+                if (sSetParamExist) sSet = sheet.get_Parameter(adskSheetSetParamGuid).AsString();
                 if (sSet == "----"|| sSet == null || sSet.Length == 0) sSet = "без комплекта"; //continue; 
                 Logger.Log("   Лист " + sheet.get_Parameter(BuiltInParameter.SHEET_NUMBER)+" "+sheet.Name, 2);
-                TNovSheet tNovSheet = getTNovSheet(sheet,sheetSetParam,sSetParamExist);
+                TNovSheet tNovSheet = GetTNovSheet(sheet,adskSheetSetParamGuid,sSetParamExist);
 
                 tNovSheets.Add(tNovSheet);
             }
@@ -424,7 +304,7 @@ namespace TNov
                                         Logger.Log("      назначен Номер",2);
                                         if (sCustomNumberParamExist)
                                         {
-                                            Parameter sheetCustomNumberParameter = sheet.LookupParameter(sheetCustomNumberParam); //Шномер
+                                            Parameter sheetCustomNumberParameter = sheet.get_Parameter(NSheetNumberParamGuid); //Шномер
                                             sheetCustomNumberParameter.Set(tNovSheet.TNovSheetCleanNumber);
                                             Logger.Log("      назначен Ш.Номер", 2);
                                         }
@@ -468,7 +348,7 @@ namespace TNov
                             sheet.get_Parameter(BuiltInParameter.SHEET_NUMBER).AsString() + " " + sheet.Name, 2);
 
                         string sSet = "без комплекта";
-                        if (sSetParamExist) sSet = sheet.LookupParameter(sheetSetParam).AsString();
+                        if (sSetParamExist) sSet = sheet.get_Parameter(adskSheetSetParamGuid).AsString();
                         if (sSet == "----" || sSet == null || sSet.Length == 0) sSet = "без комплекта"; //continue;
 
                         Parameter sheetNumberParameter = sheet.get_Parameter(BuiltInParameter.SHEET_NUMBER);
@@ -477,7 +357,7 @@ namespace TNov
 
                         string sheetSet = "";
 
-                        if (sSetParamExist) sheetSet = sheet.LookupParameter(sheetSetParam).AsString();
+                        if (sSetParamExist) sheetSet = sheet.get_Parameter(adskSheetSetParamGuid).AsString();
 
                         if (addPrefix) newNumber = sheetSet + " " + newNumber;
 
@@ -555,7 +435,7 @@ namespace TNov
                         foreach (var sheet in sheets2)
                         {
                             string sSet = "-";
-                            if (sSetParamExist) sSet = sheet.LookupParameter(sheetSetParam).AsString();
+                            if (sSetParamExist) sSet = sheet.get_Parameter(adskSheetSetParamGuid).AsString();
                             if (sSet == "----" || sSet == null || sSet.Length == 0) sSet = "-"; //continue;
                             sSet = sSet.Replace(".СО", "");
                             if (sSet.Equals(set)) viewSet.Insert(sheet); //исправлено - было "начинается с"
@@ -593,10 +473,10 @@ namespace TNov
             foreach (var sheet in sheetsToNum)
             {
                 string sSet = "без комплекта";
-                if (sSetParamExist) sSet = sheet.LookupParameter(sheetSetParam).AsString();
+                if (sSetParamExist) sSet = sheet.get_Parameter(adskSheetSetParamGuid).AsString();
                 if (sSet == "----" || sSet == null || sSet.Length == 0) sSet = "без комплекта"; //continue;
 
-                TNovSheet tNovSheet = getTNovSheet(sheet, sheetSetParam, sSetParamExist);
+                TNovSheet tNovSheet = GetTNovSheet(sheet, adskSheetSetParamGuid, sSetParamExist);
 
                 if(tNovSheet.TNovSheetCanRenum) tNovSheetsToNum.Add(tNovSheet); //в нумератор попадут только те листы,
                                                                                 //которые можно перенумеровать
@@ -606,7 +486,7 @@ namespace TNov
             //Нумератор
 
             //окно (ViewModel не используется)
-            var wpfview1 = new sheetnumwpf(tNovSheetArray);
+            var wpfview1 = new SheetNumWPF(tNovSheetArray);
             bool? ok1 = wpfview1.ShowDialog();
             if (ok1 != null && ok1 == true) { } else { Logger.Log("Запуск отменен пользователем. Завершение работы.", 3); return Result.Succeeded; }
 
@@ -637,7 +517,7 @@ namespace TNov
                             if (tNovSheet.TNovSheetNumber == sNumber) //найден лист с тем же Номером листа
                             {
                                 string sSet = "без комплекта";
-                                if (sSetParamExist) sSet = sheet.LookupParameter(sheetSetParam).AsString();
+                                if (sSetParamExist) sSet = sheet.get_Parameter(adskSheetSetParamGuid).AsString();
 
                                 string sSet2 = "bb";
                                 if (sSet.Length > 2)
@@ -680,7 +560,7 @@ namespace TNov
                                     Logger.Log("   Лист " + sNumber + ": назначен Номер " + newNumberToSet, 2);
                                     if (sCustomNumberParamExist)
                                     {
-                                        Parameter sheetCustomNumberParameter = sheet.LookupParameter(sheetCustomNumberParam); //Шномер
+                                        Parameter sheetCustomNumberParameter = sheet.get_Parameter(NSheetNumberParamGuid); //Шномер
                                         sheetCustomNumberParameter.Set(newNumber);
                                     }
                                 }
@@ -713,7 +593,7 @@ namespace TNov
                     foreach (var sheet in sheets5)
                     {
                         string sSet = "без комплекта";
-                        if (sSetParamExist) sSet = sheet.LookupParameter(sheetSetParam).AsString();
+                        if (sSetParamExist) sSet = sheet.get_Parameter(adskSheetSetParamGuid).AsString();
                         if (sSet == "----") sSet = "без комплекта"; //continue;
 
                         Parameter sheetNumberParameter = sheet.get_Parameter(BuiltInParameter.SHEET_NUMBER);
@@ -722,7 +602,7 @@ namespace TNov
 
                         string sheetSet = "";
 
-                        if (sSetParamExist) sheetSet = sheet.LookupParameter(sheetSetParam).AsString();
+                        if (sSetParamExist) sheetSet = sheet.get_Parameter(adskSheetSetParamGuid).AsString();
 
                         try
                         {

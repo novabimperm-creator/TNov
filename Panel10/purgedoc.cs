@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TNov
 {
-    public static class purgedoc
+    public static class PurgeDoc
     {
         internal static List<ElementId> GetPurgeableElements(Document doc, List<PerformanceAdviserRuleId> performanceAdviserRuleIds)
         {

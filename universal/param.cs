@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TNov
 {
-    public class param
+    public class Param
     {
         public static bool ParamExist(in string pName, Element elem)
         {

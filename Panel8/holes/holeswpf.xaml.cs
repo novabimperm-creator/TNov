@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для holeswpf.xaml
+    /// Логика взаимодействия для HolesWPF.xaml
     /// </summary>
-    public partial class holeswpf : Window
+    public partial class HolesWPF : Window
     {
-        public holeswpf(holesViewModel viewModel)
+        public HolesWPF(HolesViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;
@@ -24,6 +24,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
     }
 }

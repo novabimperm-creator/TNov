@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace TNov
 {
-    public class bimexportViewModel : INotifyPropertyChanged
+    public class BimExportViewModel : INotifyPropertyChanged
     {
         private string _folder = @"\\fs-nova\NOVA\01_ПРОЕКТИРОВАНИЕ\02_Уфа_Промсвязь\03_BIM_Отчеты коллизий\Этап 1\_RVT";
         public string folder { get => _folder; set { _folder = value; OnPropertyChanged(); } }

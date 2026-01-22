@@ -176,7 +176,7 @@ namespace TNov
             if (elem != null)
             {
                 Element eType = doc.GetElement(elem.GetTypeId());
-                bool adskNparamexist = param.ParamExist("ADSK_Толщина стенки", elem);
+                bool adskNparamexist = Param.ParamExist("ADSK_Толщина стенки", elem);
                 string komm = eType.LookupParameter("Комментарии к типоразмеру").AsString(); if (komm == null) komm = "";
                 double d = elem.LookupParameter("Диаметр").AsDouble();
                 double t = 0;
@@ -269,7 +269,7 @@ namespace TNov
             string komm = eType.LookupParameter("Комментарии к типоразмеру").AsString(); if (komm == null) komm = "";
             double dnar = elem.LookupParameter("Внешний диаметр").AsDouble();
             double d = elem.LookupParameter("Диаметр").AsDouble();
-            bool adskNparamexist = param.ParamExist("ADSK_Толщина стенки", elem);
+            bool adskNparamexist = Param.ParamExist("ADSK_Толщина стенки", elem);
             double t = 0;
             if (adskNparamexist) { t = elem.LookupParameter("ADSK_Толщина стенки").AsDouble(); }
             double l = elem.LookupParameter("Длина").AsDouble();
@@ -292,7 +292,7 @@ namespace TNov
             if (elem != null)
             {
                 string fitCode = "По умолчанию";
-                bool fitCodeparamexist = param.ParamExist("Код фитинга", elem);
+                bool fitCodeparamexist = Param.ParamExist("Код фитинга", elem);
                 if (fitCodeparamexist) 
                 {
                     string fitCodeP = elem.LookupParameter("Код фитинга").AsString(); if (fitCodeP != null) fitCode = fitCodeP;

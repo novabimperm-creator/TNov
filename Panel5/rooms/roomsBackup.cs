@@ -27,7 +27,7 @@ namespace TNov
         public string RoomBackupSK;
     }
     [Transaction(TransactionMode.Manual)]
-    public class roomsBackup : IExternalCommand
+    public class RoomsBackup : IExternalCommand
     {
         private TNovProgressBar apartsProgressBar;
         private void ThreadStartingPoint()
@@ -68,25 +68,14 @@ namespace TNov
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
             }
 
-            //Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
-
-            //Список используемых параметров
-
-            string N_Par_sq = "N_Площадь.Округленная";
-            if (oldProject == true) { N_Par_sq = "Площадь.Округленная"; }
-            string N_Par_sqround = "N_Площадь.ОкруглСКоэффициентом";
-            if (oldProject == true) { N_Par_sqround = "Площадь.ОкруглСКоэффициентом"; }
-            string N_Par_apartment = "N_Квартира";
-            if (oldProject == true) { N_Par_apartment = "квартира"; }
-            string N_Par_apartnum = "N_Кв.Номер";
-            if (oldProject == true) { N_Par_apartnum = "квартира.номер"; }
-            string N_Par_offnum = "N_Офис.Номер";
-            if (oldProject == true) { N_Par_offnum = "Офис.Номер"; }
-            string N_Par_LevelNum = "N_Эт.Номер";
-            if (oldProject == true) { N_Par_LevelNum = "Эт.Номер"; }
-
-            if (oldProject) Logger.Log("Используется старый шаблон", 2);
+            //параметры
+            Guid NRoomSqParamGuid = new Guid("4f890165-ec27-4a22-811a-07e010101ec5"); //N_Площадь.Округленная
+            Guid NRoomSqKParamGuid = new Guid("e6b18cda-4550-4531-afae-96a9035f7fca"); //N_Площадь.ОкруглСКоэффициентом
+            Guid NRoomIsApartParamGuid = new Guid("155f8c55-e05f-4737-883e-1338eb722735"); //N_Квартира
+            Guid NRoomApartNumberParamGuid = new Guid("2f2edd07-cd47-4e30-b091-c1ceb5e6ff63"); //N_Кв.Номер
+            Guid NRoomOfficeNumber = new Guid("e73bb005-9ad8-489c-bc1f-fd8c3b521ec3"); //N_Офис.Номер
+            Guid NLevelNumberParamGuid = new Guid("4d2aa1b8-727c-43a1-8b1e-8c22dd484e11"); //N_Эт.Номер
+            BuiltInParameter roomNumber = BuiltInParameter.ROOM_NUMBER; //Номер
 
             Logger.Log("Сбор элементов", 1);
             List<Room> rooms = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Rooms)   //фильтр по категории Помещения
@@ -154,11 +143,11 @@ namespace TNov
                         //тип помещения
                         string roomType = "Прочие";
 
-                        int Квартиры = room.LookupParameter(N_Par_apartment).AsInteger();
-                        if (Квартиры == 1) roomType = "Квартиры";
+                        int isApart = room.get_Parameter(NRoomIsApartParamGuid).AsInteger();
+                        if (room.get_Parameter(NRoomIsApartParamGuid)?.AsInteger() == 1) roomType = "Квартиры";
 
                         bool office = false;
-                        Parameter offnumParam = room.LookupParameter(N_Par_offnum);
+                        Parameter offnumParam = room.get_Parameter(NRoomOfficeNumber);
                         if (offnumParam != null && offnumParam.HasValue)
                         {
                             string offNumValue = offnumParam.AsString();
@@ -166,7 +155,7 @@ namespace TNov
                             if (isOffice || offnumParam.AsString().Length > 0) { office = true; roomType = "Офисы"; }
                         }
 
-                        if (room.get_Parameter(BuiltInParameter.ROOM_NAME).AsString().Contains("Кладов")&&Квартиры!=1&&office==false) 
+                        if (room.get_Parameter(BuiltInParameter.ROOM_NAME).AsString().Contains("Кладов")&& isApart!= 1&&office==false) 
                             roomType = "Кладовые";
 
                         Logger.Log("   тип: " + roomType, 2);
@@ -174,8 +163,8 @@ namespace TNov
                         //площади
                         string roomSqStr = "0";
                         string roomSqRStr = "0";
-                        roomSqStr = room.LookupParameter(N_Par_sq).AsDouble().ToString();
-                        roomSqRStr = room.LookupParameter(N_Par_sqround).AsDouble().ToString();
+                        roomSqStr = room.get_Parameter(NRoomSqParamGuid).AsDouble().ToString();
+                        roomSqRStr = room.get_Parameter(NRoomSqKParamGuid).AsDouble().ToString();
                         Logger.Log("   площадь: " + roomSqStr, 2);
                         Logger.Log("   площадь округл: " + roomSqRStr, 2);
 
@@ -243,27 +232,27 @@ namespace TNov
                         int modelRoomGroupNumber = 0;
                         if (elem != null)
                         {
-                            modelRoomS = elem.LookupParameter(N_Par_sq).AsDouble().ToString();
-                            modelRoomSK = elem.LookupParameter(N_Par_sqround).AsDouble().ToString();
+                            modelRoomS = elem.get_Parameter(NRoomSqParamGuid).AsDouble().ToString();
+                            modelRoomSK = elem.get_Parameter(NRoomSqKParamGuid).AsDouble().ToString();
                             modelRoomName = elem.get_Parameter(BuiltInParameter.ROOM_NAME).AsString();
                             if (roomCategory == "Квартиры")
                             {
-                                string gNum = elem.LookupParameter(N_Par_apartnum).AsString();
+                                string gNum = elem.get_Parameter(NRoomApartNumberParamGuid).AsString();
                                 if (gNum != null && gNum.Length > 0) int.TryParse (gNum, out modelRoomGroupNumber);
                             }
                             if (roomCategory == "Офисы")
                             {
-                                string gNum = elem.LookupParameter(N_Par_offnum).AsString();
+                                string gNum = elem.get_Parameter(NRoomOfficeNumber).AsString();
                                 if (gNum != null && gNum.Length > 0) int.TryParse(gNum, out modelRoomGroupNumber);
                             }
                             if (roomCategory == "Кладовые")
                             {
-                                string gNum = elem.LookupParameter("Номер").AsString();
+                                string gNum = elem.get_Parameter(roomNumber).AsString();
                                 if(gNum!=null&&gNum.Length>0) int.TryParse(gNum, out modelRoomGroupNumber);
                             }
                             if (roomCategory == "Прочие")
                             {
-                                double gNum = elem.LookupParameter(N_Par_LevelNum).AsDouble();
+                                double gNum = elem.get_Parameter(NLevelNumberParamGuid).AsDouble();
                                 modelRoomGroupNumber=(int)gNum;
                             }
                         }
@@ -328,8 +317,8 @@ namespace TNov
                                     {
                                         try
                                         {
-                                            room.LookupParameter(N_Par_sq).Set(sq);
-                                            room.LookupParameter(N_Par_sqround).Set(sqk);
+                                            room.get_Parameter(NRoomSqParamGuid).Set(sq);
+                                            room.get_Parameter(NRoomSqKParamGuid).Set(sqk);
                                             Logger.Log("   параметры назначены", 2);
                                         }
                                         catch (Exception ex)

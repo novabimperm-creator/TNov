@@ -18,81 +18,11 @@ using Parameter = Autodesk.Revit.DB.Parameter;
 
 namespace TNov
 {
-    public class floorViewModel : INotifyPropertyChanged
-    {
-        private string _offset = "0";
-        public string offset { get => _offset; set { _offset = value; OnPropertyChanged(); } }
-
-        [JsonIgnore] public ObservableCollection<string> typelist { get; set; }
-        private string _typename;
-        public string typename { get { return _typename; } set { _typename = value; OnPropertyChanged(); } }
-        
-        private int _typenum = 0;
-        public int typenum { get => _typenum; set { _typenum = value; OnPropertyChanged(); } }
-        public floorViewModel()
-        {
-            Param();
-        }
-        private void Param()
-        {
-            BuiltInParameter gm = BuiltInParameter.ALL_MODEL_MODEL; //параметр Группа модели
-            List<FloorType> list1 = ((IEnumerable<Element>)new FilteredElementCollector(RevitAPI.Document)
-                .OfClass(typeof(FloorType)))
-                .Where<Element>((Func<Element, bool>)(f => f.Category.Id.IntegerValue.Equals(-2000032)))
-                .Where<Element>((Func<Element, bool>)(f => f.get_Parameter(gm).AsString() != null))
-                .Where<Element>((Func<Element, bool>)(f => f.get_Parameter(gm).AsString().Contains("Пол")))
-                .Cast<FloorType>().OrderBy<FloorType, string>((Func<FloorType, string>)(f => ((Element)f).Name), (IComparer<string>)new AlphanumComparatorFastString())
-                .ToList<FloorType>(); //типы полов
-
-            typelist = new ObservableCollection<string>{};
-            foreach (Element e in list1) { typelist.Add(e.Name); }
-            typename = typelist[typenum];
-        }
-
-
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event EventHandler HideRequest;
-        private void RaiseHideRequest()
-        {
-            HideRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event EventHandler ShowRequest;
-        private void RaiseShowRequest()
-        {
-            ShowRequest?.Invoke(this, EventArgs.Empty);
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-    }
+    
     [Transaction(TransactionMode.Manual)]
-    public class floors : IExternalCommand
+    public class Floors : IExternalCommand
     {
-        private XYZ VectorFromHorizVertAngles(double angleHorizD, double angleVertD)
-        {
-            // Convert degreess to radians.
-
-            double degToRadian = Math.PI * 2 / 360;
-            double angleHorizR = angleHorizD * degToRadian;
-            double angleVertR = angleVertD * degToRadian;
-
-            // Return unit vector in 3D
-
-            double a = Math.Cos(angleVertR);
-            double b = Math.Cos(angleHorizR);
-            double c = Math.Sin(angleHorizR);
-            double d = Math.Sin(angleVertR);
-
-            return new XYZ(a * b, a * c, d);
-        }
+        
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             string TNovClassName = "Генератор полов"; DateTime dateTime = DateTime.Now;
@@ -103,6 +33,15 @@ namespace TNov
             
             //проверка подключения, запись в журнал
             bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+
+            //параметры
+            
+            Guid NFinishRoomParamGuid = new Guid("8b9d4aff-a6c8-4ad5-b0f5-442f2b87c765"); //N_Отделка.Помещение
+            string NFinishElemNaznParam = "Отделка.Помещение.Назначение";
+            Guid NFinishElemGroupParamGuid = new Guid("60e4ba60-55ca-4922-8ce7-22a6c43c95c2"); //N_Отделка.ГруппаТекст
+            BuiltInParameter roomNameParam = BuiltInParameter.ROOM_NAME;
+            BuiltInParameter roomNaznParam = BuiltInParameter.ROOM_DEPARTMENT;
+            Guid NFinishRoomGroupParamGuid = new Guid("76144285-f586-4eb7-af04-e4ad9902f67a"); //N_Отделка.Группа
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
@@ -163,7 +102,7 @@ namespace TNov
             //анализ текущей выборки
             Logger.Log("Анализ текущей выборки",1);
             List<Room> roomList = new List<Room>();
-            roomList = floors.GetRoomsFromCurrentSelection(doc, selection); //получаем комнаты из текущей выборки
+            roomList = Floors.GetRoomsFromCurrentSelection(doc, selection); //получаем комнаты из текущей выборки
             if (roomList.Count == 0) //запускаем выбор элементов если ничего не выбрано
             {
                 RoomSelectionFilter roomSelectionFilter = new RoomSelectionFilter();
@@ -185,16 +124,16 @@ namespace TNov
             Logger.Log("Элементы собраны. Выбор сценария",1);
 
             //Диалог
-            var viewModel = new floorViewModel();
+            var viewModel = new FloorViewModel();
             // Десериализация
             bool forProject = true;
             json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
             if (canserialize)
             {
-                viewModel = JsonConvert.DeserializeObject<floorViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<FloorViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
-            var wpfview = new floorwpf(viewModel);
+            var wpfview = new FloorWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { } 
@@ -323,17 +262,18 @@ namespace TNov
                             fhal.Set(offset); //назначаем смещение от уровня
                             
                             //параметры отделки
-                            Parameter roomParam = felem.LookupParameter("N_Отделка.Помещение");
-                            Parameter roomParam2 = felem.LookupParameter("Отделка.Помещение.Назначение");
-                            Parameter roomParam3 = felem.LookupParameter("N_Отделка.ГруппаТекст");
 
-                            string roomName = room.get_Parameter(BuiltInParameter.ROOM_NAME).AsString();
-                            string roomNazn = room.LookupParameter("Назначение")?.AsString() ?? "";
-                            string roomGroup = room.LookupParameter("N_Отделка.Группа")?.AsInteger().ToString() ?? "";
+                            Parameter roomParam = felem.get_Parameter(NFinishRoomParamGuid);
+                            Parameter roomParam2 = felem.LookupParameter(NFinishElemNaznParam);
+                            Parameter roomParam3 = felem.get_Parameter(NFinishElemGroupParamGuid);
 
-                            if (roomParam != null) roomParam.Set(roomName);
-                            if (roomParam2 != null) roomParam2.Set(roomNazn);
-                            if (roomParam3 != null) roomParam3.Set(roomGroup);
+                            string roomName = room.get_Parameter(roomNameParam).AsString();
+                            string roomNazn = room.get_Parameter(roomNaznParam)?.AsString() ?? "";
+                            string roomGroup = room.get_Parameter(NFinishRoomGroupParamGuid)?.AsInteger().ToString() ?? "";
+
+                            roomParam?.Set(roomName);
+                            roomParam2?.Set(roomNazn);
+                            roomParam3?.Set(roomGroup);
 
                             FailureHandlingOptions failureHandlingOptions = transaction.GetFailureHandlingOptions();
                             failureHandlingOptions.SetFailuresPreprocessor((IFailuresPreprocessor)new FloorIntersectionWarningSwallower());

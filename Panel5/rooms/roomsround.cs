@@ -20,7 +20,7 @@ namespace TNov
     
 
     [Transaction(TransactionMode.Manual)]
-    public class roomsround : IExternalCommand
+    public class RoomsRound : IExternalCommand
     {
         private TNovProgressBar levnumProgressBar;
         private void ThreadStartingPoint()
@@ -61,17 +61,9 @@ namespace TNov
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл",2);
             }
 
-            //Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
-
-            //Список используемых параметров
-
-            string N_Par_sq = "N_Площадь.Округленная";
-            if (oldProject == true) { N_Par_sq = "Площадь.Округленная"; }
-            string N_Par_sqround = "N_Площадь.ОкруглСКоэффициентом";
-            if (oldProject == true) { N_Par_sqround = "Площадь.ОкруглСКоэффициентом"; }
-
-            if (oldProject) Logger.Log( "Используется старый шаблон",2);
+            //параметры
+            Guid NRoomSqParamGuid = new Guid("4f890165-ec27-4a22-811a-07e010101ec5"); //N_Площадь.Округленная
+            Guid NRoomSqKParamGuid = new Guid("e6b18cda-4550-4531-afae-96a9035f7fca"); //N_Площадь.ОкруглСКоэффициентом
 
             Logger.Log( "Сбор элементов",1);
             List<Room> rooms = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Rooms)   //фильтр по категории Помещения
@@ -97,16 +89,16 @@ namespace TNov
 
             // Диалоговое окно
             Logger.Log("Диалоговое окно", 1);
-            var viewModel = new officesViewModel();
+            var viewModel = new RoomsViewModel();
             // Десериализация
             bool forProject = true;
             json js = new json("Офисография", in forProject, out bool canserialize, out string jsonpath);
             if (canserialize)
             {
-                viewModel = JsonConvert.DeserializeObject<officesViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<RoomsViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log( "Десериализация прошла успешно",1);
             }
-            var wpfview = new officeswpf(viewModel);
+            var wpfview = new RoomsWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { } else { Logger.Log("Запуск отменен пользователем. Завершение работы.", 3); return Result.Cancelled; }
@@ -194,8 +186,8 @@ namespace TNov
                     foreach (string n in n2) { if (name.Contains(n)) { k = 0.3; } }
                     double areaRK = Math.Round((areaR * k + 0.000001), 1); 
                     Logger.Log( "   площадь с коэфф: " + areaR.ToString(), 2);
-                    room.LookupParameter(N_Par_sq)?.Set(areaR);
-                    room.LookupParameter(N_Par_sqround)?.Set(areaRK);
+                    room.get_Parameter(NRoomSqParamGuid)?.Set(areaR);
+                    room.get_Parameter(NRoomSqKParamGuid)?.Set(areaRK);
                     Logger.Log( "   "+"параметры назначены успешно",2);
                 }
 

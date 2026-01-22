@@ -16,36 +16,9 @@ using TNov.main;
 
 namespace TNov
 {
-    public class steelscheduleViewModel : INotifyPropertyChanged
-    {
-
-        private bool _all = false;
-        public bool all
-        {
-            get => _all; set { _all = value; OnPropertyChanged(); }
-        }
-        private bool _visible = true;
-        public bool visible
-        {
-            get => _visible; set { _visible = value; OnPropertyChanged(); }
-        }
-
-
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-
-    }
+    
     [Transaction(TransactionMode.Manual)]
-    public class steelschedule : IExternalCommand
+    public class SteelSchedule : IExternalCommand
     {
         private void hidecolumn(in string value, out bool hide)
         {
@@ -104,16 +77,16 @@ namespace TNov
 
             Logger.Log("Диалоговое окно",1);
             //Диалог
-            var viewModel = new steelscheduleViewModel();
+            var viewModel = new SteelScheduleViewModel();
             // Десериализация
             bool forProject = false;
             json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
             if (canserialize)
             {
-                viewModel = JsonConvert.DeserializeObject<steelscheduleViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<SteelScheduleViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
-            var wpfview = new steelschedulewpf(viewModel);
+            var wpfview = new SteelScheduleWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { }

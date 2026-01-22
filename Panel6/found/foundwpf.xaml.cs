@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для foundwpf.xaml
+    /// Логика взаимодействия для FoundWPF.xaml
     /// </summary>
-    public partial class foundwpf : Window
+    public partial class FoundWPF : Window
     {
-        public foundwpf(foundViewModel viewModel)
+        public FoundWPF(FoundViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;
@@ -22,6 +22,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
-        
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+
+        }
     }
 }

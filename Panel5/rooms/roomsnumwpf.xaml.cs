@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для roomsnumwpf.xaml
+    /// Логика взаимодействия для RoomsNumWPF.xaml
     /// </summary>
-    public partial class roomsnumwpf : Window
+    public partial class RoomsNumWPF : Window
     {
-        public roomsnumwpf(roomsnumViewModel viewModel)
+        public RoomsNumWPF(RoomsNumViewModel viewModel)
         {
             InitializeComponent();
             textBox1.Focus();
@@ -30,5 +30,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+
+        }
     }
 }

@@ -1,70 +1,151 @@
-﻿<Window x:Class="TNov.bimexportwpf"
+﻿<Window x:Class="TNov.BimExportWPF"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:TNov"
-             mc:Ignorable="d" Height="330" Width="650"
-            d:DataContext="{d:DesignInstance local:bimexportViewModel}"
+             mc:Ignorable="d" Height="360" Width="650"
+            d:DataContext="{d:DesignInstance local:BimExportViewModel}"
             WindowStartupLocation="CenterScreen" 
-            Background="DarkSeaGreen"
-            Title="TNov. BIM Экспорт" ResizeMode="NoResize">
-    <StackPanel VerticalAlignment="Center" Margin="5">
+            Background="White" BorderBrush="#FF008E43" BorderThickness="1"
+            ResizeMode="NoResize" WindowStyle="None">
+    <Window.Resources>
+        <!-- Стиль с полным шаблоном -->
+        <Style x:Key="CustomButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#F0F0F0"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <!-- Убираем SystemColors -->
+                        <ControlTemplate.Resources>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" 
+                                         Color="Transparent"/>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" 
+                                         Color="Transparent"/>
+                        </ControlTemplate.Resources>
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBlock Margin="5" Text="Исходный каталог _RVT:" />
-            <CheckBox x:Name="RVTcheck" IsThreeState="False" IsChecked="{Binding RVTcheck}" Content="Проверять модели в папке _RVT на актуальность*" Margin="5" VerticalAlignment="Center"/>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBox Name="textBox1" Text="{Binding folder}" Width="390" Margin="5" TextAlignment="Center" TextWrapping="Wrap" TextChanged="textBox1_TextChanged" />
-            <Button Content="__RVT" x:Name="browseButton" Click="browseButton_Click" Width="40" MinHeight="25" Margin="5" />
-            <RadioButton x:Name="rvt" GroupName="rvt" IsThreeState="False" IsChecked="{Binding fromRVT}" VerticalAlignment="Center"  />
-            <TextBox Name="textBox1RS" Text="{Binding folderRS}" Width="0" TextAlignment="Center" TextWrapping="Wrap" MaxHeight="25" />
-            <RadioButton x:Name="rs" GroupName="rvt" IsThreeState="False" IsChecked="{Binding fromRS}" VerticalAlignment="Center"  />
-            <Button Content="Revit Server" x:Name="browseButtonRS" Click="browseButtonRS_Click" Width="90" MinHeight="25" Margin="5" />
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBlock Margin="5" Text="Целевой каталог _NWC:" />
-            <CheckBox x:Name="NWC" IsThreeState="False" IsChecked="{Binding NWC}" Margin="5" Content="Выгрузить NWC" VerticalAlignment="Center" FontWeight="Bold"/>
-            <CheckBox x:Name="NWCNova" IsThreeState="False" IsChecked="{Binding NWCNova}" Content="с вида Nova (для внутр. проверок раздела)" Margin="5" VerticalAlignment="Center"/>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBox Name="textBox2" Text="{Binding folder2}" Width="500" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
-            <Button Content="__NWC" x:Name="browseButton2" Click="browseButton2_Click" Width="60" MinHeight="25" Margin="5" />
+                        <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="2">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                        </Border>
 
-        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <!-- Прямое указание цвета -->
+                                <Setter TargetName="border" 
+                                    Property="Background" 
+                                    Value="#FF008E43"/>
+                                <!-- Цвет заголовка -->
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" 
+                                    Property="Background" 
+                                    Value="#FF008E43"/>
+                                <!-- Темнее -->
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" 
+                                    Property="Opacity" 
+                                    Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="30"
+              ResizeBorderThickness="5"
+              GlassFrameThickness="0"
+              CornerRadius="0"/>
+    </WindowChrome.WindowChrome>
+    <Grid>
+        <!-- Верхняя панель (кастомный заголовок) -->
+        <Border Height="30" 
+                Background="#FF008E43" 
+                VerticalAlignment="Top"
+                MouseDown="Border_MouseDown">
+            <TextBlock Text="TNov - BIM Экспорт" 
+                       Foreground="White"
+                       VerticalAlignment="Center"
+                       Margin="10,0"/>
+        </Border>
+
+        <!-- Основное содержимое -->
+        <Border Margin="0,30,0,0">
+
+            <StackPanel VerticalAlignment="Center" Margin="5">
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Margin="5" Text="Исходный каталог _RVT:" />
+                    <CheckBox BorderBrush="#CCCCCC" x:Name="RVTcheck" IsThreeState="False" IsChecked="{Binding RVTcheck}" Content="Проверять модели в папке _RVT на актуальность*" Margin="5" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBox Name="textBox1" Text="{Binding folder}" Width="390" Margin="5" TextAlignment="Center" TextWrapping="Wrap" TextChanged="textBox1_TextChanged" BorderBrush="#CCCCCC"/>
+                    <Button Style="{StaticResource CustomButtonStyle}" Content="__RVT" x:Name="browseButton" Click="browseButton_Click" Width="40" MinHeight="25" Margin="5" />
+                    <RadioButton BorderBrush="#CCCCCC" x:Name="rvt" GroupName="rvt" IsThreeState="False" IsChecked="{Binding fromRVT}" VerticalAlignment="Center"  />
+                    <TextBox Name="textBox1RS" Text="{Binding folderRS}" Width="0" TextAlignment="Center" TextWrapping="Wrap" MaxHeight="25" />
+                    <RadioButton BorderBrush="#CCCCCC" x:Name="rs" GroupName="rvt" IsThreeState="False" IsChecked="{Binding fromRS}" VerticalAlignment="Center"  />
+                    <Button Style="{StaticResource CustomButtonStyle}" Content="Revit Server" x:Name="browseButtonRS" Click="browseButtonRS_Click" Width="90" MinHeight="25" Margin="5" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Margin="5" Text="Целевой каталог _NWC:" />
+                    <CheckBox BorderBrush="#CCCCCC" x:Name="NWC" IsThreeState="False" IsChecked="{Binding NWC}" Margin="5" Content="Выгрузить NWC" VerticalAlignment="Center" FontWeight="Bold"/>
+                    <CheckBox BorderBrush="#CCCCCC" x:Name="NWCNova" IsThreeState="False" IsChecked="{Binding NWCNova}" Content="с вида Nova (для внутр. проверок раздела)" Margin="5" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBox Name="textBox2" Text="{Binding folder2}" Width="500" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+                    <Button Style="{StaticResource CustomButtonStyle}" Content="__NWC" x:Name="browseButton2" Click="browseButton2_Click" Width="60" MinHeight="25" Margin="5" />
+
+                </StackPanel>
 
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBlock Margin="5" Text="Целевой каталог для моделей на выдачу:" />
-            <CheckBox x:Name="RVT" IsThreeState="False" IsChecked="{Binding RVT}" Content="очищ. RVT" Margin="5" VerticalAlignment="Center" FontWeight="Bold"/>
-            <CheckBox x:Name="NWC2" IsThreeState="False" IsChecked="{Binding NWC2}" Content="NWC в папку выдачи" Margin="5" VerticalAlignment="Center" FontWeight="Bold"/>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBox Name="textBox3" Text="{Binding folder3}" Width="500" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
-            <Button Content="__выдача" x:Name="browseButton3" Click="browseButton3_Click" Width="60" MinHeight="25" Margin="5" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Margin="5" Text="Целевой каталог для моделей на выдачу:" />
+                    <CheckBox BorderBrush="#CCCCCC" x:Name="RVT" IsThreeState="False" IsChecked="{Binding RVT}" Content="очищ. RVT" Margin="5" VerticalAlignment="Center" FontWeight="Bold"/>
+                    <CheckBox BorderBrush="#CCCCCC" x:Name="NWC2" IsThreeState="False" IsChecked="{Binding NWC2}" Content="NWC в папку выдачи" Margin="5" VerticalAlignment="Center" FontWeight="Bold"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBox Name="textBox3" Text="{Binding folder3}" Width="500" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
+                    <Button Style="{StaticResource CustomButtonStyle}" Content="__выдача" x:Name="browseButton3" Click="browseButton3_Click" Width="60" MinHeight="25" Margin="5" />
 
-        </StackPanel>
+                </StackPanel>
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBlock Margin="5 0 0 0" Text="Разделы:" VerticalAlignment="Center" FontWeight="Bold"/>
-            <CheckBox x:Name="AR" IsThreeState="False" IsChecked="{Binding AR}" Content="АР" Margin="5" VerticalAlignment="Center"/>
-            <CheckBox x:Name="ST" IsThreeState="False" IsChecked="{Binding ST}" Content="КЖ" Margin="5" VerticalAlignment="Center"/>
-            <CheckBox x:Name="VK" IsThreeState="False" IsChecked="{Binding VK}" Content="ВК" Margin="5" VerticalAlignment="Center"/>
-            <CheckBox x:Name="OV" IsThreeState="False" IsChecked="{Binding OV}" Content="ОВ" Margin="5" VerticalAlignment="Center"/>
-            <CheckBox x:Name="EL" IsThreeState="False" IsChecked="{Binding EL}" Content="ЭЛ" Margin="5" VerticalAlignment="Center"/>
-            <CheckBox x:Name="SS" IsThreeState="False" IsChecked="{Binding SS}" Content="СС" Margin="5" VerticalAlignment="Center"/>
-            <TextBlock Margin="5 0 0 0" Text="Фильтр по имени:" VerticalAlignment="Center" FontWeight="Bold"/>
-            <TextBox Name="textBox4" Text="{Binding namefilter}" Width="125" MinHeight="25" Margin="5" TextAlignment="Center" TextWrapping="Wrap" />
-        </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Margin="5 0 0 0" Text="Разделы:" VerticalAlignment="Center" FontWeight="Bold"/>
+                    <CheckBox x:Name="AR" IsThreeState="False" IsChecked="{Binding AR}" Content="АР" Margin="5" VerticalAlignment="Center" BorderBrush="#CCCCCC"/>
+                    <CheckBox x:Name="ST" IsThreeState="False" IsChecked="{Binding ST}" Content="КЖ" Margin="5" VerticalAlignment="Center" BorderBrush="#CCCCCC"/>
+                    <CheckBox x:Name="VK" IsThreeState="False" IsChecked="{Binding VK}" Content="ВК" Margin="5" VerticalAlignment="Center" BorderBrush="#CCCCCC"/>
+                    <CheckBox x:Name="OV" IsThreeState="False" IsChecked="{Binding OV}" Content="ОВ" Margin="5" VerticalAlignment="Center" BorderBrush="#CCCCCC"/>
+                    <CheckBox x:Name="EL" IsThreeState="False" IsChecked="{Binding EL}" Content="ЭЛ" Margin="5" VerticalAlignment="Center" BorderBrush="#CCCCCC"/>
+                    <CheckBox x:Name="SS" IsThreeState="False" IsChecked="{Binding SS}" Content="СС" Margin="5" VerticalAlignment="Center" BorderBrush="#CCCCCC"/>
+                    <TextBlock Margin="5 0 0 0" Text="Фильтр по имени:" VerticalAlignment="Center" FontWeight="Bold"/>
+                    <TextBox Name="textBox4" Text="{Binding namefilter}" Width="125" MinHeight="25" Margin="5" TextAlignment="Center" TextWrapping="Wrap" BorderBrush="#CCCCCC"/>
+                </StackPanel>
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Content="*Открыть папку RevitServerToolCommand (BIM-менеджер)" x:Name="rvtExportButton" Click="rvtExportButton_Click" Width="350" MinHeight="25" Margin="5" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Style="{StaticResource CustomButtonStyle}" Content="*Открыть папку RevitServerToolCommand (BIM-менеджер)" x:Name="rvtExportButton" Click="rvtExportButton_Click" Width="350" MinHeight="25" Margin="5" />
 
-            <Button Content="Отмена" x:Name="escButton" IsCancel="True" Click="escButton_Click" MinWidth="60" MinHeight="25" Margin="20 5 5 5" />
-            <Button Content="Запуск" x:Name="acceptButton" IsDefault="True" Click="acceptButton_Click" MinWidth="110" Margin="5"/>
-        </StackPanel>
+                    <Button Style="{StaticResource CustomButtonStyle}" Content="Отмена" x:Name="escButton" IsCancel="True" Click="escButton_Click" MinWidth="60" MinHeight="25" Margin="20 5 5 5" />
+                    <Button Style="{StaticResource CustomButtonStyle}" Content="Запуск" x:Name="acceptButton" IsDefault="True" Click="acceptButton_Click" MinWidth="110" Margin="5"/>
+                </StackPanel>
 
-    </StackPanel>
+            </StackPanel>
 
+        </Border>
+    </Grid>
+
+    
 </Window>

@@ -34,6 +34,9 @@ namespace TNov
             Guid param3AGuid = new Guid("7cdb6adb-756e-4e5b-b4d0-5ccaf3cee047");//N_Кв.НомерНаЭтаже
             Guid paramOGuid = new Guid("e73bb005-9ad8-489c-bc1f-fd8c3b521ec3");//N_Офис.Номер
             Guid paramTGuid = new Guid("5b03cee1-38d2-4e17-9f7d-a88fd3b1913b");//Т_Номер прод пом
+            Guid NTParamsNotSetParamGuid = new Guid("70879f6b-b838-49de-8ff5-35e1c7d97e0c");
+            Guid TPolozhParamGuid = new Guid("7d68b956-732c-4da9-99a8-13be56ccaf94"); //Т_Положение
+            Guid TNaznParamGuid = new Guid("2a73f7b8-05e7-410a-b22a-66498e315df4"); //Т_Назначение
 
             Document doc = data.GetDocument();
             Autodesk.Revit.ApplicationServices.Application app = doc.Application;
@@ -125,6 +128,23 @@ namespace TNov
                     if(comments.Length > 0)
                         elem.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(comments);//назначаем также параметр Комментарии для спецификации офисов
                     elem.get_Parameter(paramTGuid).Set(value); //назначение целевого параметра
+
+
+                    if (Param.ParamExistByGuid(NTParamsNotSetParamGuid, elem))
+                    {
+                        if (elem.get_Parameter(NTParamsNotSetParamGuid).AsDouble() != 1)
+                        {
+                            string value1 = GetTNazn(roomNazn.AsString(), elem.get_Parameter(BuiltInParameter.ROOM_NAME).AsString());
+                            if (Param.ParamExistByGuid(TPolozhParamGuid, elem))
+                            {
+                                elem.get_Parameter(TPolozhParamGuid).Set(value1);
+                            }
+                            if (Param.ParamExistByGuid(TNaznParamGuid, elem))
+                            {
+                                elem.get_Parameter(TNaznParamGuid).Set(value1);
+                            }
+                        }
+                    }
                 }    
 
                 
@@ -134,7 +154,35 @@ namespace TNov
 
 
         }
-
+        string GetTNazn(string Nazn, string Name)
+        {
+            string TNazn = "";
+            if (Nazn.Contains("Жилое")) TNazn = Nazn;
+            else if (Nazn.Contains("Технич"))
+            {
+                if (Name.Contains("Лестн") || Name.Contains("лестн")) TNazn = "Лестница";
+                else TNazn = "Техническое";
+            }
+            else if (Nazn.Contains("Лестн")) TNazn = "Лестница";
+            else if (Nazn.Contains("Кладов")) TNazn = "Кладовые";
+            else if (Nazn.Contains("Встроен")) TNazn = "МОП";
+            else if (Nazn.Contains("Парк")) TNazn = "МОП";
+            else if (Nazn.Contains("МОП"))
+            {
+                if (Name.Contains("Лестн") || Name.Contains("лестн")) TNazn = "Лестница";
+                else if (Name.Contains("Кладов")) TNazn = "Кладовые";
+                else if (Name.Contains("Электр")) TNazn = "Техническое";
+                else if (Name.Contains("связи")) TNazn = "Техническое";
+                else if (Name.Contains("Технич")) TNazn = "Техническое";
+                else if (Name.Contains("ИТП")) TNazn = "Техническое";
+                else if (Name.Contains("Котельная")) TNazn = "Техническое";
+                else if (Name.Contains("Пульт")) TNazn = "Техническое";
+                else if (Name.Contains("Венткамера")) TNazn = "Техническое";
+                else TNazn = "МОП";
+            }
+            else TNazn = "Коммерция";
+            return TNazn;
+        }
         public string GetAdditionalInformation()
         {
             return "TNov, bim@pm-nova.ru";

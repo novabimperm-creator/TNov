@@ -29,6 +29,15 @@ namespace TNov
         Guid adskElev0paramGuid = new Guid("6ec2f9e9-3d50-4d75-a453-26ef4e6d1625");//ADSK_Отверстие_Отметка от нуля
         Guid adskElevLevelparamGuid = new Guid("e4793a44-6050-45b3-843e-cfb49d9191c5");//ADSK_Отверстие_Отметка от этажа
         Guid adskElevLevel2paramGuid = new Guid("44f7ce8a-2926-4514-bacb-423bd4ac3847");//ADSK_Отверстие_Отметка этажа
+        Guid NTNovTextparamGuid = new Guid("b00446ce-acf8-498e-add9-a3603abe9028"); //N_TNov_Text
+        Guid adskHoleWidthParamGuid = new Guid("096bc30e-3c95-4637-84d5-9f6bf45d8676");//ADSK_Отверстие_Ширина
+        Guid adskHoleHeightParamGuid = new Guid("bc4e92d8-db66-4e93-8923-3af6e2dc8599");//ADSK_Отверстие_Высота
+        Guid adskDiamParamGuid = new Guid("9b679ab7-ea2e-49ce-90ab-0549d5aa36ff");//ADSK_Размер_Диаметр
+        Guid NTaskApprovedBIMParamGuid = new Guid("94587b6e-5bdd-4fe8-bea4-4996c32801c4");//N_Согласовано BIM
+        Guid NTaskApprovedSTParamGuid = new Guid("7cb33aa5-8106-4e4c-8038-6691e34f438c");//N_Согласовано КР
+        Guid NTaskApprovedMEPParamGuid = new Guid("5c117e3e-c32b-4ab9-9cbb-99557e7c20c5");//N_Согласовано рук
+
+
         public void Execute(UpdaterData data)
         {
             Document doc = data.GetDocument();
@@ -122,18 +131,18 @@ namespace TNov
                                 }
 
                             }
-                            string widthParam = "ADSK_Отверстие_Ширина"; string heightParam = "ADSK_Отверстие_Высота";
+                            Guid widthParam = adskHoleWidthParamGuid; Guid heightParam = adskHoleHeightParamGuid;
                             foreach (Parameter param in elem.ParametersMap) //круглые отв
                             {
                                 string paramName = param.Definition.Name;
-                                if (paramName == "ADSK_Размер_Диаметр") { widthParam = "ADSK_Размер_Диаметр"; heightParam = "ADSK_Размер_Диаметр"; }
+                                if (paramName == "ADSK_Размер_Диаметр") { widthParam = adskDiamParamGuid; heightParam = adskDiamParamGuid; }
                             }
                             string prevValue = "0";
-                            bool TNovTextParamExist = param.ParamExist("N_TNov_Text", elem);
-                            if(TNovTextParamExist) { try { prevValue = elem.LookupParameter("N_TNov_Text").AsValueString(); } catch (Exception) { } }
+                            bool TNovTextParamExist = Param.ParamExistByGuid(NTNovTextparamGuid, elem);
+                            if(TNovTextParamExist) { try { prevValue = elem.get_Parameter(NTNovTextparamGuid).AsValueString(); } catch (Exception) { } }
                             bool prevValues = true;
                             if(prevValue==null||prevValue=="0") prevValues = false;
-                            if(prevValues)
+                            if(prevValues && elem.Location != null)
                             {
                                 //считываем предыдущие значения параметров
                                 ///структура значения параметра: СоглРук=СоглBIM=СоглКР=СуммаРазмеров=Координаты
@@ -144,10 +153,10 @@ namespace TNov
                                 double dims0 = 0; if (pars.Length > 3 && pars[3].Length > 0) Double.TryParse(pars[3], out dims0);
                                 double point0 = 0; if(pars.Length > 4 && pars[4].Length>0) Double.TryParse(pars[4], out point0);
                                 //считываем новые значения параметров
-                                int Headstatus = elem.LookupParameter("N_Согласовано рук").AsInteger();
-                                int BIMstatus = elem.LookupParameter("N_Согласовано BIM").AsInteger();
-                                int STstatus = elem.LookupParameter("N_Согласовано КР").AsInteger();
-                                double elem_width = elem.LookupParameter(widthParam).AsDouble(); double elem_height = elem.LookupParameter(heightParam).AsDouble();
+                                int Headstatus = elem.get_Parameter(NTaskApprovedMEPParamGuid).AsInteger();
+                                int BIMstatus = elem.get_Parameter(NTaskApprovedBIMParamGuid).AsInteger();
+                                int STstatus = elem.get_Parameter(NTaskApprovedSTParamGuid).AsInteger();
+                                double elem_width = elem.get_Parameter(widthParam).AsDouble(); double elem_height = elem.get_Parameter(heightParam).AsDouble();
                                 double dims = elem_width * 0.3048 * 1000000 + elem_height * 0.3048 * 1000; dims = Math.Round(dims);
                                 LocationPoint elem_lp = (LocationPoint)elem.Location;
                                 XYZ p = elem_lp.Point; double point = p.X * 0.3048 * 1000000000 + p.Y * 0.3048 * 1000000 + p.Z * 0.3048*1000; point=Math.Round(point);
@@ -176,7 +185,7 @@ namespace TNov
                                             if (Headstatus0 == 0) 
                                             { 
                                                 Headstatus1 = Headstatus0; 
-                                                elem.LookupParameter("N_Согласовано рук").Set(Headstatus1); //галочка была неактивна - ее нельзя поставить
+                                                elem.get_Parameter(NTaskApprovedMEPParamGuid).Set(Headstatus1); //галочка была неактивна - ее нельзя поставить
                                             } 
                                             else
                                             {
@@ -185,7 +194,7 @@ namespace TNov
                                                 else 
                                                 {
                                                     Headstatus1 = 0; //выключаем галочку при любых других изменениях
-                                                    elem.LookupParameter("N_Согласовано рук").Set(Headstatus1);
+                                                    elem.get_Parameter(NTaskApprovedMEPParamGuid).Set(Headstatus1);
                                                 }
                                             }
                                             break;
@@ -203,7 +212,7 @@ namespace TNov
                                             if (BIMstatus0 == 0) 
                                             { 
                                                 BIMstatus1 = BIMstatus0; //галочка была неактивна - ее нельзя поставить
-                                                elem.LookupParameter("N_Согласовано BIM").Set(BIMstatus1);
+                                                elem.get_Parameter(NTaskApprovedBIMParamGuid).Set(BIMstatus1);
                                             }
                                             else
                                             {
@@ -212,7 +221,7 @@ namespace TNov
                                                 else
                                                 {
                                                     BIMstatus1 = 0; //выключаем галочку при любых других изменениях
-                                                    elem.LookupParameter("N_Согласовано BIM").Set(BIMstatus1);
+                                                    elem.get_Parameter(NTaskApprovedBIMParamGuid).Set(BIMstatus1);
                                                 }
                                             }
                                             break;
@@ -231,7 +240,7 @@ namespace TNov
                                             if (STstatus0 == 0) 
                                             { 
                                                 STstatus1 = STstatus0;
-                                                elem.LookupParameter("N_Согласовано КР").Set(STstatus1);
+                                                elem.get_Parameter(NTaskApprovedSTParamGuid).Set(STstatus1);
                                             }
                                             else
                                             {
@@ -240,7 +249,7 @@ namespace TNov
                                                 else 
                                                 { 
                                                     STstatus1 = 0; 
-                                                    elem.LookupParameter("N_Согласовано КР").Set(STstatus1);
+                                                    elem.get_Parameter(NTaskApprovedSTParamGuid).Set(STstatus1);
                                                 }
                                             }
                                             break;
@@ -255,7 +264,7 @@ namespace TNov
                                         case "BIM":
                                             /*if (STstatus == 1)
                                             {
-                                                STstatus1 = 0; elem.LookupParameter("N_Согласовано КР").Set(STstatus1);
+                                                STstatus1 = 0; elem.LookupParameter(NTaskApprovedSTParamGuid).Set(STstatus1);
                                             }*/
                                             break; //изменено 10.2025
 
@@ -265,11 +274,11 @@ namespace TNov
                                         default:
                                             if (STstatus == 1)
                                             {
-                                                STstatus1 = 0; elem.LookupParameter("N_Согласовано КР").Set(STstatus1);
+                                                STstatus1 = 0; elem.get_Parameter(NTaskApprovedSTParamGuid).Set(STstatus1);
                                             }
                                             if (BIMstatus == 1)
                                             {
-                                                BIMstatus1 = 0; elem.LookupParameter("N_Согласовано BIM").Set(BIMstatus1);
+                                                BIMstatus1 = 0; elem.get_Parameter(NTaskApprovedBIMParamGuid).Set(BIMstatus1);
                                                 
                                             }
 
@@ -284,7 +293,7 @@ namespace TNov
                                         case "BIM":
                                             /*if (STstatus == 1)
                                             {
-                                                STstatus1 = 0; elem.LookupParameter("N_Согласовано КР").Set(STstatus1);
+                                                STstatus1 = 0; elem.LookupParameter(NTaskApprovedSTParamGuid).Set(STstatus1);
                                             }*/
                                             break; //изменено 10.2025
 
@@ -294,11 +303,11 @@ namespace TNov
                                         default:
                                             if (STstatus == 1)
                                             {
-                                                STstatus1 = 0; elem.LookupParameter("N_Согласовано КР").Set(STstatus1);
+                                                STstatus1 = 0; elem.get_Parameter(NTaskApprovedSTParamGuid).Set(STstatus1);
                                             }
                                             if (BIMstatus == 1)
                                             {
-                                                BIMstatus1 = 0; elem.LookupParameter("N_Согласовано BIM").Set(BIMstatus1);
+                                                BIMstatus1 = 0; elem.get_Parameter(NTaskApprovedBIMParamGuid).Set(BIMstatus1);
 
                                             }
 
@@ -316,38 +325,39 @@ namespace TNov
                             }
                             else
                             {
-                                
-                                int Headstatus = elem.LookupParameter("N_Согласовано рук").AsInteger();
-                                int BIMstatus = elem.LookupParameter("N_Согласовано BIM").AsInteger();
-                                int STstatus = elem.LookupParameter("N_Согласовано КР").AsInteger();
-                                double elem_width = elem.LookupParameter(widthParam).AsDouble(); double elem_height = elem.LookupParameter(heightParam).AsDouble();
-                                double dims = elem_width * 0.3048 * 1000000 + elem_height * 0.3048*1000; dims = Math.Round(dims);
-                                LocationPoint elem_lp = (LocationPoint)elem.Location;
-                                XYZ p = elem_lp.Point; double point = p.X * 0.3048 * 1000000000 + p.Y * 0.3048 * 1000000 + p.Z * 0.3048*1000; point = Math.Round(point);
-
-                                int Headstatus1 = Headstatus; int BIMstatus1 = BIMstatus; int STstatus1 = STstatus;
-                                /*
-                                switch (userDepartment)
+                                if (elem.Location != null)
                                 {
-                                    case "BIM":
-                                        break;
+                                    int Headstatus = elem.get_Parameter(NTaskApprovedMEPParamGuid).AsInteger();
+                                    int BIMstatus = elem.get_Parameter(NTaskApprovedBIMParamGuid).AsInteger();
+                                    int STstatus = elem.get_Parameter(NTaskApprovedSTParamGuid).AsInteger();
+                                    double elem_width = elem.get_Parameter(widthParam).AsDouble(); double elem_height = elem.get_Parameter(heightParam).AsDouble();
+                                    double dims = elem_width * 0.3048 * 1000000 + elem_height * 0.3048 * 1000; dims = Math.Round(dims);
+                                    LocationPoint elem_lp = (LocationPoint)elem.Location;
+                                    XYZ p = elem_lp.Point; double point = p.X * 0.3048 * 1000000000 + p.Y * 0.3048 * 1000000 + p.Z * 0.3048 * 1000; point = Math.Round(point);
 
-                                    case "ST":
-                                        break;
+                                    int Headstatus1 = Headstatus; int BIMstatus1 = BIMstatus; int STstatus1 = STstatus;
+                                    /*
+                                    switch (userDepartment)
+                                    {
+                                        case "BIM":
+                                            break;
 
-                                    default:
-                                        if (STstatus == 1) {elem.LookupParameter("N_Согласовано КР").Set(0); STstatus1=0;}
-                                        if (BIMstatus == 1) {elem.LookupParameter("N_Согласовано BIM").Set(0); BIMstatus1=0;}
-                                        break;
+                                        case "ST":
+                                            break;
+
+                                        default:
+                                            if (STstatus == 1) {elem.LookupParameter(NTaskApprovedSTParamGuid).Set(0); STstatus1=0;}
+                                            if (BIMstatus == 1) {elem.LookupParameter(NTaskApprovedBIMParamGuid).Set(0); BIMstatus1=0;}
+                                            break;
+                                    }
+                                    */
+                                    if (Param.ParamExistByGuid(NTNovTextparamGuid, elem))
+                                    {
+                                        //записываем новые значения параметров
+                                        elem.get_Parameter(NTNovTextparamGuid).Set(Headstatus1.ToString() + "=" + BIMstatus1.ToString() + "=" + STstatus1.ToString()
+                                            + "=" + dims.ToString() + "=" + point.ToString());
+                                    }
                                 }
-                                */
-                                            if (param.ParamExist("N_TNov_Text",elem))
-                                {
-                                    //записываем новые значения параметров
-                                    elem.LookupParameter("N_TNov_Text").Set(Headstatus1.ToString() + "=" + BIMstatus1.ToString() + "=" + STstatus1.ToString()
-                                        + "=" + dims.ToString() + "=" + point.ToString());
-                                }
-                                
                             }
 
 

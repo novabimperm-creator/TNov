@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для steelschedulewpf.xaml
+    /// Логика взаимодействия для SteelScheduleWPF.xaml
     /// </summary>
-    public partial class steelschedulewpf : Window
+    public partial class SteelScheduleWPF : Window
     {
-        public steelschedulewpf(steelscheduleViewModel viewModel)
+        public SteelScheduleWPF(SteelScheduleViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;
@@ -24,6 +24,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
     }
 }

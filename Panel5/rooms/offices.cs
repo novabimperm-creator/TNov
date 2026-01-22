@@ -18,99 +18,11 @@ using TNov.main;
 
 namespace TNov
 {
-    public class officesViewModel : INotifyPropertyChanged
-    {
-        public int selection { get; set; }
-
-        private ICommand _scenario1;
-        public ICommand scenario1
-        {
-            get
-            {
-                if (_scenario1 == null)
-                {
-                    _scenario1 = new RelayCommand(param => { selection = 1; }, CanExecute);
-                }
-                return _scenario1;
-            }
-        }
-        private ICommand _scenario2;
-        public ICommand scenario2
-        {
-            get
-            {
-                if (_scenario2 == null)
-                {
-                    _scenario2 = new RelayCommand(param => { selection = 2; }, CanExecute);
-                }
-                return _scenario2;
-            }
-        }
-        private bool _recalc = true;
-        public bool recalc { get => _recalc; set { _recalc = value; OnPropertyChanged(); } }
-
-        private string _k03 = "Балкон,Французский балкон,Терраса";
-        public string k03
-        {
-            get => _k03;
-            set
-            {
-                _k03 = value;
-                OnPropertyChanged();
-            }
-        }
-        private string _k05 = "Лоджия";
-        public string k05
-        {
-            get => _k05;
-            set
-            {
-                _k05 = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private string _names1 = "Лестница,лестница,Лестничная клетка,лестничная клетка";
-        public string names1
-        {
-            get => _names1;
-            set
-            {
-                _names1 = value;
-                OnPropertyChanged();
-            }
-        }
-        private string _names2 = "Коридор,Тамбур,Холл,Электрощитовая,Венткамера,Терраса";
-        public string names2
-        {
-            get => _names2;
-            set
-            {
-                _names2 = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-        private bool CanExecute(object param)
-        {
-            return true;
-        }
-    }
+    
 
 
     [Transaction(TransactionMode.Manual)]
-    public class offices : IExternalCommand
+    public class Offices : IExternalCommand
     {
         private TNovProgressBar officesProgressBar;
         private void ThreadStartingPoint()
@@ -134,9 +46,6 @@ namespace TNov
             Logger.Initialize(TNovClassName);
             
 
-            //Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
-
             var viewModel0 = new aboutViewModel();
             
             string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
@@ -154,21 +63,15 @@ namespace TNov
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log("Расширенные логи вкл",2);
             }
 
-            //Список используемых параметров
+            //параметры
+            Guid NRoomSqParamGuid = new Guid("4f890165-ec27-4a22-811a-07e010101ec5"); //N_Площадь.Округленная
+            Guid NRoomSqKParamGuid = new Guid("e6b18cda-4550-4531-afae-96a9035f7fca"); //N_Площадь.ОкруглСКоэффициентом
+            Guid NRoomOfficeNumber = new Guid("e73bb005-9ad8-489c-bc1f-fd8c3b521ec3"); //N_Офис.Номер
+            Guid NRoomOfficeSqO = new Guid("835dbef4-b314-4a24-9c12-814abcf6b66f"); //N_Офис.Площадь.Общая
+            Guid NRoomOfficeSqP = new Guid("8afe9673-011e-49d5-a8a4-57fc14cc3b1d");// //N_Офис.Площадь.Полезная
+            Guid NRoomOfficeSqR = new Guid("72d42023-d485-49e3-8b7d-2ddda6791f28");// //N_Офис.Площадь.Расчетная
 
-            string N_Par_sq = "N_Площадь.Округленная";
-            if (oldProject == true) { N_Par_sq = "Площадь.Округленная"; }
-            string N_Par_sqk = "N_Площадь.ОкруглСКоэффициентом";
-            if (oldProject == true) { N_Par_sqk = "Площадь.ОкруглСКоэффициентом"; }
-            string N_Par_offnum = "N_Офис.Номер";
-            if (oldProject == true) { N_Par_offnum = "Офис.Номер"; }
-            string N_Par_offsqo = "N_Офис.Площадь.Общая";
-            if (oldProject == true) { N_Par_offsqo = "Офис.Площадь.Общая"; }
-            string N_Par_offsqp = "N_Офис.Площадь.Полезная";
-            if (oldProject == true) { N_Par_offsqp = "Офис.Площадь.Полезная"; }
-            string N_Par_offsqr = "N_Офис.Площадь.Расчетная";
-            if (oldProject == true) { N_Par_offsqr = "Офис.Площадь.Расчетная"; }
-
+            
             Logger.Log("Сбор элементов",1);
             List<Room> rooms = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Rooms)   //фильтр по категории Помещения
                                                                          .WhereElementIsNotElementType()    //фильтр только экземпляры
@@ -181,8 +84,7 @@ namespace TNov
 
             foreach (Room room in rooms) //проверка наличия неразмещенных помещений
             {
-                double area = room.get_Parameter(BuiltInParameter.ROOM_AREA).AsDouble();
-                if (area == 0) { ec++; }
+                if (room.get_Parameter(BuiltInParameter.ROOM_AREA).AsDouble() == 0) ec++; 
             }
 
             if (ec > 0) //если есть неразмещенные помещения - прерываем процесс
@@ -203,7 +105,7 @@ namespace TNov
             
             foreach (Room room in rooms) //проверка наличия офисов
             {
-                Parameter offnumParam = room.LookupParameter(N_Par_offnum);
+                Parameter offnumParam = room.get_Parameter(NRoomOfficeNumber);
                 if (offnumParam!=null&&offnumParam.HasValue)
                 {
                     string offNumValue = offnumParam.AsString();
@@ -214,8 +116,7 @@ namespace TNov
             
             if (officescount == 0) //если нет офисов - прерываем процесс
             {
-                new infowindow280("В проекте отсутствуют помещения с включенным параметром " + 
-                    N_Par_offnum + ". Заполните его в спецификации.").ShowDialog();
+                new infowindow280("В проекте отсутствуют помещения с включенным параметром N_Офис.Номер. Заполните его в спецификации.").ShowDialog();
                 Logger.Log("Офисы отсутствуют. Завершение работы.", 3);
                 string commandText = @"https://portal.talan.group/knowledge/proektirovanie/ofisografiya/";
                 var proc = new System.Diagnostics.Process();
@@ -228,16 +129,16 @@ namespace TNov
             // Диалоговое окно
 
             Logger.Log("Диалоговое окно",1);
-            var viewModel = new officesViewModel();
+            var viewModel = new RoomsViewModel();
             // Десериализация
             bool forProject = true;
             json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
             if (canserialize)
             {
-                viewModel = JsonConvert.DeserializeObject<officesViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<RoomsViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
-            var wpfview = new officeswpf(viewModel);
+            var wpfview = new RoomsWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { } else { Logger.Log("Запуск отменен пользователем. Завершение работы.", 3); return Result.Cancelled; }
@@ -299,7 +200,7 @@ namespace TNov
                 {
                     bool isOfficeRoom = false;
 
-                    Parameter offnumParam = room.LookupParameter(N_Par_offnum);
+                    Parameter offnumParam = room.get_Parameter(NRoomOfficeNumber);
                     if (offnumParam != null && offnumParam.HasValue)
                     {
                         string offNumValue = offnumParam.AsString();
@@ -309,10 +210,10 @@ namespace TNov
 
                     if (isOfficeRoom)
                     {
-                        string officeNum = room.LookupParameter(N_Par_offnum).AsValueString();
+                        string officeNum = room.get_Parameter(NRoomOfficeNumber).AsValueString();
                         foreach (var oroom in orooms)
                         {
-                            string officeNum1 = oroom.LookupParameter(N_Par_offnum).AsValueString();
+                            string officeNum1 = oroom.get_Parameter(NRoomOfficeNumber).AsValueString();
                             if (officeNum1 == officeNum)
                             {
                                 newORooms.Add(oroom);
@@ -345,8 +246,8 @@ namespace TNov
                         foreach (string n in n3) { if (name.Contains(n)) { k = 0.5; } }
                         foreach (string n in n4) { if (name.Contains(n)) { k = 0.3; } }
                         double areaRK = Math.Round((areaR * k + 0.000001), 1);
-                        room.LookupParameter(N_Par_sq)?.Set(areaR);
-                        room.LookupParameter(N_Par_sqk)?.Set(areaRK);
+                        room.get_Parameter(NRoomSqParamGuid)?.Set(areaR);
+                        room.get_Parameter(NRoomSqKParamGuid)?.Set(areaRK);
                         Logger.Log("   Помещение " + room.Id + " : успешно",2);
                     }
 
@@ -359,11 +260,11 @@ namespace TNov
             //Офисография
 
             var oroomssortbynum = from oroom in orooms //сортированный список помещений по номеру офиса
-                              orderby oroom.LookupParameter(N_Par_offnum).AsValueString()
+                              orderby oroom.get_Parameter(NRoomOfficeNumber).AsValueString()
                                 select oroom;
 
             var offices = from oroom in oroomssortbynum //список офисов
-                         group oroom by oroom.LookupParameter(N_Par_offnum).AsValueString();
+                         group oroom by oroom.get_Parameter(NRoomOfficeNumber).AsValueString();
 
             int officesCount = offices.Count();
 
@@ -386,15 +287,15 @@ namespace TNov
 
                 foreach (var office in offices) //проходим по каждому офису в списке офисов
                 {
-                    Logger.Log("Офис "+office.First().LookupParameter(N_Par_offnum).AsValueString(),2);
+                    Logger.Log("Офис "+office.First().get_Parameter(NRoomOfficeNumber).AsValueString(),2);
                     
                     double offsqo = 0; //объявляем переменную для заполнения значения параметра N_Офис.Площадь.Общая
                     double offsqp = 0; //N_Офис.Площадь.Полезная
                     double offsqr = 0; //N_Офис.Площадь.Расчетная
                     foreach (var oroom in office) //проходим по каждой комнате в офисе
                     {
-                        double sqNonConvert = oroom.LookupParameter(N_Par_sq).AsDouble();
-                        double sq = oroom.LookupParameter(N_Par_sq).AsDouble() / 0.3048 / 0.3048; //объявляем переменную, получаем площадь каждого помещения в офисе
+                        double sqNonConvert = oroom.get_Parameter(NRoomSqParamGuid).AsDouble();
+                        double sq = oroom.get_Parameter(NRoomSqParamGuid).AsDouble() / 0.3048 / 0.3048; //объявляем переменную, получаем площадь каждого помещения в офисе
                         Logger.Log("   Помещение " + oroom.Id.ToString()+" имя: "+oroom.Name+" площадь:"+ sqNonConvert.ToString(), 2);
                         
                         offsqo += sq; //добавляем значение площади помещения к общей площади офиса
@@ -412,12 +313,11 @@ namespace TNov
                     {
                         try
                         {
-                            oroom.LookupParameter(N_Par_offsqo).Set(offsqo); //назначаем параметр каждому помещению в офисе
+                            oroom.get_Parameter(NRoomOfficeSqO).Set(offsqo); //назначаем параметр каждому помещению в офисе
                         }
                         catch (Exception ex)
                         {
-                            Logger.Log("   Комната " + oroom.Id.ToString() + " Параметр "
-                                + N_Par_offsqo + " ошибка: " + ex.Message,4);
+                            Logger.Log("   Комната " + oroom.Id.ToString() + " Параметр N_Офис.Площадь.Общая ошибка: " + ex.Message,4);
                         }
                     }
                     //Полезная площадь
@@ -425,12 +325,11 @@ namespace TNov
                     {
                         try
                         {
-                            oroom.LookupParameter(N_Par_offsqp).Set(offsqp); 
+                            oroom.get_Parameter(NRoomOfficeSqP).Set(offsqp); 
                         }
                         catch (Exception ex)
                         {
-                            Logger.Log("   Комната " + oroom.Id.ToString() + " Параметр "
-                                + N_Par_offsqp + " ошибка: " + ex.Message, 4);
+                            Logger.Log("   Комната " + oroom.Id.ToString() + " Параметр N_Офис.Площадь.Полезная ошибка: " + ex.Message, 4);
                         }
                     }
                     //Расчетная площадь
@@ -438,12 +337,11 @@ namespace TNov
                     {
                         try
                         {
-                            oroom.LookupParameter(N_Par_offsqr).Set(offsqr);
+                            oroom.get_Parameter(NRoomOfficeSqR).Set(offsqr);
                         }
                         catch (Exception ex)
                         {
-                            Logger.Log("   Комната " + oroom.Id.ToString() + " Параметр "
-                                + N_Par_offsqr + " ошибка: " + ex.Message, 4);
+                            Logger.Log("   Комната " + oroom.Id.ToString() + " Параметр N_Офис.Площадь.Расчетная ошибка: " + ex.Message, 4);
                         }
                     }
                     //Прогресс-бар: +1

@@ -3,6 +3,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
+using Autodesk.Windows;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -10,15 +11,16 @@ using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using TNov.main;
-using TNov.Panel3.typefilter;
-using TNov.Panel8;
 using static System.Windows.Forms.LinkLabel;
 using adWin = Autodesk.Windows;
+using RibbonItem = Autodesk.Revit.UI.RibbonItem;
+using RibbonPanel = Autodesk.Revit.UI.RibbonPanel;
 using SplitButton = Autodesk.Revit.UI.SplitButton;
 
 /*
@@ -38,7 +40,11 @@ namespace TNov
         private string syncOption = "Подсветка 20/30 минут";
         private int time1 = 0;
         private int time2 = 0;
-        
+        private static List<RibbonPanel> _ARRibbonItems = new List<RibbonPanel>();
+        private static List<RibbonPanel> _STRibbonItems = new List<RibbonPanel>();
+        private static List<RibbonPanel> _MEPRibbonItems = new List<RibbonPanel>();
+        private static List<RibbonPanel> _BIMRibbonItems = new List<RibbonPanel>();
+        private ComboBox _comboBox;
         public Result OnStartup(UIControlledApplication application)
         {
             // Подписываемся на событие создания нового документа
@@ -174,11 +180,114 @@ namespace TNov
 
             // Создание вкладок, панелей, кнопок
 
-            string assemblyLocation = Assembly.GetExecutingAssembly().Location,
-                iconsDirectoryPath = Path.GetDirectoryName(assemblyLocation) + @"\TNov_icons\",
-                tabName = "TNov";
+            string assemblyLocation = Assembly.GetExecutingAssembly().Location, tabName = "TNov";
 
             application.CreateRibbonTab(tabName);
+
+
+
+            ContextualHelp mainhelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/");
+
+            // Панель "Настройки"
+
+            RibbonPanel panel0 = application.CreateRibbonPanel(tabName, "Настройки");
+
+            ComboBoxData comboData = new ComboBoxData("Режим");
+            
+            //проверка актуальности версии 
+#if config1 || config2
+            string TNovVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            string[] versionparts = TNovVersion.Split('.');
+            double versionMath = Convert.ToDouble(versionparts[0] + "000000") + Convert.ToDouble(versionparts[1] + "0000") +
+                Convert.ToDouble(versionparts[2] + "00") + Convert.ToDouble(versionparts[3]);
+            string verfilePath = nova.novaserver + "_TNov/actual/version.txt";
+            string actualVersion = TNovVersion;
+            try
+            {
+                actualVersion = File.ReadAllText(verfilePath);
+            }
+            catch (Exception) { }
+            string[] actualversionparts = actualVersion.Split('.');
+            double actualversionMath = Convert.ToDouble(actualversionparts[0] + "000000") + Convert.ToDouble(actualversionparts[1] + "0000") +
+                Convert.ToDouble(actualversionparts[2] + "00") + Convert.ToDouble(actualversionparts[3]);
+
+            // проверка актуальности клиента, переустановка и перезапуск клиента
+
+            bool run = Process.GetProcessesByName("TNovClient").Any();
+            //C:\Users\%username%\TNovClient
+            string curClientVersion = "1.0.0.0";
+            try
+            {
+                curClientVersion = FileVersionInfo.GetVersionInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.dll")).FileVersion;
+            }
+            catch (Exception) { }
+            string[] versionpartsC = curClientVersion.Split('.');
+            double versionMathC = Convert.ToDouble(versionpartsC[0] + "000000") + Convert.ToDouble(versionpartsC[1] + "0000") +
+                Convert.ToDouble(versionpartsC[2] + "00") + Convert.ToDouble(versionpartsC[3]);
+
+            string verfilePathC = nova.novaserver + "_TNov/actual/clientversion.txt";
+            string actualVersionC = curClientVersion;
+            try
+            {
+                actualVersionC = File.ReadAllText(verfilePathC);
+            }
+            catch (Exception) { }
+            string[] actversionpartsC = actualVersionC.Split('.');
+            double actversionMathC = Convert.ToDouble(actversionpartsC[0] + "000000") + Convert.ToDouble(actversionpartsC[1] + "0000") +
+                Convert.ToDouble(actversionpartsC[2] + "00") + Convert.ToDouble(actversionpartsC[3]);
+
+            if (actversionMathC > versionMathC)
+            {
+                try
+                {
+                    if (run) { Process.GetProcessesByName("TNovClient").First().Kill(); }
+                    Thread.Sleep(5000);
+                    File.Copy(nova.novafolder + "client/TNovClient.deps.json", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.deps.json"), true);
+                    File.Copy(nova.novafolder + "client/TNovClient.dll", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.dll"), true);
+                    File.Copy(nova.novafolder + "client/TNovClient.exe", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.exe"), true);
+                    File.Copy(nova.novafolder + "client/TNovClient.pdb", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.pdb"), true);
+                    File.Copy(nova.novafolder + "client/TNovClient.runtimeconfig.json", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.runtimeconfig.json"), true);
+                }
+                catch (Exception) { }
+            }
+            bool run1 = Process.GetProcessesByName("TNovClient").Any();
+            if (!run1)
+            {
+                try
+                {
+                    Process.Start(@"C://Users/" + Environment.UserName + "/TNovClient/TNovClient.exe");
+                }
+                catch (Exception) { }
+            }
+#endif
+            // кнопка "Настройки"
+
+            System.Drawing.Image imgN = Properties.Resources.logo;
+#if config1 || config2
+            if (actualversionMath > versionMath) { imgN = Properties.Resources.attention32; }
+#endif
+            System.Drawing.Image imgNmin = Properties.Resources.logomin;
+#if config1 || config2
+            if (actualversionMath > versionMath) { imgNmin = Properties.Resources.attention16; }
+#endif
+            PushButtonData buttonDataN = new PushButtonData(nameof(appversion), "Настройки", assemblyLocation, typeof(appversion).FullName)
+            {
+                //LargeImage = GetImageSource(imgN),
+                Image = GetImageSource(imgNmin),
+                ToolTip = "Глобальные настройки плагина и сведения о программе."
+            };
+            buttonDataN.SetContextualHelp(mainhelp);
+
+            IList<RibbonItem> ribbonItemList0 = panel0.AddStackedItems(buttonDataN,(RibbonItemData)comboData);
+            _comboBox = ribbonItemList0[1] as ComboBox; 
+            _comboBox.AddItem(new ComboBoxMemberData("Все", "Все"));
+            _comboBox.AddItem(new ComboBoxMemberData("АР", "АР"));
+            _comboBox.AddItem(new ComboBoxMemberData("КЖ", "КЖ"));
+            _comboBox.AddItem(new ComboBoxMemberData("Сети", "Сети"));
+            _comboBox.AddItem(new ComboBoxMemberData("BIM", "BIM"));
+            _comboBox.CurrentChanged += OnComboBoxCurrentChanged; //подписка на событие изменения выбора
+            
 
             // Панель "Проект"
 
@@ -204,7 +313,7 @@ namespace TNov
 
             System.Drawing.Image imgJournal = Properties.Resources.journal32;
             System.Drawing.Image imgJournalmin = Properties.Resources.journal16;
-            PushButtonData buttonDataJournal = new PushButtonData(nameof(journal), "Журнал\nсинхронизаций", assemblyLocation, typeof(journal).FullName)
+            PushButtonData buttonDataJournal = new PushButtonData(nameof(Journal), "Журнал\nсинхронизаций", assemblyLocation, typeof(Journal).FullName)
             {
                 LargeImage = GetImageSource(imgJournal),
                 Image = GetImageSource(imgJournalmin),
@@ -226,31 +335,29 @@ namespace TNov
 
             System.Drawing.Image imgParamTable = Properties.Resources.ParamTable32;
             System.Drawing.Image imgParamTablemin = Properties.Resources.ParamTable16;
-            PushButtonData buttonDataParamTable = new PushButtonData(nameof(ParamTable), ".", assemblyLocation, typeof(ParamTable).FullName)
+            PushButtonData buttonDataParamTable = new PushButtonData(nameof(ParamTable), "Таблица параметров", assemblyLocation, typeof(ParamTable).FullName)
             {
                 Image = GetImageSource(imgParamTablemin),
                 ToolTip = "Открыть таблицу требований к модели."
             };
             buttonDataParamTable.SetContextualHelp(CDEhelp);
 
-            // сгруппированная кнопка "Методички"
+            // сгруппированная кнопка "База знаний"
 
             System.Drawing.Image imgwiki = Properties.Resources.wiki32;
             System.Drawing.Image imgwikimin = Properties.Resources.wiki16;
-            PushButtonData buttonDatawiki = new PushButtonData(nameof(workorg), ".", assemblyLocation, typeof(workorg).FullName)
+            PushButtonData buttonDatawiki = new PushButtonData(nameof(WorkOrg), "База знаний", assemblyLocation, typeof(WorkOrg).FullName)
             {
                 Image = GetImageSource(imgwikimin),
                 ToolTip = "Wiki по работе в Revit и не только."
             };
-            ContextualHelp mainhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/");
             buttonDatawiki.SetContextualHelp(mainhelp);
 
             // сгруппированная кнопка "Учебный портал"
 
             System.Drawing.Image imgedu = Properties.Resources.edu32;
             System.Drawing.Image imgedumin = Properties.Resources.edu16;
-            PushButtonData buttonDataedu = new PushButtonData(nameof(edu), ".", assemblyLocation, typeof(edu).FullName)
+            PushButtonData buttonDataedu = new PushButtonData(nameof(EduPortal), "Учебный портал", assemblyLocation, typeof(EduPortal).FullName)
             {
                 Image = GetImageSource(imgedumin),
                 ToolTip = "Перейти на учебный портал (moodle.talan.group)."
@@ -259,7 +366,7 @@ namespace TNov
                 "https://moodle.talan.group");
             buttonDataedu.SetContextualHelp(eduhelp);
 
-            // группа кнопок "Таблица параметров", "Методички", "Учебный портал"
+            // группа кнопок "Таблица параметров", "База знаний", "Учебный портал"
 
             panel3.AddStackedItems(buttonDataParamTable, buttonDatawiki, buttonDataedu);
 
@@ -286,7 +393,7 @@ namespace TNov
 
             System.Drawing.Image imgplw = Properties.Resources.plw32;
             System.Drawing.Image imgplwmin = Properties.Resources.plw16;
-            PushButtonData buttonDataplw = new PushButtonData(nameof(plw), "Закреплятор\nУровни Наборы", assemblyLocation, typeof(plw).FullName)
+            PushButtonData buttonDataplw = new PushButtonData(nameof(PLW), "Закреплятор\nУровни Наборы", assemblyLocation, typeof(PLW).FullName)
             {
                 LargeImage = GetImageSource(imgplw),
                 Image = GetImageSource(imgplwmin),
@@ -301,7 +408,7 @@ namespace TNov
 
             System.Drawing.Image imgplwSettings = Properties.Resources.worksets32;
             System.Drawing.Image imgplwSettingsmin = Properties.Resources.worksets16;
-            PushButtonData buttonDataplwSettings = new PushButtonData(nameof(plwSettings), "Настройки", assemblyLocation, typeof(plwSettings).FullName)
+            PushButtonData buttonDataplwSettings = new PushButtonData(nameof(PLWSettings), "Настройки", assemblyLocation, typeof(PLWSettings).FullName)
             {
                 LargeImage = GetImageSource(imgplwSettings),
                 Image = GetImageSource(imgplwSettingsmin),
@@ -314,7 +421,7 @@ namespace TNov
 
             System.Drawing.Image imgunpinner = Properties.Resources.unpinner32;
             System.Drawing.Image imgunpinnermin = Properties.Resources.unpinner16;
-            PushButtonData buttonDataunpinner = new PushButtonData(nameof(unpinner), "Откреплятор", assemblyLocation, typeof(unpinner).FullName)
+            PushButtonData buttonDataunpinner = new PushButtonData(nameof(Unpinner), "Откреплятор", assemblyLocation, typeof(Unpinner).FullName)
             {
                 LargeImage = GetImageSource(imgunpinner),
                 Image = GetImageSource(imgunpinnermin),
@@ -336,7 +443,7 @@ namespace TNov
 
             System.Drawing.Image imgchanges = Properties.Resources.changes32;
             System.Drawing.Image imgchangesmin = Properties.Resources.changes16;
-            PushButtonData buttonDatachanges = new PushButtonData(nameof(changes), "Изменения", assemblyLocation, typeof(changes).FullName)
+            PushButtonData buttonDatachanges = new PushButtonData(nameof(Changes), "Изменения", assemblyLocation, typeof(Changes).FullName)
             {
                 Image = GetImageSource(imgchangesmin),
                 ToolTip = "Автонумерация облаков и заполнение параметров листов."
@@ -350,7 +457,7 @@ namespace TNov
 
             System.Drawing.Image imgidselection = Properties.Resources.idselection32;
             System.Drawing.Image imgidselectionmin = Properties.Resources.idselection16;
-            PushButtonData buttonDataidselection = new PushButtonData(nameof(idselection), "Выбор по ID", assemblyLocation, typeof(idselection).FullName)
+            PushButtonData buttonDataidselection = new PushButtonData(nameof(IdSelection), "Выбор по ID", assemblyLocation, typeof(IdSelection).FullName)
             {
                 Image = GetImageSource(imgidselectionmin),
                 ToolTip = "Выбрать и изолировать элементы по ID."
@@ -363,7 +470,7 @@ namespace TNov
 
             System.Drawing.Image imgexcel = Properties.Resources.excel32;
             System.Drawing.Image imgexcelmin = Properties.Resources.excel16;
-            PushButtonData buttonDataexcel = new PushButtonData(nameof(excel), "Excel", assemblyLocation, typeof(excel).FullName)
+            PushButtonData buttonDataexcel = new PushButtonData(nameof(Excel), "Excel", assemblyLocation, typeof(Excel).FullName)
             {
                 Image = GetImageSource(imgexcelmin),
                 ToolTip = "Экспорт спецификации в Excel."
@@ -374,7 +481,7 @@ namespace TNov
 
             // подкнопка "Excel.Настройки"
 
-            PushButtonData buttonDataexcelSettings = new PushButtonData(nameof(excelSettings), "Excel.Настройки", assemblyLocation, typeof(excelSettings).FullName)
+            PushButtonData buttonDataexcelSettings = new PushButtonData(nameof(ExcelSettings), "Excel.Настройки", assemblyLocation, typeof(ExcelSettings).FullName)
             {
                 Image = GetImageSource(imgexcelmin),
                 ToolTip = "Экспорт спецификации в Excel."
@@ -393,7 +500,7 @@ namespace TNov
 
             System.Drawing.Image imgsheets = Properties.Resources.sheets32;
             System.Drawing.Image imgsheetsmin = Properties.Resources.sheets16;
-            PushButtonData buttonDatasheets = new PushButtonData(nameof(sheets), "Менеджер\nлистов", assemblyLocation, typeof(sheets).FullName)
+            PushButtonData buttonDatasheets = new PushButtonData(nameof(Sheets), "Менеджер\nлистов", assemblyLocation, typeof(Sheets).FullName)
             {
                 LargeImage = GetImageSource(imgsheets),
                 Image = GetImageSource(imgsheetsmin),
@@ -408,7 +515,7 @@ namespace TNov
 
             System.Drawing.Image imgfilter = Properties.Resources.typefilter32;
             System.Drawing.Image imgfiltermin = Properties.Resources.typefilter16;
-            PushButtonData buttonDatafilter = new PushButtonData(nameof(typefilter), "Типофильтр", assemblyLocation, typeof(typefilter).FullName)
+            PushButtonData buttonDatafilter = new PushButtonData(nameof(Panel3.typefilter.TypeFilter), "Типофильтр", assemblyLocation, typeof(Panel3.typefilter.TypeFilter).FullName)
             {
                 LargeImage = GetImageSource(imgfilter),
                 Image = GetImageSource(imgfiltermin),
@@ -422,12 +529,13 @@ namespace TNov
             // Панель "АР Модель"
 
             RibbonPanel panel4 = application.CreateRibbonPanel(tabName, "АР Модель");
+            _ARRibbonItems.Add(panel4);
 
             // кнопка "Генератор полов"
 
             System.Drawing.Image imgfloors = Properties.Resources.floors32;
             System.Drawing.Image imgfloorsmin = Properties.Resources.floors16;
-            PushButtonData buttonDatafloors = new PushButtonData(nameof(floors), "Генератор\nполов", assemblyLocation, typeof(floors).FullName)
+            PushButtonData buttonDatafloors = new PushButtonData(nameof(Floors), "Генератор\nполов", assemblyLocation, typeof(Floors).FullName)
             {
                 LargeImage = GetImageSource(imgfloors),
                 Image = GetImageSource(imgfloorsmin),
@@ -441,7 +549,7 @@ namespace TNov
             // кнопка "Антизеркало"
             System.Drawing.Image imgmirror = Properties.Resources.mirror32;
             System.Drawing.Image imgmirrormin = Properties.Resources.mirror16;
-            PushButtonData buttonDatamirror = new PushButtonData(nameof(mirror), "Антизеркало", assemblyLocation, typeof(mirror).FullName)
+            PushButtonData buttonDatamirror = new PushButtonData(nameof(Mirror), "Антизеркало", assemblyLocation, typeof(Mirror).FullName)
             {
                 LargeImage = GetImageSource(imgmirror),
                 Image = GetImageSource(imgmirrormin),
@@ -452,18 +560,48 @@ namespace TNov
             buttonDatamirror.SetContextualHelp(mirrorhelp);
             panel4.AddItem(buttonDatamirror);
 
+            // кнопка "Перемычки"
+
+            System.Drawing.Image imgbeamscut = Properties.Resources.beamscut32;
+            System.Drawing.Image imgbeamscutmin = Properties.Resources.beamscut16;
+            PushButtonData buttonDatabeamscut = new PushButtonData(nameof(Beams), "Перемычки", assemblyLocation, typeof(Beams).FullName)
+            {
+                LargeImage = GetImageSource(imgbeamscut),
+                Image = GetImageSource(imgbeamscutmin),
+                ToolTip = "Вырезать объем бетонных перемычек из стен, сформировать эскизы ПР."
+            };
+            ContextualHelp beamshelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/vedomostperemychek/");
+            buttonDatabeamscut.SetContextualHelp(beamshelp);
+            panel4.AddItem(buttonDatabeamscut);
+
             // Панель "АР Параметры"
 
             RibbonPanel panel5 = application.CreateRibbonPanel(tabName, "АР Параметры");
+            _ARRibbonItems.Add(panel5);
 
-            
+            // кнопка "Эт.Номер"
+
+            System.Drawing.Image imglevelnumber = Properties.Resources.levelnumber32;
+            System.Drawing.Image imglevelnumbermin = Properties.Resources.levelnumber16;
+            PushButtonData buttonDatalevelnumber = new PushButtonData(nameof(LevelNumber), "Эт.Номер", assemblyLocation, typeof(LevelNumber).FullName)
+            {
+                LargeImage = GetImageSource(imglevelnumber),
+                Image = GetImageSource(imglevelnumbermin),
+                ToolTip = "Заполнить Эт.Номер у элементов модели (с выбором категорий)."
+            };
+            ContextualHelp levelnumberhelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/specificationsbylevel/");
+            buttonDatalevelnumber.SetContextualHelp(levelnumberhelp);
+            panel5.AddItem(buttonDatalevelnumber);
+
             // кнопка с выпадающим списком "Помещения"
 
             // подкнопка "Номера помещений"
 
             System.Drawing.Image imgrooms = Properties.Resources.roomsnum32;
             System.Drawing.Image imgroomsmin = Properties.Resources.roomsnum16;
-            PushButtonData buttonDatarooms = new PushButtonData(nameof(roomsnum), "Номера помещений", assemblyLocation, typeof(roomsnum).FullName)
+            PushButtonData buttonDatarooms = new PushButtonData(nameof(RoomsNum), "Номера помещений", assemblyLocation, typeof(RoomsNum).FullName)
             {
                 LargeImage = GetImageSource(imgrooms),
                 Image = GetImageSource(imgroomsmin),
@@ -477,7 +615,7 @@ namespace TNov
 
             System.Drawing.Image imgroomsround = Properties.Resources.roomsround32;
             System.Drawing.Image imgroomsroundmin = Properties.Resources.roomsround16;
-            PushButtonData buttonDataroomsround = new PushButtonData(nameof(roomsround), "Округлятор", assemblyLocation, typeof(roomsround).FullName)
+            PushButtonData buttonDataroomsround = new PushButtonData(nameof(RoomsRound), "Округлятор", assemblyLocation, typeof(RoomsRound).FullName)
             {
                 LargeImage = GetImageSource(imgroomsround),
                 Image = GetImageSource(imgroomsroundmin),
@@ -491,7 +629,7 @@ namespace TNov
 
             System.Drawing.Image imgapartsnum = Properties.Resources.apartsnum32;
             System.Drawing.Image imgapartsnummin = Properties.Resources.apartsnum16;
-            PushButtonData buttonDataapartsnum = new PushButtonData(nameof(apartsnumnew), "Нумератор квартир", assemblyLocation, typeof(apartsnumnew).FullName)
+            PushButtonData buttonDataapartsnum = new PushButtonData(nameof(ApartsNumAtLevel), "Нумератор квартир", assemblyLocation, typeof(ApartsNumAtLevel).FullName)
             {
                 LargeImage = GetImageSource(imgapartsnum),
                 Image = GetImageSource(imgapartsnummin),
@@ -505,7 +643,7 @@ namespace TNov
 
             System.Drawing.Image imgaparts = Properties.Resources.aparts32;
             System.Drawing.Image imgapartsmin = Properties.Resources.aparts16;
-            PushButtonData buttonDataaparts = new PushButtonData(nameof(aparts), "Квартирография", assemblyLocation, typeof(aparts).FullName)
+            PushButtonData buttonDataaparts = new PushButtonData(nameof(Aparts), "Квартирография", assemblyLocation, typeof(Aparts).FullName)
             {
                 LargeImage = GetImageSource(imgaparts),
                 Image = GetImageSource(imgapartsmin),
@@ -519,7 +657,7 @@ namespace TNov
 
             System.Drawing.Image imgoffices = Properties.Resources.offices32;
             System.Drawing.Image imgofficesmin = Properties.Resources.offices16;
-            PushButtonData buttonDataoffices = new PushButtonData(nameof(offices), "Офисография", assemblyLocation, typeof(offices).FullName)
+            PushButtonData buttonDataoffices = new PushButtonData(nameof(Offices), "Офисография", assemblyLocation, typeof(Offices).FullName)
             {
                 LargeImage = GetImageSource(imgoffices),
                 Image = GetImageSource(imgofficesmin),
@@ -533,7 +671,7 @@ namespace TNov
 
             System.Drawing.Image imgfailedrooms = Properties.Resources.failedrooms32;
             System.Drawing.Image imgfailedroomsmin = Properties.Resources.failedrooms16;
-            PushButtonData buttonDatafailedrooms = new PushButtonData(nameof(failedrooms), "Удалить лишние", assemblyLocation, typeof(failedrooms).FullName)
+            PushButtonData buttonDatafailedrooms = new PushButtonData(nameof(PurgeFailedRooms), "Удалить лишние", assemblyLocation, typeof(PurgeFailedRooms).FullName)
             {
                 LargeImage = GetImageSource(imgfailedrooms),
                 Image = GetImageSource(imgfailedroomsmin),
@@ -547,7 +685,7 @@ namespace TNov
 
             System.Drawing.Image imgroomsbackup = Properties.Resources.roomsbackup32;
             System.Drawing.Image imgroomsbackupmin = Properties.Resources.roomsbackup16;
-            PushButtonData buttonDataroomsbackup = new PushButtonData(nameof(roomsBackup), "Резервные копии", assemblyLocation, typeof(roomsBackup).FullName)
+            PushButtonData buttonDataroomsbackup = new PushButtonData(nameof(RoomsBackup), "Резервные копии", assemblyLocation, typeof(RoomsBackup).FullName)
             {
                 LargeImage = GetImageSource(imgroomsbackup),
                 Image = GetImageSource(imgroomsbackupmin),
@@ -559,7 +697,7 @@ namespace TNov
 
             // подкнопка "Номера по ТЗ"
 
-            PushButtonData buttonDataroomsTNumber = new PushButtonData(nameof(roomsTNumber), "Номера по ТЗ", assemblyLocation, typeof(roomsTNumber).FullName)
+            PushButtonData buttonDataroomsTNumber = new PushButtonData(nameof(RoomsTNumber), "Номера по ТЗ", assemblyLocation, typeof(RoomsTNumber).FullName)
             {
                 LargeImage = GetImageSource(imgrooms),
                 Image = GetImageSource(imgroomsmin),
@@ -590,24 +728,13 @@ namespace TNov
             groupaparts.AddPushButton(buttonDataroomsbackup);
             groupaparts.AddPushButton(buttonDataroomsTNumber);
 
-            // сгруппированная кнопка "Эт.Номер"
-
-            System.Drawing.Image imglevelnumber = Properties.Resources.levelnumber32;
-            System.Drawing.Image imglevelnumbermin = Properties.Resources.levelnumber16;
-            PushButtonData buttonDatalevelnumber = new PushButtonData(nameof(levelnumber), "Эт.Номер", assemblyLocation, typeof(levelnumber).FullName)
-            {
-                Image = GetImageSource(imglevelnumbermin),
-                ToolTip = "Заполнить Эт.Номер у элементов модели (с выбором категорий)."
-            };
-            ContextualHelp levelnumberhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/specificationsbylevel/");
-            buttonDatalevelnumber.SetContextualHelp(levelnumberhelp);
+            
 
             // сгруппированная кнопка "Парковки"
 
             System.Drawing.Image imgpark = Properties.Resources.park32;
             System.Drawing.Image imgparkmin = Properties.Resources.park16;
-            PushButtonData buttonDatapark = new PushButtonData(nameof(park), "Парковки", assemblyLocation, typeof(park).FullName)
+            PushButtonData buttonDatapark = new PushButtonData(nameof(Parking), "Парковки", assemblyLocation, typeof(Parking).FullName)
             {
                 Image = GetImageSource(imgparkmin),
                 ToolTip = "Пакет функций для работы с парковками."
@@ -621,35 +748,36 @@ namespace TNov
 
             System.Drawing.Image imgfloorspec = Properties.Resources.floorimages32;
             System.Drawing.Image imgfloorspecmin = Properties.Resources.floorimages16;
-            PushButtonData buttonDatafloorspec = new PushButtonData(nameof(floorimages), "Ведомость полов", assemblyLocation, typeof(floorimages).FullName)
+            PushButtonData buttonDatafloorspec = new PushButtonData(nameof(FloorImages), "Ведомость полов", assemblyLocation, typeof(FloorImages).FullName)
             {
                 Image = GetImageSource(imgfloorspecmin),
                 ToolTip = "Сформировать изображения для ведомости полов."
             };
             buttonDatafloorspec.SetContextualHelp(mainhelp);
 
-            // группа кнопок "Эт.Номер", "Парковки", "Ведомость полов"
+            // сгруппированная кнопка "Ведомость отделки"
 
-            panel5.AddStackedItems(buttonDatalevelnumber, buttonDatapark, buttonDatafloorspec);
-
-            // кнопка "Ведомость отделки"
-            
             System.Drawing.Image imgfinishing = Properties.Resources.finishing32;
             System.Drawing.Image imgfinishingmin = Properties.Resources.finishing16;
-            PushButtonData buttonDatafinishing = new PushButtonData(nameof(finishing), "Ведомость\nотделки", assemblyLocation, typeof(finishing).FullName)
+            PushButtonData buttonDatafinishing = new PushButtonData(nameof(Finishing), "Ведомость\nотделки", assemblyLocation, typeof(Finishing).FullName)
             {
-                LargeImage = GetImageSource(imgfinishing),
                 Image = GetImageSource(imgfinishingmin),
                 ToolTip = "Заполнение параметров для ведомости отделки у стен, полов, потолков."
             };
             ContextualHelp finishinghelp = new ContextualHelp(ContextualHelpType.Url,
                 "https://portal.talan.group/knowledge/proektirovanie/vedomostotdelkipomeshcheniy/");
             buttonDatafinishing.SetContextualHelp(finishinghelp);
-            panel5.AddItem(buttonDatafinishing);
+
+            // группа кнопок "Парковки", "Ведомость полов", "Ведомость отделки"
+
+            panel5.AddStackedItems(buttonDatapark, buttonDatafloorspec, buttonDatafinishing);
+
+            
             
             // Панель "КЖ Модель"
 
             RibbonPanel panel6 = application.CreateRibbonPanel(tabName, "КЖ Модель");
+            _STRibbonItems.Add(panel6);
 
             // кнопка с выпадающим списком "Краска+"
 
@@ -657,7 +785,7 @@ namespace TNov
 
             System.Drawing.Image imgpaint = Properties.Resources.paint32;
             System.Drawing.Image imgpaintmin = Properties.Resources.paint16;
-            PushButtonData buttonDatapaint = new PushButtonData(nameof(paint), "Краска+", assemblyLocation, typeof(paint).FullName)
+            PushButtonData buttonDatapaint = new PushButtonData(nameof(Paint), "Краска+", assemblyLocation, typeof(Paint).FullName)
             {
                 LargeImage = GetImageSource(imgpaint),
                 Image = GetImageSource(imgpaintmin),
@@ -695,7 +823,7 @@ namespace TNov
 
             System.Drawing.Image imgpaint2 = Properties.Resources.paint2_32;
             System.Drawing.Image imgpaint2min = Properties.Resources.paint2_16;
-            PushButtonData buttonDatapaint2 = new PushButtonData(nameof(paint2), "Материал?", assemblyLocation, typeof(paint2).FullName)
+            PushButtonData buttonDatapaint2 = new PushButtonData(nameof(Paint2), "Материал?", assemblyLocation, typeof(Paint2).FullName)
             {
                 LargeImage = GetImageSource(imgpaint2),
                 Image = GetImageSource(imgpaint2min),
@@ -731,7 +859,7 @@ namespace TNov
 
             System.Drawing.Image imgfixstructurefile = Properties.Resources.fixstructurefile32;
             System.Drawing.Image imgfixstructurefilemin = Properties.Resources.fixstructurefile16;
-            PushButtonData buttonDatafixstructurefile = new PushButtonData(nameof(fixstructurefile), "Ускорить файл", assemblyLocation, typeof(fixstructurefile).FullName)
+            PushButtonData buttonDatafixstructurefile = new PushButtonData(nameof(Fixstructurefile), "Ускорить файл", assemblyLocation, typeof(Fixstructurefile).FullName)
             {
                 Image = GetImageSource(imgfixstructurefilemin),
                 ToolTip = "Ускорить работу модели КЖ путем манипуляций с параметрами несущей арматуры."
@@ -740,24 +868,13 @@ namespace TNov
                 "https://portal.talan.group/knowledge/proektirovanie/uskorenierabotyfaylovmodeli_posu/");
             buttonDatafixstructurefile.SetContextualHelp(fixstructurefilehelp);
                   
-            // сгруппированная кнопка "Перемычки"
-
-            System.Drawing.Image imgbeamscut = Properties.Resources.beamscut32;
-            System.Drawing.Image imgbeamscutmin = Properties.Resources.beamscut16;
-            PushButtonData buttonDatabeamscut = new PushButtonData(nameof(beamscut), "Перемычки", assemblyLocation, typeof(beamscut).FullName)
-            {
-                Image = GetImageSource(imgbeamscutmin),
-                ToolTip = "Вырезать объем бетонных перемычек из стен, сформировать эскизы ПР."
-            };
-            ContextualHelp beamshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/vedomostperemychek/");
-            buttonDatabeamscut.SetContextualHelp(beamshelp);
+            
 
             // сгруппированная кнопка "Сваи"
 
             System.Drawing.Image imgpiles = Properties.Resources.foundcut32;
             System.Drawing.Image imgpilesmin = Properties.Resources.foundcut16;
-            PushButtonData buttonDatapiles = new PushButtonData(nameof(found), "Сваи", assemblyLocation, typeof(found).FullName)
+            PushButtonData buttonDatapiles = new PushButtonData(nameof(Found), "Сваи", assemblyLocation, typeof(Found).FullName)
             {
                 Image = GetImageSource(imgpilesmin),
                 ToolTip = "Пакет функций по работе со сваями."
@@ -766,20 +883,21 @@ namespace TNov
                 "https://portal.talan.group/knowledge/proektirovanie/svai_xmqe/");
             buttonDatapiles.SetContextualHelp(pileshelp);
 
-            // группа кнопок "Ускорить файл", "Перемычки", "Сваи"
+            // группа кнопок "Ускорить файл", "Сваи"
 
-            panel6.AddStackedItems(buttonDatafixstructurefile, buttonDatabeamscut, buttonDatapiles);
+            panel6.AddStackedItems(buttonDatafixstructurefile, buttonDatapiles);
             
 
             // Панель "КЖ Параметры"
 
             RibbonPanel panel7 = application.CreateRibbonPanel(tabName, "КЖ Параметры");
+            _STRibbonItems.Add(panel7);
 
             // сгруппированная кнопка "Эскизы деталей"
 
             System.Drawing.Image imgrebarimages = Properties.Resources.rebarimages32;
             System.Drawing.Image imgrebarimagesmin = Properties.Resources.rebarimages16;
-            PushButtonData buttonDatarebarimages = new PushButtonData(nameof(rebarimages), "Эскизы деталей", assemblyLocation, typeof(rebarimages).FullName)
+            PushButtonData buttonDatarebarimages = new PushButtonData(nameof(RebarImages), "Эскизы деталей", assemblyLocation, typeof(RebarImages).FullName)
             {
                 Image = GetImageSource(imgrebarimagesmin),
                 ToolTip = "Заполнить параметр A_Арм Эскиз формы у системной арматуры для ведомости деталей."
@@ -792,7 +910,7 @@ namespace TNov
 
             System.Drawing.Image imgsteelschedule = Properties.Resources.steelschedule32;
             System.Drawing.Image imgsteelschedulemin = Properties.Resources.steelschedule16;
-            PushButtonData buttonDatasteelschedule = new PushButtonData(nameof(steelschedule), "ВРС подчистить", assemblyLocation, typeof(steelschedule).FullName)
+            PushButtonData buttonDatasteelschedule = new PushButtonData(nameof(SteelSchedule), "ВРС подчистить", assemblyLocation, typeof(SteelSchedule).FullName)
             {
                 Image = GetImageSource(imgsteelschedulemin),
                 ToolTip = "Подчистить все ведомости расхода стали в проекте (скрыть столбцы с нулевыми значениями)."
@@ -805,7 +923,7 @@ namespace TNov
 
             System.Drawing.Image imgschemespec = Properties.Resources.grouping32;
             System.Drawing.Image imgschemespecmin = Properties.Resources.grouping16;
-            PushButtonData buttonDataschemespec = new PushButtonData(nameof(schemespec), "Группировка", assemblyLocation, typeof(schemespec).FullName)
+            PushButtonData buttonDataschemespec = new PushButtonData(nameof(Schemespec), "Группировка", assemblyLocation, typeof(Schemespec).FullName)
             {
                 Image = GetImageSource(imgschemespecmin),
                 ToolTip = "Заполнить параметр A_Группирование для сортировки спецификаций)."
@@ -819,82 +937,18 @@ namespace TNov
             panel7.AddStackedItems(buttonDatarebarimages, buttonDatasteelschedule, buttonDataschemespec);
 
 
-            // Панель "Отверстия"
-
-            RibbonPanel panel8 = application.CreateRibbonPanel(tabName, "Отверстия");
             
-            
-            // кнопка с выпадающим списком "Задания от ИОС"
-
-            //подкнопка "Задания от ИОС"
-            System.Drawing.Image imggettask = Properties.Resources.gettask32;
-            System.Drawing.Image imggettaskmin = Properties.Resources.gettask16;
-            PushButtonData buttonDatagettask = new PushButtonData(nameof(gettask), "Задания\nот ИОС", assemblyLocation, typeof(gettask).FullName)
-            {
-                LargeImage = GetImageSource(imggettask),
-                Image = GetImageSource(imggettaskmin),
-                ToolTip = "Проверить статусы выданных заданий, внедрить/обновить задание."
-            };
-            ContextualHelp gettaskhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/samostoyatelnoemodelirovanieotverstiy/");
-            buttonDatagettask.SetContextualHelp(gettaskhelp);
-
-            //подкнопка "Найти элементы"
-            System.Drawing.Image imggettaskelems = Properties.Resources.idselectionTasks32;
-            System.Drawing.Image imggettaskelemsmin = Properties.Resources.idselectionTasks16;
-            PushButtonData buttonDatagettaskelems = new PushButtonData(nameof(idselectionTasks), "Найти элементы", assemblyLocation, typeof(idselectionTasks).FullName)
-            {
-                LargeImage = GetImageSource(imggettaskelems),
-                Image = GetImageSource(imggettaskelemsmin),
-                ToolTip = "Найти отверстия или другие компоненты заданий по Маркам (позициям)."
-            };
-            buttonDatagettaskelems.SetContextualHelp(gettaskhelp);
-
-            //подкнопка "Проверка отверстий"
-
-            System.Drawing.Image imgholescheckdynamo = Properties.Resources.dynpl32;
-            System.Drawing.Image imgholescheckdynamomin = Properties.Resources.dynpl16;
-            PushButtonData buttonDataholescheckdynamo = new PushButtonData(nameof(holescheckdynamo), "Проверка\nотверстий", assemblyLocation, typeof(holescheckdynamo).FullName)
-            {
-                LargeImage = GetImageSource(imgholescheckdynamo),
-                Image = GetImageSource(imgholescheckdynamomin),
-                ToolTip = "Запустить скрипт Чек-лист.Отверстия (Dynamo)."
-            };
-            ContextualHelp holescheckdynamohelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/samostoyatelnoemodelirovanieotverstiy/");
-            buttonDataholescheckdynamo.SetContextualHelp(holescheckdynamohelp);
-
-
-            SplitButtonData buttonDatataskgroup = new SplitButtonData("Задания\nот ИОС", "Проверить статусы выданных заданий, внедрить/обновить задание.");
-            SplitButton grouptask = panel8.AddItem(buttonDatataskgroup) as SplitButton;
-            grouptask.AddPushButton(buttonDatagettask);
-            grouptask.AddPushButton(buttonDatagettaskelems);
-            grouptask.AddPushButton(buttonDataholescheckdynamo);
-
-            // кнопка "Отметки Вырезание"
-
-            System.Drawing.Image imgholes = Properties.Resources.holes32;
-            System.Drawing.Image imgholesmin = Properties.Resources.holes16;
-            PushButtonData buttonDataholes = new PushButtonData(nameof(holes), "Отметки\nВырезание", assemblyLocation, typeof(holes).FullName)
-            {
-                LargeImage = GetImageSource(imgholes),
-                Image = GetImageSource(imgholesmin),
-                ToolTip = "Вырезать отверстия из стен и плит, заполнить отметки отверстий."
-            };
-            ContextualHelp holeshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/samostoyatelnoemodelirovanieotverstiy/");
-            buttonDataholes.SetContextualHelp(holeshelp);
-            panel8.AddItem(buttonDataholes);
 
             // Панель "Сети"
 
             RibbonPanel panel9 = application.CreateRibbonPanel(tabName, "Сети");
+            _MEPRibbonItems.Add(panel9);
 
             // кнопка "Сводная спека"
 
             System.Drawing.Image imgadskg = Properties.Resources.adskg32;
             System.Drawing.Image imgadskgmin = Properties.Resources.adskg16;
-            PushButtonData buttonDataadskg = new PushButtonData(nameof(adskg), "Сводная\nспека", assemblyLocation, typeof(adskg).FullName)
+            PushButtonData buttonDataadskg = new PushButtonData(nameof(MEPSpec), "Сводная\nспека", assemblyLocation, typeof(MEPSpec).FullName)
             {
                 LargeImage = GetImageSource(imgadskg),
                 Image = GetImageSource(imgadskgmin),
@@ -909,7 +963,7 @@ namespace TNov
 
             System.Drawing.Image imgadskstenki = Properties.Resources.adskstenki32;
             System.Drawing.Image imgadskstenkimin = Properties.Resources.adskstenki16;
-            PushButtonData buttonDataadskstenki = new PushButtonData(nameof(adskstenki), "Стенки классы", assemblyLocation, typeof(adskstenki).FullName)
+            PushButtonData buttonDataadskstenki = new PushButtonData(nameof(DuctThicknessClasses), "Стенки классы", assemblyLocation, typeof(DuctThicknessClasses).FullName)
             {
                 Image = GetImageSource(imgadskstenkimin),
                 ToolTip = "Заполнить толщины стенок и класс герметичности воздуховодов."
@@ -923,7 +977,7 @@ namespace TNov
 
             System.Drawing.Image imgduct3d = Properties.Resources.vent32;
             System.Drawing.Image imgduct3dmin = Properties.Resources.vent16;
-            PushButtonData buttonDataduct3d = new PushButtonData(nameof(duct3d), "Схемы ОВ2", assemblyLocation, typeof(duct3d).FullName)
+            PushButtonData buttonDataduct3d = new PushButtonData(nameof(Duct3D), "Схемы ОВ2", assemblyLocation, typeof(Duct3D).FullName)
             {
                 Image = GetImageSource(imgduct3dmin),
                 ToolTip = "Создать/заменить схемы систем вентиляции."
@@ -936,7 +990,7 @@ namespace TNov
 
             System.Drawing.Image imgss = Properties.Resources.ssNumberer32;
             System.Drawing.Image imgssmin = Properties.Resources.ssNumberer16;
-            PushButtonData buttonDatass = new PushButtonData(nameof(ssNumberer), "Адресатор", assemblyLocation, typeof(ssNumberer).FullName)
+            PushButtonData buttonDatass = new PushButtonData(nameof(SSNumberer), "Адресатор", assemblyLocation, typeof(SSNumberer).FullName)
             {
                 Image = GetImageSource(imgssmin),
                 ToolTip = "Пакет функций по адресации устройств СС ПС."
@@ -953,7 +1007,7 @@ namespace TNov
 
             System.Drawing.Image imgefl = Properties.Resources.efl32;
             System.Drawing.Image imgeflmin = Properties.Resources.efl16;
-            PushButtonData buttonDataefl = new PushButtonData(nameof(efl), "ЭЛ Отметки", assemblyLocation, typeof(efl).FullName)
+            PushButtonData buttonDataefl = new PushButtonData(nameof(ElElevValues), "ЭЛ Отметки", assemblyLocation, typeof(ElElevValues).FullName)
             {
                 Image = GetImageSource(imgeflmin),
                 ToolTip = "Заполнить параметры N_ЭЛ.Высота стяжки и N_ЭЛ.Отметка потолка у выключателей, осветительных и электрических приборов, электрооборудования."
@@ -964,7 +1018,7 @@ namespace TNov
 
             // подкнопка "ЭЛ Отметки размещения. Настройки"
 
-            PushButtonData buttonDataeflsettings = new PushButtonData(nameof(eflsettings), "Отметки.Настройки", assemblyLocation, typeof(eflsettings).FullName)
+            PushButtonData buttonDataeflsettings = new PushButtonData(nameof(ElElevValuesSettings), "Отметки.Настройки", assemblyLocation, typeof(ElElevValuesSettings).FullName)
             {
                 Image = GetImageSource(imgeflmin),
                 ToolTip = "Настройки плагина ЭЛ Отметки."
@@ -975,7 +1029,7 @@ namespace TNov
 
             System.Drawing.Image imgcabletrays = Properties.Resources.cabletrays32;
             System.Drawing.Image imgcabletraysmin = Properties.Resources.cabletrays16;
-            PushButtonData buttonDatacabletrays = new PushButtonData(nameof(cabletrays), "Лотки", assemblyLocation, typeof(cabletrays).FullName)
+            PushButtonData buttonDatacabletrays = new PushButtonData(nameof(CableTrays), "Лотки", assemblyLocation, typeof(CableTrays).FullName)
             {
                 Image = GetImageSource(imgcabletraysmin),
                 ToolTip = "Крышки, перегородки для кабельных лотков, помещение лотков и их элементов в рабочий набор."
@@ -986,7 +1040,7 @@ namespace TNov
 
             // подкнопка "Лотки.Настройки"
 
-            PushButtonData buttonDatacabletrayssettings = new PushButtonData(nameof(cabletrayssettings), "Лотки.Настройки", assemblyLocation, typeof(cabletrayssettings).FullName)
+            PushButtonData buttonDatacabletrayssettings = new PushButtonData(nameof(CableTraysSettings), "Лотки.Настройки", assemblyLocation, typeof(CableTraysSettings).FullName)
             {
                 Image = GetImageSource(imgcabletraysmin),
                 ToolTip = "Настройки плагина Лотки."
@@ -997,7 +1051,7 @@ namespace TNov
 
             System.Drawing.Image imgcableways = Properties.Resources.cableways32;
             System.Drawing.Image imgcablewaysmin = Properties.Resources.cableways16;
-            PushButtonData buttonDatacableways = new PushButtonData(nameof(cableways), "Способы прокладки", assemblyLocation, typeof(cableways).FullName)
+            PushButtonData buttonDatacableways = new PushButtonData(nameof(CableWays), "Способы прокладки", assemblyLocation, typeof(CableWays).FullName)
             {
                 Image = GetImageSource(imgcablewaysmin),
                 ToolTip = "Запись значений в параметры автоматического выключателя."
@@ -1008,7 +1062,7 @@ namespace TNov
 
             // подкнопка "Прокладка.Настройки"
 
-            PushButtonData buttonDatacablewayssettings = new PushButtonData(nameof(cablewaysSettings), "Прокладка.Настройки", assemblyLocation, typeof(cablewaysSettings).FullName)
+            PushButtonData buttonDatacablewayssettings = new PushButtonData(nameof(CableWaysSettings), "Прокладка.Настройки", assemblyLocation, typeof(CableWaysSettings).FullName)
             {
                 Image = GetImageSource(imgcablewaysmin),
                 ToolTip = "Настройки плагина Способы прокладки."
@@ -1031,15 +1085,118 @@ namespace TNov
             ((PulldownButton)splitButtonCT).AddPushButton(buttonDatacabletrays);
             ((PulldownButton)splitButtonCT).AddPushButton(buttonDatacabletrayssettings);
 
+            // Панель "Pikachu Tools"
+
+            RibbonPanel panel9p = application.CreateRibbonPanel(tabName, "Pikachu Tools");
+            _MEPRibbonItems.Add(panel9p);
+
+            // кнопка "FamilyAToFamilyB"
+            System.Drawing.Image imgFamilyAToFamilyB = Properties.Resources.pikachu32;
+            System.Drawing.Image imgFamilyAToFamilyBmin = Properties.Resources.pikachu16;
+            PushButtonData buttonDataFamilyAToFamilyB = new PushButtonData("FamilyAToFamilyB", "Расстановщик\nСС ПС", assemblyLocation, typeof(PikachuCommand).FullName)
+            {
+                LargeImage = GetImageSource(imgFamilyAToFamilyB),
+                Image = GetImageSource(imgFamilyAToFamilyBmin),
+                ToolTip = "Универсальное размещение элементов рядом с элементами из связанных файлов",
+                LongDescription = "Размещает элементы текущего файла рядом с элементами из связанных файлов\n\nГод напряженный - работаем эффективно!"
+            };
+            ContextualHelp buttonDataFamilyAToFamilyBhelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/");
+            buttonDataFamilyAToFamilyB.SetContextualHelp(buttonDataFamilyAToFamilyBhelp);
+            panel9p.AddItem(buttonDataFamilyAToFamilyB);
+
+            // кнопка "IntersectionCheck"
+            System.Drawing.Image imgIntersectionCheck = Properties.Resources.pikachu2_32;
+            System.Drawing.Image imgIntersectionCheckmin = Properties.Resources.pikachu2_16;
+            PushButtonData buttonDataIntersectionCheck = new PushButtonData("IntersectionCheck", "Проверка\nпересечений", assemblyLocation, typeof(IntersectionCheckCommand).FullName)
+            {
+                LargeImage = GetImageSource(imgIntersectionCheck),
+                Image = GetImageSource(imgIntersectionCheckmin),
+                ToolTip = "Проверка пересечений между элементами текущего и связанных файлов с навигацией в 3D",
+                LongDescription = "Показывает пересечения элементов текущего файла со связанными файлами\n\nГод напряженный - ищем и устраняем коллизии!"
+            };
+            ContextualHelp buttonDataIntersectionCheckhelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/");
+            buttonDataIntersectionCheck.SetContextualHelp(buttonDataIntersectionCheckhelp);
+            panel9p.AddItem(buttonDataIntersectionCheck);
+
+            // Панель "Отверстия"
+
+            RibbonPanel panel8 = application.CreateRibbonPanel(tabName, "Отверстия");
+
+            // кнопка с выпадающим списком "Задания от ИОС"
+
+            //подкнопка "Задания от ИОС"
+            System.Drawing.Image imggettask = Properties.Resources.gettask32;
+            System.Drawing.Image imggettaskmin = Properties.Resources.gettask16;
+            PushButtonData buttonDatagettask = new PushButtonData(nameof(TasksMenu), "Задания\nот ИОС", assemblyLocation, typeof(TasksMenu).FullName)
+            {
+                LargeImage = GetImageSource(imggettask),
+                Image = GetImageSource(imggettaskmin),
+                ToolTip = "Проверить статусы выданных заданий, внедрить/обновить задание."
+            };
+            ContextualHelp gettaskhelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/samostoyatelnoemodelirovanieotverstiy/");
+            buttonDatagettask.SetContextualHelp(gettaskhelp);
+
+            //подкнопка "Найти элементы"
+            System.Drawing.Image imggettaskelems = Properties.Resources.idselectionTasks32;
+            System.Drawing.Image imggettaskelemsmin = Properties.Resources.idselectionTasks16;
+            PushButtonData buttonDatagettaskelems = new PushButtonData(nameof(IdSelectionTasks), "Найти элементы", assemblyLocation, typeof(IdSelectionTasks).FullName)
+            {
+                LargeImage = GetImageSource(imggettaskelems),
+                Image = GetImageSource(imggettaskelemsmin),
+                ToolTip = "Найти отверстия или другие компоненты заданий по Маркам (позициям)."
+            };
+            buttonDatagettaskelems.SetContextualHelp(gettaskhelp);
+
+            //подкнопка "Проверка отверстий"
+
+            System.Drawing.Image imgholescheckdynamo = Properties.Resources.dynpl32;
+            System.Drawing.Image imgholescheckdynamomin = Properties.Resources.dynpl16;
+            PushButtonData buttonDataholescheckdynamo = new PushButtonData(nameof(HolesCheckDynamo), "Проверка\nотверстий", assemblyLocation, typeof(HolesCheckDynamo).FullName)
+            {
+                LargeImage = GetImageSource(imgholescheckdynamo),
+                Image = GetImageSource(imgholescheckdynamomin),
+                ToolTip = "Запустить скрипт Чек-лист.Отверстия (Dynamo)."
+            };
+            ContextualHelp holescheckdynamohelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/samostoyatelnoemodelirovanieotverstiy/");
+            buttonDataholescheckdynamo.SetContextualHelp(holescheckdynamohelp);
+
+
+            SplitButtonData buttonDatataskgroup = new SplitButtonData("Задания\nот ИОС", "Проверить статусы выданных заданий, внедрить/обновить задание.");
+            SplitButton grouptask = panel8.AddItem(buttonDatataskgroup) as SplitButton;
+            grouptask.AddPushButton(buttonDatagettask);
+            grouptask.AddPushButton(buttonDatagettaskelems);
+            grouptask.AddPushButton(buttonDataholescheckdynamo);
+
+            // кнопка "Отметки Вырезание"
+
+            System.Drawing.Image imgholes = Properties.Resources.holes32;
+            System.Drawing.Image imgholesmin = Properties.Resources.holes16;
+            PushButtonData buttonDataholes = new PushButtonData(nameof(Holes), "Отметки\nВырезание", assemblyLocation, typeof(Holes).FullName)
+            {
+                LargeImage = GetImageSource(imgholes),
+                Image = GetImageSource(imgholesmin),
+                ToolTip = "Вырезать отверстия из стен и плит, заполнить отметки отверстий."
+            };
+            ContextualHelp holeshelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/samostoyatelnoemodelirovanieotverstiy/");
+            buttonDataholes.SetContextualHelp(holeshelp);
+            panel8.AddItem(buttonDataholes);
+
+
             // Панель "BIM"
 
             RibbonPanel panel10 = application.CreateRibbonPanel(tabName, "BIM");
+            _BIMRibbonItems.Add(panel10);
 
             // кнопка "BIM Экспорт"
 
             System.Drawing.Image imgnwc = Properties.Resources.nwc32;
             System.Drawing.Image imgnwcmin = Properties.Resources.nwc16;
-            PushButtonData buttonDatabim = new PushButtonData(nameof(bimexport), "BIM\nЭкспорт", assemblyLocation, typeof(bimexport).FullName)
+            PushButtonData buttonDatabim = new PushButtonData(nameof(BimExport), "BIM\nЭкспорт", assemblyLocation, typeof(BimExport).FullName)
             {
                 LargeImage = GetImageSource(imgnwc),
                 Image = GetImageSource(imgnwcmin),
@@ -1050,96 +1207,28 @@ namespace TNov
             buttonDatabim.SetContextualHelp(bimhelp);
             panel10.AddItem(buttonDatabim);
 
-            // Панель "TNov"
+            // кнопка "Т Назначение"
+            PushButtonData buttonDataTParsNazn = new PushButtonData(nameof(TParsNazn), "Т Назначение", assemblyLocation, typeof(TParsNazn).FullName);
+            panel10.AddItem(buttonDataTParsNazn);
 
-            RibbonPanel panelN = application.CreateRibbonPanel(tabName, "TNov");
+            // кнопка "Коды материалов"
+            PushButtonData buttonDataMat = new PushButtonData(nameof(AssignMaterialCodesCommand), "Коды материалов", assemblyLocation, typeof(AssignMaterialCodesCommand).FullName);
+            panel10.AddItem(buttonDataMat);
 
-            //проверка актуальности версии 
-#if config1 || config2
-            string TNovVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            string[] versionparts = TNovVersion.Split('.');
-            double versionMath = Convert.ToDouble(versionparts[0]+"000000") + Convert.ToDouble(versionparts[1] + "0000") +
-                Convert.ToDouble(versionparts[2] + "00") + Convert.ToDouble(versionparts[3]);
-            string verfilePath = nova.novaserver+"_TNov/actual/version.txt";
-            string actualVersion = TNovVersion;
+            //после создания панелей скрываем лишние
+            string appComboBoxJson = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/appComboBox.json");
             try
             {
-                actualVersion = File.ReadAllText(verfilePath);
-            }
-            catch (Exception) { }
-            string[] actualversionparts = actualVersion.Split('.');
-            double actualversionMath = Convert.ToDouble(actualversionparts[0] + "000000") + Convert.ToDouble(actualversionparts[1] + "0000") +
-                Convert.ToDouble(actualversionparts[2] + "00") + Convert.ToDouble(actualversionparts[3]);
-
-            // проверка актуальности клиента, переустановка и перезапуск клиента
-
-            bool run = Process.GetProcessesByName("TNovClient").Any();
-            //C:\Users\%username%\TNovClient
-            string curClientVersion = "1.0.0.0";
-            try
-            {
-                curClientVersion = FileVersionInfo.GetVersionInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.dll")).FileVersion;
-            }
-            catch (Exception) { }
-            string[] versionpartsC = curClientVersion.Split('.');
-            double versionMathC = Convert.ToDouble(versionpartsC[0] + "000000") + Convert.ToDouble(versionpartsC[1] + "0000") +
-                Convert.ToDouble(versionpartsC[2] + "00") + Convert.ToDouble(versionpartsC[3]);
-            
-            string verfilePathC = nova.novaserver + "_TNov/actual/clientversion.txt";
-            string actualVersionC = curClientVersion;
-            try
-            {
-                actualVersionC = File.ReadAllText(verfilePathC);
-            }
-            catch (Exception) { }
-            string[] actversionpartsC = actualVersionC.Split('.');
-            double actversionMathC = Convert.ToDouble(actversionpartsC[0] + "000000") + Convert.ToDouble(actversionpartsC[1] + "0000") +
-                Convert.ToDouble(actversionpartsC[2] + "00") + Convert.ToDouble(actversionpartsC[3]);
-
-            if (actversionMathC > versionMathC) 
-            {
-                try
+                int comboBoxIndex = JsonConvert.DeserializeObject<int>(File.ReadAllText(appComboBoxJson));
+                IList<ComboBoxMember> comboBoxItems = _comboBox.GetItems();
+                if (comboBoxIndex >= 0 && comboBoxIndex < comboBoxItems.Count)
                 {
-                    if (run) { Process.GetProcessesByName("TNovClient").First().Kill(); }
-                    Thread.Sleep(5000);
-                    File.Copy(nova.novafolder + "client/TNovClient.deps.json", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.deps.json"),true);
-                    File.Copy(nova.novafolder + "client/TNovClient.dll", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.dll"), true);
-                    File.Copy(nova.novafolder + "client/TNovClient.exe", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.exe"), true);
-                    File.Copy(nova.novafolder + "client/TNovClient.pdb", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.pdb"), true);
-                    File.Copy(nova.novafolder + "client/TNovClient.runtimeconfig.json", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.runtimeconfig.json"), true);
+                    _comboBox.Current = comboBoxItems[comboBoxIndex];
+                    ComboBoxChangeSelection();
                 }
-                catch (Exception) { }
             }
-            bool run1 = Process.GetProcessesByName("TNovClient").Any();
-            if (!run1) 
-            {
-                try
-                {
-                    Process.Start(@"C://Users/"+ Environment.UserName+"/TNovClient/TNovClient.exe");
-                }
-                catch (Exception) { }
-            }
-#endif
-            // кнопка "Настройки"
+            catch { }
 
-            System.Drawing.Image imgN = Properties.Resources.logo;
-#if config1 || config2
-            if (actualversionMath > versionMath) { imgN = Properties.Resources.attention32; }
-#endif
-            System.Drawing.Image imgNmin = Properties.Resources.logomin;
-#if config1 || config2
-            if (actualversionMath > versionMath) { imgNmin = Properties.Resources.attention16; }
-#endif
-            PushButtonData buttonDataN = new PushButtonData(nameof(appversion), "Настройки\nпрограммы", assemblyLocation, typeof(appversion).FullName)
-            {
-                LargeImage = GetImageSource(imgN),
-                Image = GetImageSource(imgNmin),
-                ToolTip = "Глобальные настройки плагина и сведения о программе."
-            };
-            buttonDataN.SetContextualHelp(mainhelp);
-            panelN.AddItem(buttonDataN);
-
-            
             // Результат создания кнопок и панелей
             return Result.Succeeded;
 
@@ -1233,6 +1322,7 @@ namespace TNov
         public void OnDocumentOpened(object sender, DocumentOpenedEventArgs e)
         {
             
+            //раскраска
             info = BasicFileInfo.Extract(e.Document.PathName);
             if (info.IsWorkshared)
             {
@@ -1266,8 +1356,7 @@ namespace TNov
 
                 if (servercheck)
                 {
-                    task3 task3 = new task3();
-                    List<string> groupTxtList = task3.GetGroupsInfo(doc);
+                    List<string> groupTxtList = TaskTools.GetGroupsInfo(doc);
                     
                     DateTime dateTime = DateTime.Now;
                     string date = dateTime.ToString();
@@ -1380,6 +1469,63 @@ namespace TNov
                 }
             }
         }
+        private void OnComboBoxCurrentChanged(object sender, EventArgs e)
+        {
+            ComboBoxChangeSelection();
+        }
+
+        private void ComboBoxChangeSelection()
+        {
+            if (_comboBox.Current != null)
+            {
+                string selectedMode = _comboBox.Current.ItemText;
+
+                // Обработка выбора
+
+                foreach (var ribbonItem in _BIMRibbonItems)
+                {
+                    if (selectedMode == "Все" || selectedMode == "BIM")
+                        ribbonItem.Visible = true;
+                    else ribbonItem.Visible = false;
+                }
+                foreach (var ribbonItem in _ARRibbonItems)
+                {
+                    if (selectedMode == "Все" || selectedMode == "АР")
+                        ribbonItem.Visible = true;
+                    else ribbonItem.Visible = false;
+                }
+                foreach (var ribbonItem in _STRibbonItems)
+                {
+                    if (selectedMode == "Все" || selectedMode == "КЖ")
+                        ribbonItem.Visible = true;
+                    else ribbonItem.Visible = false;
+                }
+                foreach (var ribbonItem in _MEPRibbonItems)
+                {
+                    if (selectedMode == "Все" || selectedMode == "Сети")
+                        ribbonItem.Visible = true;
+                    else ribbonItem.Visible = false;
+                }
+
+                //Сериализация
+                string appComboBoxJson = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/appComboBox.json");
+                try
+                {
+                    IList<ComboBoxMember> comboBoxItems = _comboBox.GetItems();
+                    int comboBoxIndex = 0;
+                    foreach (var comboBoxMember in comboBoxItems)
+                    {
+                        if (selectedMode == comboBoxMember.ItemText)
+                        {
+                            File.WriteAllText(appComboBoxJson, JsonConvert.SerializeObject(comboBoxIndex)); break;
+                        }
+                        comboBoxIndex++;
+                    }
+                }
+                catch { }
+
+            }
+        }
 
         // Конвертер изображения
         private BitmapSource GetImageSource(System.Drawing.Image img)
@@ -1400,7 +1546,6 @@ namespace TNov
             }
             return bmp;
         }
-
         
 
     }

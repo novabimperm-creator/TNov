@@ -19,7 +19,7 @@ namespace TNov.Properties {
     // с помощью такого средства, как ResGen или Visual Studio.
     // Чтобы добавить или удалить член, измените файл .ResX и снова запустите ResGen
     // с параметром /str или перестройте свой проект VS.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -117,31 +117,6 @@ namespace TNov.Properties {
             get {
                 object obj = ResourceManager.GetObject("adskstenki64", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на using Autodesk.Revit.DB;
-        ///using Autodesk.Revit.UI;
-        ///using Autodesk.Revit.Attributes;
-        ///using System.Collections.Generic;
-        ///using System.Windows.Forms;
-        ///using System.Linq;
-        ///using Autodesk.Revit.DB.Architecture;
-        ///using System;
-        ///
-        ///namespace TNov
-        ///{
-        ///    [Transaction(TransactionMode.Manual)]
-        ///    public class aparts : IExternalCommand
-        ///    {
-        ///        private static DialogResult ShowInputDialog(out string output1, out string output2, out bool output3)
-        ///        {
-        ///            System.Drawing.Size size = new System.D [остаток строки не уместился]&quot;;.
-        /// </summary>
-        public static string aparts {
-            get {
-                return ResourceManager.GetString("aparts", resourceCulture);
             }
         }
         
@@ -1181,6 +1156,66 @@ namespace TNov.Properties {
         public static System.Drawing.Bitmap park64 {
             get {
                 object obj = ResourceManager.GetObject("park64", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap pikachu16 {
+            get {
+                object obj = ResourceManager.GetObject("pikachu16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap pikachu2_16 {
+            get {
+                object obj = ResourceManager.GetObject("pikachu2_16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap pikachu2_32 {
+            get {
+                object obj = ResourceManager.GetObject("pikachu2_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap pikachu2_64 {
+            get {
+                object obj = ResourceManager.GetObject("pikachu2_64", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap pikachu32 {
+            get {
+                object obj = ResourceManager.GetObject("pikachu32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap pikachu64 {
+            get {
+                object obj = ResourceManager.GetObject("pikachu64", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

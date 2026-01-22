@@ -1,14 +1,13 @@
 ﻿using System.Windows;
-using TNov.Panel8;
 
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для duct3dwpf.xaml
+    /// Логика взаимодействия для Duct3DWPF.xaml
     /// </summary>
-    public partial class duct3dwpf : Window
+    public partial class Duct3DWPF : Window
     {
-        public duct3dwpf(duct3dViewModel viewModel)
+        public Duct3DWPF(Duct3DViewModel viewModel)
         {
             InitializeComponent();
             this.SizeToContent = SizeToContent.Height;
@@ -26,6 +25,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
     }
 }

@@ -10,7 +10,7 @@ using TNov.main;
 namespace TNov
 {
     [Transaction(TransactionMode.Manual)]
-    public class mirror : IExternalCommand
+    public class Mirror : IExternalCommand
     {
         
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)

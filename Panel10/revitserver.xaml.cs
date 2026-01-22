@@ -10,12 +10,12 @@ using System.Windows.Data;
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для revitserver.xaml
+    /// Логика взаимодействия для RevitServer.xaml
     /// </summary>
-    public partial class revitserver : Window
+    public partial class RevitServer : Window
     {
 
-        public revitserver(revitserverViewModel viewModel)
+        public RevitServer(RevitServerViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;
@@ -34,9 +34,10 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
-        
-        
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
     }
     public class InverseConverter : IValueConverter
     {

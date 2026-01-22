@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Windows.Forms;
 using System.Windows.Threading;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
@@ -19,7 +20,7 @@ namespace TNov
 {
     
     [Transaction(TransactionMode.Manual)]
-    public class bimexport : IExternalCommand
+    public class BimExport : IExternalCommand
     {
         private bool IsFileInUse(FileInfo file)
         {
@@ -106,19 +107,19 @@ namespace TNov
 
             Logger.Log("Диалоговое окно",1);
             // Диалоговое окно
-            var viewModel = new bimexportViewModel();
+            var viewModel = new BimExportViewModel();
             // Десериализация
             string jsonpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/bimexport.json");
             try
             {
-                viewModel = JsonConvert.DeserializeObject<bimexportViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<BimExportViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
             catch (Exception ex)
             {
                 Logger.Log("Ошибка при десериализации: " + ex.Message,4);
             }
-            var wpfview = new bimexportwpf(viewModel, linksString);
+            var wpfview = new BimExportWPF(viewModel, linksString);
             
             if (linksString.First()!= "-----") 
             {
@@ -229,6 +230,7 @@ namespace TNov
                     fileName = fileName.Replace(".rvt", "");
                 }
                 if (fileName.Contains("-АР") && viewModel.AR == false) continue;
+                if (fileName.Contains("-ПОФ") && viewModel.AR == false) continue;
                 if (fileName.Contains("-КЖ") && viewModel.ST == false) continue;
                 if (fileName.Contains("-ВК") && viewModel.VK == false) continue;
                 if (fileName.Contains("-ОВ") && viewModel.OV == false) continue;
@@ -236,6 +238,7 @@ namespace TNov
                 if (fileName.Contains("-ЭО") && viewModel.EL == false) continue;
                 if (fileName.Contains("-СС") && viewModel.SS == false) continue;
                 if (fileName.Contains("_АР") && viewModel.AR == false) continue;
+                if (fileName.Contains("_ПОФ") && viewModel.AR == false) continue;
                 if (fileName.Contains("_КЖ") && viewModel.ST == false) continue;
                 if (fileName.Contains("_ВК") && viewModel.VK == false) continue;
                 if (fileName.Contains("_ОВ") && viewModel.OV == false) continue;
@@ -257,290 +260,300 @@ namespace TNov
                 //ModelPathUtils.ConvertUserVisiblePathToModelPath(new FileInfo(Path.Combine(filePath)).FullName);
                 ModelPathUtils.ConvertUserVisiblePathToModelPath(filePath);
                 ModelPath modelPath1 = ModelPathUtils.ConvertUserVisiblePathToModelPath(filePath);
-                Document document = uiApp.Application.OpenDocumentFile(modelPath1, openOptions);
-
-                if (viewModel.NWC||viewModel.NWC2)
+                try
                 {
-                    this.bimExportProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.bimExportProgressBar.info.Text = fileName +
-                    ": экспорт NWC"));
+                    Document document = uiApp.Application.OpenDocumentFile(modelPath1, openOptions);
 
-                    //наличие геометрии в модели
-                    int elemsCount = 0;
-                    List<Autodesk.Revit.DB.Floor> foundations = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_StructuralFoundation)   //Фундаменты
-                                                                             .WhereElementIsNotElementType()
-                                                                             .OfClass(typeof(Autodesk.Revit.DB.Floor))  //отсеиваем модели в контексте
-                                                                             .Cast<Autodesk.Revit.DB.Floor>()
-                                                                             .ToList();
-                    if (foundations.Count > 0)
+                    if (viewModel.NWC || viewModel.NWC2)
                     {
-                        elemsCount += foundations.Count; Logger.Log("фундаменты: " + foundations.Count.ToString(),2);
-                    }
-                    List<Wall> walls = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_Walls)
-                                                                             .WhereElementIsNotElementType()
-                                                                             .OfClass(typeof(Wall))
-                                                                             .Cast<Wall>()
-                                                                             .ToList();
-                    if (walls.Count > 0)
-                    {
-                        elemsCount += walls.Count; Logger.Log("стены: " + walls.Count.ToString(), 2);
-                    }
-                    List<Autodesk.Revit.DB.Floor> floors = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_Floors)
-                                                                             .WhereElementIsNotElementType()
-                                                                             .OfClass(typeof(Autodesk.Revit.DB.Floor))
-                                                                             .Cast<Autodesk.Revit.DB.Floor>()
-                                                                             .ToList();
-                    if (floors.Count > 0) 
-                    { 
-                        elemsCount += floors.Count; Logger.Log("плиты: " + floors.Count.ToString(), 2); 
-                    }
-                    List<CableTray> CTList = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_CableTray)
-                                                                 .WhereElementIsNotElementType()
-                                                                 .Cast<CableTray>()
-                                                                 .ToList();
-                    if (CTList.Count > 0) 
-                    {
-                        elemsCount += CTList.Count; Logger.Log("лотки: " + CTList.Count.ToString(), 2);
-                    }
-                    List<Element> Vozd = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_DuctCurves)
-                    .WhereElementIsNotElementType()
-                    .Cast<Element>()
-                    .ToList();
-                    if (Vozd.Count > 0) 
-                    { 
-                        elemsCount += Vozd.Count; Logger.Log("воздуховоды: " + Vozd.Count.ToString(), 2);
-                    }
-                    List<Element> Obor = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_MechanicalEquipment)
-                    .WhereElementIsNotElementType()
-                    .Cast<Element>()
-                    .ToList();
-                    if (Obor.Count > 0) 
-                    { 
-                        elemsCount += Obor.Count; Logger.Log("оборудование: " + Obor.Count.ToString(), 2);
-                    }
-                    List<Element> Trub = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_PipeCurves)
-                    .WhereElementIsNotElementType()
-                    .Cast<Element>()
-                    .ToList();
-                    if (Trub.Count > 0) 
-                    {
-                        elemsCount += Trub.Count; Logger.Log("трубы: " + Trub.Count.ToString(), 2);
-                    }
-                    List<FamilyInstance> GMs = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_GenericModel)
-                                                                            .WhereElementIsNotElementType()
-                                                                         .OfClass(typeof(FamilyInstance))
-                                                                         .Cast<FamilyInstance>()
-                                                                         .ToList();
-                    if (GMs.Count > 0) 
-                    { 
-                        elemsCount += GMs.Count; Logger.Log("обобщенные модели: " + GMs.Count.ToString(), 2);
-                    }
-                    bool modelConsistsElements = elemsCount > 0;
-                    //настройки экспорта в NWC
-                    NavisworksExportOptions navisworksExportOptions = new NavisworksExportOptions();
-                    navisworksExportOptions.ExportScope = NavisworksExportScope.View;
-                    navisworksExportOptions.ConvertElementProperties = true;
-                    navisworksExportOptions.ConvertLinkedCADFormats = false;
-                    navisworksExportOptions.DivideFileIntoLevels = false;
-                    navisworksExportOptions.FindMissingMaterials = false;
-                    List<Element> list = ((IEnumerable<Element>)new FilteredElementCollector(document)
+                        this.bimExportProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.bimExportProgressBar.info.Text = fileName +
+                        ": экспорт NWC"));
+
+                        //наличие геометрии в модели
+                        int elemsCount = 0;
+                        List<Autodesk.Revit.DB.Floor> foundations = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_StructuralFoundation)   //Фундаменты
+                                                                                 .WhereElementIsNotElementType()
+                                                                                 .OfClass(typeof(Autodesk.Revit.DB.Floor))  //отсеиваем модели в контексте
+                                                                                 .Cast<Autodesk.Revit.DB.Floor>()
+                                                                                 .ToList();
+                        if (foundations.Count > 0)
+                        {
+                            elemsCount += foundations.Count; Logger.Log("фундаменты: " + foundations.Count.ToString(), 2);
+                        }
+                        List<Wall> walls = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_Walls)
+                                                                                 .WhereElementIsNotElementType()
+                                                                                 .OfClass(typeof(Wall))
+                                                                                 .Cast<Wall>()
+                                                                                 .ToList();
+                        if (walls.Count > 0)
+                        {
+                            elemsCount += walls.Count; Logger.Log("стены: " + walls.Count.ToString(), 2);
+                        }
+                        List<Autodesk.Revit.DB.Floor> floors = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_Floors)
+                                                                                 .WhereElementIsNotElementType()
+                                                                                 .OfClass(typeof(Autodesk.Revit.DB.Floor))
+                                                                                 .Cast<Autodesk.Revit.DB.Floor>()
+                                                                                 .ToList();
+                        if (floors.Count > 0)
+                        {
+                            elemsCount += floors.Count; Logger.Log("плиты: " + floors.Count.ToString(), 2);
+                        }
+                        List<CableTray> CTList = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_CableTray)
+                                                                     .WhereElementIsNotElementType()
+                                                                     .Cast<CableTray>()
+                                                                     .ToList();
+                        if (CTList.Count > 0)
+                        {
+                            elemsCount += CTList.Count; Logger.Log("лотки: " + CTList.Count.ToString(), 2);
+                        }
+                        List<Element> Vozd = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_DuctCurves)
                         .WhereElementIsNotElementType()
-                        .OfCategory(BuiltInCategory.OST_Views))
-                        .Where<Element>((System.Func<Element, bool>)(fi => fi.Name == "Talan" || fi.Name == "Navisworks"))
-                        .ToList<Element>();
-                    if (viewModel.NWCNova)
-                    {
-                        Logger.Log("экспортируем с вида Nova", 2);
-                        List<Element> listN = ((IEnumerable<Element>)new FilteredElementCollector(document)
+                        .Cast<Element>()
+                        .ToList();
+                        if (Vozd.Count > 0)
+                        {
+                            elemsCount += Vozd.Count; Logger.Log("воздуховоды: " + Vozd.Count.ToString(), 2);
+                        }
+                        List<Element> Obor = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_MechanicalEquipment)
                         .WhereElementIsNotElementType()
-                        .OfCategory(BuiltInCategory.OST_Views))
-                        .Where<Element>((System.Func<Element, bool>)(fi => fi.Name == "Nova"))
-                        .ToList<Element>();
-                        if(listN.Count>0) list.Insert(0, listN[0]); //заменяем первый элемент списка видов нужным видом Nova
-                    }
-                    
-
-
-                    bool canOverwriteNwc = true;
-                    string nwcPath1 = nwcPath;
-                    if (viewModel.NWC == false) nwcPath1 = rvtPath2;
-                    string path = nwcPath1 + @"\" + fileName + ".nwc"; if(viewModel.NWCNova) path = nwcPath1 + @"\" + fileName + " внутр.nwc";
-                    bool nwcFileExists = File.Exists(path);
-                    if (nwcFileExists)
-                    {
-                        Logger.Log("найден существующий NWC-файл", 2);
-                        FileInfo fileInfo = new FileInfo(path);
-                        bool fileInUse = IsFileInUse(fileInfo);
-                        if (fileInUse)
+                        .Cast<Element>()
+                        .ToList();
+                        if (Obor.Count > 0)
                         {
-                            nwcPath1 = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                            path = nwcPath1 + @"\" + fileName + ".nwc"; if (viewModel.NWCNova) path = nwcPath1 + @"\" + fileName + " внутр.nwc";
-                            bool nwcFileExists1 = File.Exists(path);
-                            if (nwcFileExists1)
-                            {
-                                FileInfo fileInfo1 = new FileInfo(path);
-                                bool fileInUse1 = IsFileInUse(fileInfo1);
-                                if (fileInUse1)
-                                {
-                                    Logger.Log("ошибка: модель NWC используется другим приложением, сохранить на рабочий стол также не удалось",4);
-                                    log += "\nМодель " + fileName + " - ошибка: модель NWC используется, сохранить на рабочий стол также не удалось";
-                                    canOverwriteNwc = false;
-                                }
-                                else
-                                {
-                                    this.bimExportProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.bimExportProgressBar.info.Text = fileName +
-                    ": экспорт NWC на рабочий стол"));
-
-                                    Logger.Log("ошибка: модель NWC используется другим приложением, сохраняем на рабочий стол",1);
-                                    log += "\nМодель " + fileName + " - ошибка: модель NWC используется, NWC сохранен на рабочий стол";
-                                    desktopNWCcount++;
-                                }
-                            }
-                               
-                            
+                            elemsCount += Obor.Count; Logger.Log("оборудование: " + Obor.Count.ToString(), 2);
                         }
-                    }
-                    //проверка на наличие элементов
-                    if (!modelConsistsElements)
-                    {
-                        Logger.Log("в модели отсутствуют элементы",1); 
-                        log += "\nМодель " + fileName + " - в модели отсутствуют элементы";
-                        canOverwriteNwc = false;
-                    }
-                    //экспорт в NWC
-                    if (canOverwriteNwc)
-                    {
-                        if (list != null)
+                        List<Element> Trub = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_PipeCurves)
+                        .WhereElementIsNotElementType()
+                        .Cast<Element>()
+                        .ToList();
+                        if (Trub.Count > 0)
                         {
-                            
-                            string nwcFileName = fileName; if (viewModel.NWCNova) nwcFileName += " внутр";
-
-                            try
-                            {
-                                using (Transaction t = new Transaction(document))
-                                {
-                                    t.Start("Сброс подрезки вида");
-                                    Element vElem = document.GetElement(list[0].Id);
-                                    View3D view3D = (View3D)vElem;
-                                    view3D.get_Parameter(BuiltInParameter.VIEWER_MODEL_CLIP_BOX_ACTIVE).Set(0);
-                                    if(view3D.IsSectionBoxActive == false) Logger.Log("Подрезка вида сброшена",1);
-                                    t.Commit();
-                                }
-                                
-                            }
-                            catch (Exception ex)
-                            {
-                                Logger.Log("ошибка: " + ex.Message,4);
-                                log += "\nМодель " + fileName + " - ошибка: " + ex.Message;
-                            }
-
-                            try
-                            {
-                                navisworksExportOptions.ViewId = list[0].Id;
-                                document.Export(nwcPath1, nwcFileName, navisworksExportOptions);
-                                if (viewModel.NWC && viewModel.NWC2) 
-                                { 
-                                    //копирование nwc в папку выдачи
-                                    File.Copy(nwcPath1 + @"\" + nwcFileName + ".nwc", rvtPath2 + @"\" + nwcFileName + ".nwc"); 
-                                }
-                                if (nwcPath1 == nwcPathD)
-                                {
-                                    log += "\nМодель " + nwcFileName + " - NWC занят другим приложением, поэтому сохранен на рабочий стол";
-                                    Logger.Log("Модель " + nwcFileName + " - NWC успешно (рабочий стол)",1);
-                                }
-                                else
-                                {
-                                    log += "\nМодель " + nwcFileName + " - успешно создан NWC"; 
-                                    Logger.Log("Модель " + nwcFileName + " - NWC успешно", 1);
-                                }
-                                
-                            }
-                            catch (Exception ex)
-                            {
-                                Logger.Log("ошибка: " + ex.Message,4);  
-                                log += "\nМодель " + nwcFileName + " - ошибка: " + ex.Message;
-                            }
-                                
-                            
-                            
-
+                            elemsCount += Trub.Count; Logger.Log("трубы: " + Trub.Count.ToString(), 2);
                         }
-                        else
+                        List<FamilyInstance> GMs = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_GenericModel)
+                                                                                .WhereElementIsNotElementType()
+                                                                             .OfClass(typeof(FamilyInstance))
+                                                                             .Cast<FamilyInstance>()
+                                                                             .ToList();
+                        if (GMs.Count > 0)
                         {
-                            Logger.Log("отсутствует вид для экспорта",4);
-                            log += "\nМодель " + fileName + " - отсутствует вид для экспорта";
-                            
+                            elemsCount += GMs.Count; Logger.Log("обобщенные модели: " + GMs.Count.ToString(), 2);
                         }
+                        bool modelConsistsElements = elemsCount > 0;
+                        //настройки экспорта в NWC
+                        NavisworksExportOptions navisworksExportOptions = new NavisworksExportOptions();
+                        navisworksExportOptions.ExportScope = NavisworksExportScope.View;
+                        navisworksExportOptions.ConvertElementProperties = true;
+                        navisworksExportOptions.ConvertLinkedCADFormats = false;
+                        navisworksExportOptions.DivideFileIntoLevels = false;
+                        navisworksExportOptions.FindMissingMaterials = false;
+                        List<Element> list = ((IEnumerable<Element>)new FilteredElementCollector(document)
+                            .WhereElementIsNotElementType()
+                            .OfCategory(BuiltInCategory.OST_Views))
+                            .Where<Element>((System.Func<Element, bool>)(fi => fi.Name == "Talan" || fi.Name == "Navisworks"))
+                            .ToList<Element>();
+                        if (viewModel.NWCNova)
+                        {
+                            Logger.Log("экспортируем с вида Nova", 2);
+                            List<Element> listN = ((IEnumerable<Element>)new FilteredElementCollector(document)
+                            .WhereElementIsNotElementType()
+                            .OfCategory(BuiltInCategory.OST_Views))
+                            .Where<Element>((System.Func<Element, bool>)(fi => fi.Name == "Nova"))
+                            .ToList<Element>();
+                            if (listN.Count > 0) list.Insert(0, listN[0]); //заменяем первый элемент списка видов нужным видом Nova
+                        }
+
+
+
+                        bool canOverwriteNwc = true;
+                        string nwcPath1 = nwcPath;
+                        if (viewModel.NWC == false) nwcPath1 = rvtPath2;
+                        string path = nwcPath1 + @"\" + fileName + ".nwc"; if (viewModel.NWCNova) path = nwcPath1 + @"\" + fileName + " внутр.nwc";
+                        bool nwcFileExists = File.Exists(path);
+                        if (nwcFileExists)
+                        {
+                            Logger.Log("найден существующий NWC-файл", 2);
+                            FileInfo fileInfo = new FileInfo(path);
+                            bool fileInUse = IsFileInUse(fileInfo);
+                            if (fileInUse)
+                            {
+                                nwcPath1 = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                                path = nwcPath1 + @"\" + fileName + ".nwc"; if (viewModel.NWCNova) path = nwcPath1 + @"\" + fileName + " внутр.nwc";
+                                bool nwcFileExists1 = File.Exists(path);
+                                if (nwcFileExists1)
+                                {
+                                    FileInfo fileInfo1 = new FileInfo(path);
+                                    bool fileInUse1 = IsFileInUse(fileInfo1);
+                                    if (fileInUse1)
+                                    {
+                                        Logger.Log("ошибка: модель NWC используется другим приложением, сохранить на рабочий стол также не удалось", 4);
+                                        log += "\nМодель " + fileName + " - ошибка: модель NWC используется, сохранить на рабочий стол также не удалось";
+                                        canOverwriteNwc = false;
+                                    }
+                                    else
+                                    {
+                                        this.bimExportProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.bimExportProgressBar.info.Text = fileName +
+                        ": экспорт NWC на рабочий стол"));
+
+                                        Logger.Log("ошибка: модель NWC используется другим приложением, сохраняем на рабочий стол", 1);
+                                        log += "\nМодель " + fileName + " - ошибка: модель NWC используется, NWC сохранен на рабочий стол";
+                                        desktopNWCcount++;
+                                    }
+                                }
+
+
+                            }
+                        }
+                        //проверка на наличие элементов
+                        if (!modelConsistsElements)
+                        {
+                            Logger.Log("в модели отсутствуют элементы", 1);
+                            log += "\nМодель " + fileName + " - в модели отсутствуют элементы";
+                            canOverwriteNwc = false;
+                        }
+                        //экспорт в NWC
+                        if (canOverwriteNwc)
+                        {
+                            if (list != null)
+                            {
+
+                                string nwcFileName = fileName; if (viewModel.NWCNova) nwcFileName += " внутр";
+
+                                try
+                                {
+                                    using (Transaction t = new Transaction(document))
+                                    {
+                                        t.Start("Сброс подрезки вида");
+                                        Element vElem = document.GetElement(list[0].Id);
+                                        View3D view3D = (View3D)vElem;
+                                        view3D.get_Parameter(BuiltInParameter.VIEWER_MODEL_CLIP_BOX_ACTIVE).Set(0);
+                                        if (view3D.IsSectionBoxActive == false) Logger.Log("Подрезка вида сброшена", 1);
+                                        t.Commit();
+                                    }
+
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Log("ошибка: " + ex.Message, 4);
+                                    log += "\nМодель " + fileName + " - ошибка: " + ex.Message;
+                                }
+
+                                try
+                                {
+                                    navisworksExportOptions.ViewId = list[0].Id;
+                                    document.Export(nwcPath1, nwcFileName, navisworksExportOptions);
+                                    if (viewModel.NWC && viewModel.NWC2)
+                                    {
+                                        //копирование nwc в папку выдачи
+                                        File.Copy(nwcPath1 + @"\" + nwcFileName + ".nwc", rvtPath2 + @"\" + nwcFileName + ".nwc");
+                                    }
+                                    if (nwcPath1 == nwcPathD)
+                                    {
+                                        log += "\nМодель " + nwcFileName + " - NWC занят другим приложением, поэтому сохранен на рабочий стол";
+                                        Logger.Log("Модель " + nwcFileName + " - NWC успешно (рабочий стол)", 1);
+                                    }
+                                    else
+                                    {
+                                        log += "\nМодель " + nwcFileName + " - успешно создан NWC";
+                                        Logger.Log("Модель " + nwcFileName + " - NWC успешно", 1);
+                                    }
+
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Log("ошибка: " + ex.Message, 4);
+                                    log += "\nМодель " + nwcFileName + " - ошибка: " + ex.Message;
+                                }
+
+
+
+
+                            }
+                            else
+                            {
+                                Logger.Log("отсутствует вид для экспорта", 4);
+                                log += "\nМодель " + fileName + " - отсутствует вид для экспорта";
+
+                            }
+                        }
+
+                        if (viewModel.RVT == false) document.Close(false);
                     }
 
-                    if (viewModel.RVT == false) document.Close(false);
+                    if (viewModel.RVT)
+                    {
+                        this.bimExportProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.bimExportProgressBar.info.Text = fileName +
+                        ": очистка RVT"));
+
+                        bool rvtFileExists = File.Exists(rvtPath2 + @"\" + fileName + ".rvt");
+                        if (rvtFileExists)
+                        {
+                            FileInfo fileInfo = new FileInfo(rvtPath2 + @"\" + fileName + ".rvt");
+                            fileInfo.Delete();
+                        }
+
+                        //удаление связей
+                        List<RevitLinkInstance> links = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_RvtLinks)      //фильтр по категории Связи
+                                                                                .WhereElementIsNotElementType()    //фильтр только экземпляры
+                                                                                .Cast<RevitLinkInstance>()         //элементы категории Связи
+                                                                                .ToList();                         //формируем список
+                        ICollection<ElementId> linksToDelete = new List<ElementId>();
+                        if (links.Count > 0)
+                        {
+                            foreach (RevitLinkInstance link in links)
+                            {
+                                linksToDelete.Add(link.Id);
+                            }
+                            using (Transaction transaction = new Transaction(document))
+                            {
+                                transaction.Start("Удалить связи");
+                                document.Delete(linksToDelete);
+                                transaction.Commit();
+                            }
+                        }
+                        //вид тангл
+                        List<Element> listTangl = ((IEnumerable<Element>)new FilteredElementCollector(document)
+                            .WhereElementIsNotElementType()
+                            .OfCategory(BuiltInCategory.OST_Views))
+                            .Where<Element>((System.Func<Element, bool>)(fi => fi.Name == "Tangl"))
+                            .ToList<Element>();
+
+                        //чистка файла
+                        using (Transaction transaction1 = new Transaction(document))
+                        {
+                            transaction1.Start("Очистка RVT");
+                            PurgeDoc.Purge(document);
+                            Logger.Log("Очистка прошла успешно", 1);
+                            if (listTangl.Count > 0)
+                            {
+                                Element vElemT = document.GetElement(listTangl[0].Id);
+                                View3D view3DT = (View3D)vElemT;
+                                view3DT.get_Parameter(BuiltInParameter.VIEWER_MODEL_CLIP_BOX_ACTIVE).Set(0);
+                                if (view3DT.IsSectionBoxActive == false) Logger.Log("Подрезка вида Tangl сброшена", 1);
+                            }
+                            transaction1.Commit();
+                        }
+
+                        //сохранить файл
+                        this.bimExportProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.bimExportProgressBar.info.Text = fileName +
+                        ": сохранение RVT"));
+
+                        document.SaveAs(rvtPath2 + @"\" + fileName + ".rvt");
+                        document.Close(false);
+                        log += "\nМодель " + fileName + " - RVT успешно очищен и сохранен"; Logger.Log("Модель " + fileName + " - RVT успешно", 1);
+                    }
+
+                    PBCount++;
+                    this.bimExportProgressBar.TNov_ProgressBar.Dispatcher.Invoke<double>((Func<double>)(() => this.bimExportProgressBar.TNov_ProgressBar.Value = (double)PBCount));
+                    this.bimExportProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.bimExportProgressBar.value.Text = PBCount.ToString()));
+
                 }
-
-                if (viewModel.RVT)
+                catch (Autodesk.Revit.Exceptions.FileNotFoundException)
                 {
-                    this.bimExportProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.bimExportProgressBar.info.Text = fileName +
-                    ": очистка RVT"));
-                    
-                    bool rvtFileExists = File.Exists(rvtPath2 + @"\" + fileName + ".rvt");
-                    if (rvtFileExists)
-                    {
-                        FileInfo fileInfo = new FileInfo(rvtPath2 + @"\" + fileName + ".rvt");
-                        fileInfo.Delete();
-                    }
-
-                    //удаление связей
-                    List<RevitLinkInstance> links = new FilteredElementCollector(document).OfCategory(BuiltInCategory.OST_RvtLinks)      //фильтр по категории Связи
-                                                                            .WhereElementIsNotElementType()    //фильтр только экземпляры
-                                                                            .Cast<RevitLinkInstance>()         //элементы категории Связи
-                                                                            .ToList();                         //формируем список
-                    ICollection<ElementId> linksToDelete = new List<ElementId>();
-                    if (links.Count > 0)
-                    {
-                        foreach (RevitLinkInstance link in links)
-                        {
-                            linksToDelete.Add(link.Id);
-                        }
-                        using (Transaction transaction = new Transaction(document))
-                        {
-                            transaction.Start("Удалить связи");
-                            document.Delete(linksToDelete);
-                            transaction.Commit();
-                        }
-                    }
-                    //вид тангл
-                    List<Element> listTangl = ((IEnumerable<Element>)new FilteredElementCollector(document)
-                        .WhereElementIsNotElementType()
-                        .OfCategory(BuiltInCategory.OST_Views))
-                        .Where<Element>((System.Func<Element, bool>)(fi => fi.Name == "Tangl"))
-                        .ToList<Element>();
-                    
-                    //чистка файла
-                    using (Transaction transaction1 = new Transaction(document))
-                    {
-                        transaction1.Start("Очистка RVT");
-                        purgedoc.Purge(document);
-                        Logger.Log("Очистка прошла успешно", 1);
-                        if (listTangl.Count > 0)
-                        {
-                            Element vElemT = document.GetElement(listTangl[0].Id);
-                            View3D view3DT = (View3D)vElemT;
-                            view3DT.get_Parameter(BuiltInParameter.VIEWER_MODEL_CLIP_BOX_ACTIVE).Set(0);
-                            if (view3DT.IsSectionBoxActive == false) Logger.Log("Подрезка вида Tangl сброшена", 1);
-                        }
-                        transaction1.Commit();
-                    }
-
-                    //сохранить файл
-                    this.bimExportProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.bimExportProgressBar.info.Text = fileName +
-                    ": сохранение RVT"));
-
-                    document.SaveAs(rvtPath2 + @"\" + fileName + ".rvt"); 
-                    document.Close(false);
-                    log += "\nМодель " + fileName + " - RVT успешно очищен и сохранен"; Logger.Log("Модель " + fileName + " - RVT успешно",1);
+                    log += "\nМодель " + fileName + " - модель не существует, обновите дерево Revit Server";
+                    Logger.Log("\nМодель " + fileName + " - модель не существует в дереве Revit Server", 1);
+                    continue;
                 }
-
-                PBCount++;
-                this.bimExportProgressBar.TNov_ProgressBar.Dispatcher.Invoke<double>((Func<double>)(() => this.bimExportProgressBar.TNov_ProgressBar.Value = (double)PBCount));
-                this.bimExportProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.bimExportProgressBar.value.Text = PBCount.ToString()));
 
 
             }

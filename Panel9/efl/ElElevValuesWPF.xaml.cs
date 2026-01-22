@@ -1,0 +1,34 @@
+﻿using System.Windows;
+
+namespace TNov
+{
+    /// <summary>
+    /// Логика взаимодействия для ElElevValuesWPF.xaml
+    /// </summary>
+    public partial class ElElevValuesWPF : Window
+    {
+        public ElElevValuesWPF(ElElevValuesViewModel viewModel)
+        {
+            InitializeComponent();
+            textBox1.Focus();
+            DataContext = viewModel;
+            this.SizeToContent = SizeToContent.Height;
+        }
+        private void acceptButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = true;
+            this.Close(); // закрытие окна
+        }
+
+        private void escButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            this.Close(); // закрытие окна
+        }
+
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+
+        }
+    }
+}

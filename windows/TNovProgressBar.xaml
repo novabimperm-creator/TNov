@@ -4,22 +4,102 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:local="clr-namespace:TNov"
-        Background="DarkSeaGreen"
         
-        Title="TNov" MaxHeight="110" MaxWidth="400" MinHeight="80"
-        MinWidth="400" WindowStyle="SingleBorderWindow" ResizeMode="NoResize" 
-        WindowStartupLocation="CenterScreen" Topmost="true">
+        MaxHeight="140" MaxWidth="400" MinHeight="80"
+        MinWidth="400" 
+        WindowStartupLocation="CenterScreen" 
+            Background="White" BorderBrush="#FF008E43" BorderThickness="1"
+            ResizeMode="NoResize" WindowStyle="None" Topmost="true">
+    <Window.Resources>
+        <!-- Стиль с полным шаблоном -->
+        <Style x:Key="CustomButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#F0F0F0"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <!-- Убираем SystemColors -->
+                        <ControlTemplate.Resources>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" 
+                                         Color="Transparent"/>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" 
+                                         Color="Transparent"/>
+                        </ControlTemplate.Resources>
+
+                        <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="2">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <!-- Прямое указание цвета -->
+                                <Setter TargetName="border" 
+                                    Property="Background" 
+                                    Value="#FF008E43"/>
+                                <!-- Цвет заголовка -->
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" 
+                                    Property="Background" 
+                                    Value="#FF008E43"/>
+                                <!-- Темнее -->
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" 
+                                    Property="Opacity" 
+                                    Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="30"
+              ResizeBorderThickness="5"
+              GlassFrameThickness="0"
+              CornerRadius="0"/>
+    </WindowChrome.WindowChrome>
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="30 px"/>
             <RowDefinition Height="25 px"/>
             <RowDefinition Height="50 px"/>
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Grid.Row="0">
+        <!-- Верхняя панель (кастомный заголовок) -->
+        <Border Height="30" 
+                Background="#FF008E43" 
+                VerticalAlignment="Top"
+                MouseDown="Border_MouseDown">
+            <TextBlock Text="TNov" 
+                       Foreground="White"
+                       VerticalAlignment="Center"
+                       Margin="10,0"/>
+        </Border>
+
+        <!-- Основное содержимое -->
+        <Border Margin="0,30,0,0">
+
+
+        </Border>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Grid.Row="1">
             <TextBlock Text="Обработка " VerticalAlignment="Center" HorizontalAlignment="Center"/>
             <TextBlock Name="info" VerticalAlignment="Center" HorizontalAlignment="Center"/>
         </StackPanel>
-        <ProgressBar Name="TNov_ProgressBar" Margin="10" Value="0" Grid.Row="1"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="1">
+        <ProgressBar Name="TNov_ProgressBar" Margin="10" Value="0" Grid.Row="2" BorderBrush="#CCCCCC"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="2">
             <TextBlock Name="value" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Center"/>
             <TextBlock Text="/" VerticalAlignment="Center" HorizontalAlignment="Center"/>
             <TextBlock Name="maxvalue" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Center"/>

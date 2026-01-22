@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для parkmarkwpf.xaml
+    /// Логика взаимодействия для ParkMarkWPF.xaml
     /// </summary>
-    public partial class parkmarkwpf : Window
+    public partial class ParkMarkWPF : Window
     {
-        public parkmarkwpf(parkmarkViewModel viewModel)
+        public ParkMarkWPF(ParkMarkViewModel viewModel)
         {
             InitializeComponent();
             textBox1.Focus();
@@ -27,5 +27,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+
+        }
     }
 }

@@ -97,11 +97,11 @@ namespace TNov
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
         }
     }
-    public class revitserverViewModel : INotifyPropertyChanged
+    public class RevitServerViewModel : INotifyPropertyChanged
     {
         public ObservableCollection<Node> Nodes { get; set; }
         
-        public revitserverViewModel(IEnumerable<string> existingModels)
+        public RevitServerViewModel(IEnumerable<string> existingModels)
         {
             /*
             Nodes = new ObservableCollection<Node>();

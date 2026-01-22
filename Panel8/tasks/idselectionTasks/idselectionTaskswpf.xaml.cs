@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для idselectionTaskswpf.xaml
+    /// Логика взаимодействия для IdSelectionTasksWPF.xaml
     /// </summary>
-    public partial class idselectionTaskswpf : Window
+    public partial class IdSelectionTasksWPF : Window
     {
-        public idselectionTaskswpf(idselectionTasksViewModel viewModel)
+        public IdSelectionTasksWPF(IdSelectionTasksViewModel viewModel)
         {
             InitializeComponent();
             textBox1.Focus();
@@ -25,6 +25,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
     }
 }

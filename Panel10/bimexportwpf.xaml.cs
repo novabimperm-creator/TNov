@@ -12,14 +12,14 @@ using TNov.main;
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для bimexportwpf.xaml
+    /// Логика взаимодействия для BimExportWPF.xaml
     /// </summary>
-    public partial class bimexportwpf : Window
+    public partial class BimExportWPF : Window
     {
         public string initialDirectory = "C:\\";
         public string RSPath = "";
         List<string> links0 = new List<string>();
-        public bimexportwpf(bimexportViewModel viewModel,List<string>linksString)
+        public BimExportWPF(BimExportViewModel viewModel,List<string>linksString)
         {
             InitializeComponent();
             textBox1.Focus();
@@ -55,8 +55,8 @@ namespace TNov
         private void browseButtonRS_Click(object sender, RoutedEventArgs e)
         {
             rs.IsChecked = true;
-            revitserverViewModel viewModel2 = new revitserverViewModel(links0);
-            var wpfview = new revitserver(viewModel2);
+            RevitServerViewModel viewModel2 = new RevitServerViewModel(links0);
+            var wpfview = new RevitServer(viewModel2);
             viewModel2.CloseRequest += (s, ea) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true)
@@ -123,6 +123,11 @@ namespace TNov
         }
 
         private void textBox1_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+
+        }
+
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
 
         }

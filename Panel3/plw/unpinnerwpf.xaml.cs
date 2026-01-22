@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для unpinnerwpf.xaml
+    /// Логика взаимодействия для UnpinnerWPF.xaml
     /// </summary>
-    public partial class unpinnerwpf : Window
+    public partial class UnpinnerWPF : Window
     {
-        public unpinnerwpf(unpinnerwpfViewModel viewModel)
+        public UnpinnerWPF(UnpinnerViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;
@@ -24,6 +24,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
     }
 }

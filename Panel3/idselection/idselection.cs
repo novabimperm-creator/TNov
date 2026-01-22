@@ -14,71 +14,10 @@ namespace TNov
 {
 
 
-    public class idselectionViewModel : INotifyPropertyChanged
-    {
-        
-
-        private string _elemids = "111";
-        public string elemids
-        {
-            get => _elemids;
-            set
-            {
-                _elemids = value;
-                OnPropertyChanged();
-            }
-        }
-        private bool _cut = true;
-        public bool cut
-        {
-            get => _cut;
-            set
-            {
-                _cut = value;
-                OnPropertyChanged();
-            }
-        }
-        private bool _isolate = true;
-        public bool isolate
-        {
-            get => _isolate;
-            set
-            {
-                _isolate = value;
-                OnPropertyChanged();
-            }
-        }
-        public RelayCommand RunCommand { get; set; }
-        public idselectionViewModel()
-        {
-            RunCommand = new RelayCommand(param => { RunIdS(); }, CanRun);
-        }
-        public void RunIdS()
-        {
-            RaiseCloseRequest();
-        }
-        private bool CanRun(object param)
-        {
-            string ids = elemids.Replace(" ", ""); ids = ids.Replace(";", ","); ids = ids.Replace(".", ","); ids = ids.Replace(",", "");
-            return double.TryParse(ids, out _);
-        }
-
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-
-    }
+    
 
     [Transaction(TransactionMode.Manual)] //важно чтобы после этой строчки был IExternalCommand!
-    public class idselection : IExternalCommand
+    public class IdSelection : IExternalCommand
     {
         
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -102,16 +41,16 @@ namespace TNov
 
             Logger.Log("Открываем диалоговое окно",1);
             // Диалоговое окно
-            var viewModel = new idselectionViewModel();
+            var viewModel = new IdSelectionViewModel();
             // Десериализация
             bool forProject = false;
             json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
             if (canserialize) 
             {
-                viewModel = JsonConvert.DeserializeObject<idselectionViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<IdSelectionViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
-            var wpfview = new idselectionwpf(viewModel);
+            var wpfview = new IdSelectionWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { } 

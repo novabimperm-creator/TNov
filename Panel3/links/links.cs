@@ -16,7 +16,7 @@ using static System.Windows.Forms.LinkLabel;
 namespace TNov
 {
     [Transaction(TransactionMode.Manual)]
-    public class links : IExternalCommand
+    public class Links : IExternalCommand
     {
         private TNovProgressBar plwProgressBar;
         private void ThreadStartingPoint()
@@ -94,8 +94,8 @@ namespace TNov
 
             //Диалоговое окно
             Logger.Log("Диалоговое окно", 1);
-            revitserverViewModel viewModel = new revitserverViewModel(linksString);
-            var wpfview = new revitserver(viewModel);
+            RevitServerViewModel viewModel = new RevitServerViewModel(linksString);
+            var wpfview = new RevitServer(viewModel);
             viewModel.CloseRequest += (s, ea) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
 

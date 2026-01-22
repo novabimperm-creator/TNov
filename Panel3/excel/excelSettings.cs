@@ -15,7 +15,7 @@ namespace TNov
 {
     
     [Transaction(TransactionMode.Manual)]
-    public class excelSettings : IExternalCommand
+    public class ExcelSettings : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -33,18 +33,18 @@ namespace TNov
             Logger.Log("Старт работы (настройки)", 0);
 
             //Диалог
-            var viewModel = new excelViewModel();
+            var viewModel = new ExcelViewModel();
             // Десериализация
             string jsonpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/excel.json");
             try
             {
-                viewModel = JsonConvert.DeserializeObject<excelViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<ExcelViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
             catch (Exception ex) { Logger.Log("Ошибка при десериализации: " + ex.Message, 4); }
 
 
-            var wpfview = new excelwpf(viewModel);
+            var wpfview = new ExcelWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { } 

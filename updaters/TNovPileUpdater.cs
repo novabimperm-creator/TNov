@@ -28,9 +28,6 @@ namespace TNov
         public void Execute(UpdaterData data)
         {
             Document doc = data.GetDocument();
-            Autodesk.Revit.ApplicationServices.Application app = doc.Application;
-
-            BuiltInParameter gm = BuiltInParameter.ALL_MODEL_MODEL; //параметр Группа модели
 
             //проверка подключения к серверу
             string usagefilePath = nova.novaserver + "_TNov/usage.txt";
@@ -45,23 +42,24 @@ namespace TNov
                 foreach (ElementId id in idsB)
                 {
                     Element elem = doc.GetElement(id);
-                    string pvalue = elem.Name;
-                    if (pvalue != null)
+                    if (elem != null& elem.Name!=null) 
                     {
-                        if (pvalue.Contains("Свая"))
+                        if (elem.Name.Contains("Свая"))
                         {
-                            LocationPoint linkElem_lp = (LocationPoint)elem.Location;
-                            XYZ point = linkElem_lp.Point;
-                            double zz = point.Z - basePoint.Position.Z; zz = zz * 304.8;
-
-                            Parameter param = elem.LookupParameter("Свая.ОтмНизаРостверка");
-                            if (param != null)
+                            LocationPoint elem_lp = (LocationPoint)elem.Location;
+                            if (elem_lp != null)
                             {
-                                try
+                                XYZ point = elem_lp.Point;
+                                double zz = point.Z - basePoint.Position.Z; zz = zz * 304.8;
+
+                                if (Param.ParamExist("Свая.ОтмНизаРостверка", elem))
                                 {
-                                    param.Set(zz); 
+                                    Parameter param = elem.LookupParameter("Свая.ОтмНизаРостверка");
+                                    if (param != null)
+                                    {
+                                        param.Set(zz);
+                                    }
                                 }
-                                catch (Exception) { }
                             }
                         }
                     }

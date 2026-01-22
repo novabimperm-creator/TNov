@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
+using Autodesk.Revit.DB.Electrical;
 using Autodesk.Revit.UI;
 using Newtonsoft.Json;
 using System;
@@ -22,43 +23,13 @@ namespace TNov
         public int number;
         public string description;
         public int cloudcount;
+        public bool newlist;
     }
 
-    public class changesViewModel : INotifyPropertyChanged
-    {
-
-        private bool _all = true;
-        public bool all
-        {
-            get => _all; set { _all = value; OnPropertyChanged(); }
-        }
-        private bool _visible = false;
-        public bool visible
-        {
-            get => _visible; set { _visible = value; OnPropertyChanged(); }
-        }
-        private bool _purge = false;
-        public bool purge
-        {
-            get => _purge; set { _purge = value; OnPropertyChanged(); }
-        }
-
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-
-    }
+    
 
     [Transaction(TransactionMode.Manual)]
-    public class changes : IExternalCommand
+    public class Changes : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -92,8 +63,6 @@ namespace TNov
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
             }
 
-            // Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
 
             Logger.Log("Сбор элементов", 1);
             //получаем элементы
@@ -114,20 +83,40 @@ namespace TNov
             .ToList();
 
             //параметры
-            string sheetComm = "A_Примечание"; if (oldProject) sheetComm = "ADSK_Примечание";
-            
+            Guid adskCommparamGuid = new Guid("a85b7661-26b0-412f-979c-66af80b4b2c3");//ADSK_Примечание
+            List<Guid> NChangeLinePars1 = new List<Guid>() //N_Изм.СтрокаXX.Кол.уч.
+            {
+                new Guid("d37ea57b-0808-4d6d-92a1-7fc6227d3f18"), new Guid("688059f1-20a0-491b-b704-9e7735963a11"),
+                new Guid("e82994ec-1686-4bc9-be42-1a3edc2dc6eb"), new Guid("342ab652-cb9c-4ca9-be4f-3be323f1fcea"),
+                new Guid("5682ac53-4a96-4b99-b4c3-8b378d353ebd"), new Guid("7833ad6e-e746-47ea-8155-85bff1f819bf"),
+                new Guid("b2c74713-128c-4df7-982d-bcdb941afb5c"), new Guid("8e092f0d-c607-4bdb-b73a-bcf71982f5d7"),
+                new Guid("3fb4479d-84d7-429e-bd0f-7e6152ac9b0a"), new Guid("e57d297d-b0a7-4633-b4e9-c0e205b37db7"),
+                new Guid("11776b7a-e30a-411d-ae48-f65ac87d4ef7"), new Guid("d2c00464-8a76-4234-a6cc-2e6767e8f64c"),
+                new Guid("680d7933-4f58-4324-9eee-01675958fbd8"), new Guid("106e190a-4365-464a-b434-9587dde6fa03")
+            };
+            List<Guid> NChangeLinePars2 = new List<Guid>() //N_Изм.СтрокаXX.Лист.
+            {
+                new Guid("8b5eb639-5e9d-4597-aab5-930c3d919674"), new Guid("c8d0f5a1-4617-4cd4-932c-4c93f35bb213"),
+                new Guid("140ea739-47c9-40bc-9b07-3b4d862eae99"), new Guid("76ad2603-00a9-4467-959c-4d3485539f7e"),
+                new Guid("8967e4fa-3cce-42e9-a5a9-f6df001476dc"), new Guid("3bb18b6d-e381-4962-b8f7-9f64be8ec998"),
+                new Guid("5c9388c8-ae8c-420e-9011-0e2c35219592"), new Guid("6830df72-f844-4edb-8cd1-c854fccc623c"),
+                new Guid("d270aba5-f903-4dcb-87a1-49fb17f4c5a3"), new Guid("d7303fe2-677c-42cd-b378-409c75137193"),
+                new Guid("4fdd5ee2-5ca9-4bd7-b7a4-7102084e1262"), new Guid("8ff1fd64-b4db-4549-8cdb-bdc8693e640e"),
+                new Guid("d550c5c9-777e-4bbd-b394-79a85161eca8"), new Guid("7f13f8e5-ad02-486d-b4d1-1ade7a2d2e5f")
+            };
+
             Logger.Log("Диалоговое окно",1);
             //Диалог
-            var viewModel = new changesViewModel();
+            var viewModel = new ChangesViewModel(); //....//нужна опция для выбранных (с фильтром по классу ViewSheet)
             // Десериализация
             bool forProject = true;
             json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
             if (canserialize)
             {
-                viewModel = JsonConvert.DeserializeObject<changesViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<ChangesViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
-            var wpfview = new changeswpf(viewModel);
+            var wpfview = new ChangesWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { } else { Logger.Log("Запуск отменен пользователем. Завершение работы.", 3); return Result.Cancelled; }
@@ -144,7 +133,11 @@ namespace TNov
             View v = doc.ActiveView;
             ElementId sheetCatId = new ElementId(-2003100);
             bool sheetView = v.Category.Id == sheetCatId;
-
+            /*
+            Autodesk.Revit.UI.Selection.Selection selection = commandData.Application.ActiveUIDocument.Selection;
+            List<ViewSheet> ViewSheetList = new List<ViewSheet>();
+            ViewSheetList = GetViewSheetsFromCurrentSelection(doc, selection); //получаем ViewSheet из текущей выборки
+            */
             using (Transaction t = new Transaction(doc))
             {
                 if (clouds.Count>0)
@@ -177,6 +170,15 @@ namespace TNov
                         var firstCloud = sheet.First();
                         string firstCloudSheetId = firstCloud.OwnerViewId.ToString();
                         if(viewModel.visible&&v.Id.ToString()!= firstCloudSheetId) continue; //обработка сценария "текущий лист"
+                        /*if (ViewSheetList.Count > 0)
+                        {
+                            bool ViewSheetListContainsSheet = false;
+                            foreach(var ViewSheet in ViewSheetList)
+                            {
+                                if (ViewSheet.Id.ToString() == firstCloudSheetId) ViewSheetListContainsSheet = true;
+                            }
+                            if(!ViewSheetListContainsSheet) continue; //обработка сценария "выбранные листы"
+                        }*/
 
                         //Нумерация облаков
 
@@ -232,9 +234,13 @@ namespace TNov
 
                 }
             }
-            
-            
+
+            /*
             //Заполнение параметров листов
+            if (ViewSheetList.Count > 0)
+            {
+                sheets = ViewSheetList; //сценарий "выбранные"
+            }*/
 
             using (Transaction t2 = new Transaction(doc))
             {
@@ -244,18 +250,54 @@ namespace TNov
                 {
                     if (viewModel.visible && v.Id.ToString() != viewSheet.Id.ToString()) continue; //обработка сценария "текущий лист"
 
-                    string sheetComments = viewSheet.LookupParameter(sheetComm).AsString();
+                    //пропуск аннулированных листов, поиск новых
+                    bool isSheetAnnul = false;
+                    string sheetComments = viewSheet.get_Parameter(adskCommparamGuid).AsString();
                     if (!string.IsNullOrEmpty(sheetComments))
                     {
-                        if (sheetComments.Contains("Аннул") || sheetComments.Contains("аннул")) continue; //пропуск аннулированных листов
+                        if (sheetComments.Contains("Аннул") || sheetComments.Contains("аннул")) isSheetAnnul = true;
+                    }
+                    List<string> allLinesComments = new List<string>();
+                    foreach(var guid in NChangeLinePars2)
+                    {
+                        string ChangeLineComments = viewSheet.get_Parameter(guid).AsString();
+                        if (!string.IsNullOrEmpty(ChangeLineComments))
+                        {
+                            if (ChangeLineComments.Contains("Аннул") || ChangeLineComments.Contains("аннул")) 
+                            {
+                                isSheetAnnul = true; break;
+                            }
+                            allLinesComments.Add(ChangeLineComments);
+                        }
+                    }
+                    if (isSheetAnnul) continue;
+
+                    //получаем id изменений на листе
+                    IList<ElementId> revisionIds = viewSheet.GetAllRevisionIds(); //получение изменений на листе
+
+                    int newRev = -1; //счетчик изменений с "нов"
+                    if (allLinesComments.Count > 0) //проверяем, новый ли лист 
+                    {
+                        //....//нужна более гибкая логика - например если лист был новый, но изменен/заменен в след изм-и,
+                        //то нужно учитывать колво изм-й на листе
+
+                        
+                        foreach (var line in allLinesComments)
+                        {
+                            if(line.Contains("Нов")|| line.Contains("нов"))
+                            {
+                                newRev++;
+                            }
+                        }
+                        
+                             
                     }
 
                     Logger.Log("Лист "+viewSheet.Name, 1);
 
                     Logger.Log("Сбор данных для листа",2);
                     var revisionsOnSheet = new List<Revision>();
-                    //получаем id изменений на листе
-                    IList<ElementId> revisionIds = viewSheet.GetAllRevisionIds(); //получение изменений на листе
+                    
                     foreach (ElementId revisionId in revisionIds)
                     {
                         Revision rev = (Revision)doc.GetElement(revisionId);
@@ -277,6 +319,7 @@ namespace TNov
                     }
                     Logger.Log("Заполнение списка элементов класса sheetChange", 2);
                     List<sheetChange> sheetChanges = new List<sheetChange>();
+                    int sheetChangeCounter = 0;
                     foreach (var revision in revisionsOnSheet)
                     {
                         Logger.Log("изм " + revision.RevisionNumber, 2);
@@ -296,7 +339,9 @@ namespace TNov
                         sChange.cloudcount = cloudsOfRevision; Logger.Log("кол-во облаков " + cloudsOfRevision.ToString(), 2);
                         sChange.description = revision.Description;
                         sChange.number = int.Parse(revision.RevisionNumber);
+                        if (newRev == sheetChangeCounter) sChange.newlist = true; else sChange.newlist = false;
                         sheetChanges.Add(sChange);
+                        sheetChangeCounter++;
                     }
 
                     var sheetChangesSorted = sheetChanges.OrderBy(s => s.number).ToList();
@@ -316,10 +361,10 @@ namespace TNov
                             if (sChange.cloudcount == 0) replaces++;
                         }
                         sheetChangesFinal.Reverse();
-                         
+                        
+                        foreach (var sChange in sheetChangesFinal) 
                         {
-                            foreach (var sChange in sheetChangesFinal) 
-                                Logger.Log("   "+sChange.number+" " + sChange.description + " " + sChange.cloudcount,2);
+                            Logger.Log("   "+sChange.number+" " + sChange.description + " " + sChange.cloudcount,2);
                         }
                         
                     }
@@ -329,10 +374,10 @@ namespace TNov
                         {
                             sheetChangesFinal.Add(sChange);
                         }
-                        
+
+                        foreach (var sChange in sheetChangesFinal)
                         {
-                            foreach (var sChange in sheetChangesFinal)
-                                Logger.Log("   " + sChange.number + " " + sChange.description + " " + sChange.cloudcount, 2);
+                            Logger.Log("   " + sChange.number + " " + sChange.description + " " + sChange.cloudcount, 2);
                         }
                     }
 
@@ -343,13 +388,15 @@ namespace TNov
                     List<string> changesStrL = new List<string>();
 
                     //заполнение переменных
+                    
                     foreach (var sC in sheetChangesFinal)
                     {
+                        string strL = "Зам."; if (sC.newlist) strL = "Нов.";
                         if (sC.cloudcount == 0)
                         {
-                            commValue += sC.description +" (Зам.), ";
+                            commValue += sC.description +" ("+ strL+"), ";
                             changesStrK.Add("-");
-                            changesStrL.Add("Зам.");
+                            changesStrL.Add(strL);
                         }
                         else
                         {
@@ -370,7 +417,7 @@ namespace TNov
                     {
                         try
                         {
-                            viewSheet.LookupParameter(sheetComm).Set(commValue);
+                            viewSheet.get_Parameter(adskCommparamGuid).Set(commValue);
                             Logger.Log("   Примечание: " + commValue,2);
                         }
                         catch (Exception ex) { Logger.Log(viewSheet.Name + " ошибка заполнения Примечания: " + ex.Message,4); }
@@ -378,36 +425,35 @@ namespace TNov
                     
                     
                     //параметры штампа
-                    string paramStringPrefix = "N_Изм.Строка"; if (oldProject) paramStringPrefix = "Изм.Строка";
-                    for (int i = 1; i < 15; i++)
+                    for (int i = 0; i < NChangeLinePars1.Count(); i++)
                     {
-                        string paramK = paramStringPrefix + i.ToString() + ".Кол.уч"; 
-                        string paramL = paramStringPrefix + i.ToString() + ".Лист"; 
-                        if (i < changesStrK.Count + 1)
+                        if (i < changesStrK.Count)
                         {
                             //запись значений из списков
                             try
                             {
-                                viewSheet.LookupParameter(paramK).Set(changesStrK[i - 1]);
-                                Logger.Log("      " + paramK+": "+ changesStrK[i - 1], 2);
-                                viewSheet.LookupParameter(paramL).Set(changesStrL[i - 1]);
-                                Logger.Log("      " + paramL + ": " + changesStrL[i - 1],2);
+                                viewSheet.get_Parameter(NChangeLinePars1[i]).Set(changesStrK[i]);
+                                Logger.Log("      N_Изм.Строка" + (i + 1).ToString() + ".Кол.уч: " + changesStrK[i], 2);
+                                viewSheet.get_Parameter(NChangeLinePars2[i]).Set(changesStrL[i]);
+                                Logger.Log("      N_Изм.Строка" + (i + 1).ToString() + ".Лист: " + changesStrL[i], 2);
                             }
-                            catch (Exception ex) { Logger.Log(viewSheet.Name + " ошибка заполнения штампа: " + ex.Message,4); }
+                            catch (Exception ex) { Logger.Log(viewSheet.Name + " ошибка заполнения штампа: " + ex.Message, 4); }
                         }
                         else
                         {
                             //запись пустых значений
                             try
                             {
-                                viewSheet.LookupParameter(paramK).Set("");
-                                Logger.Log("      " + paramK + ": очищаем", 2);
-                                viewSheet.LookupParameter(paramL).Set("");
-                                Logger.Log("      " + paramL + ": очищаем",2);
+                                viewSheet.get_Parameter(NChangeLinePars1[i]).Set("");
+                                Logger.Log("      N_Изм.Строка" + (i + 1).ToString() + ".Кол.уч: очищаем", 2);
+                                viewSheet.get_Parameter(NChangeLinePars2[i]).Set("");
+                                Logger.Log("      N_Изм.Строка" + (i + 1).ToString() + ".Лист: очищаем", 2);
                             }
-                            catch (Exception ex) { Logger.Log(viewSheet.Name + " ошибка заполнения штампа: " + ex.Message,4); }
+                            catch (Exception ex) { Logger.Log(viewSheet.Name + " ошибка заполнения штампа: " + ex.Message, 4); }
                         }
                     }
+
+                    
 
 
                 }
@@ -418,6 +464,17 @@ namespace TNov
             
             Logger.Log("Завершение работы.",5);
             return Result.Succeeded;
+        }
+        private static List<ViewSheet> GetViewSheetsFromCurrentSelection(Autodesk.Revit.DB.Document doc, Autodesk.Revit.UI.Selection.Selection sel)
+        {
+            ICollection<ElementId> elementIds = sel.GetElementIds();
+            List<ViewSheet> currentSelection = new List<ViewSheet>();
+            foreach (ElementId elementId in (IEnumerable<ElementId>)elementIds)
+            {
+                if (doc.GetElement(elementId) is ViewSheet && doc.GetElement(elementId).Category != null && doc.GetElement(elementId).Category.Id.IntegerValue.Equals(-2003100))
+                    currentSelection.Add(doc.GetElement(elementId) as ViewSheet);
+            }
+            return currentSelection;
         }
     }
 }

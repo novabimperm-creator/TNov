@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для schemespecwpf.xaml
+    /// Логика взаимодействия для SchemespecWPF.xaml
     /// </summary>
-    public partial class schemespecwpf : Window
+    public partial class SchemespecWPF : Window
     {
-        public schemespecwpf(schemespecViewModel viewModel)
+        public SchemespecWPF(SchemespecViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;
@@ -24,6 +24,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
     }
 }

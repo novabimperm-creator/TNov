@@ -13,10 +13,10 @@ using System.Collections.Generic;
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для sheetnumwpf.xaml
+    /// Логика взаимодействия для SheetNumWPF.xaml
     /// </summary>
 
-    public partial class sheetnumwpf : Window
+    public partial class SheetNumWPF : Window
     {
         private readonly List<TNovSheet> _allItems = new List<TNovSheet>();
         private readonly Dictionary<string, ObservableCollection<TNovSheet>> _filteredCollections = new Dictionary<string, ObservableCollection<TNovSheet>>();
@@ -28,7 +28,7 @@ namespace TNov
         public ObservableCollection<TNovSheet> ResultCollection { get; private set; } = new ObservableCollection<TNovSheet>();
         // Приватная текущая коллекция
         private ObservableCollection<TNovSheet> currentCollection = new ObservableCollection<TNovSheet>();
-        public sheetnumwpf(TNovSheet[] items)
+        public SheetNumWPF(TNovSheet[] items)
         {
             InitializeComponent();
             InitializeData(items);
@@ -188,8 +188,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, MouseButtonEventArgs e)
+        {
 
-
-
+        }
     }
 }

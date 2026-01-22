@@ -9,12 +9,12 @@ using System.Windows.Data;
 
 namespace TNov
 {
-    public class typeFilterCategoryViewModel : INotifyPropertyChanged
+    public class TypeFilterCategoryViewModel : INotifyPropertyChanged
     {
         public Category Category;
         private string name;
         private bool isSelected;
-        private List<typeFilterElementTypeViewModel> elementTypes;
+        private List<TypeFilterElementTypeViewModel> elementTypes;
 
         public ICollectionView ElementTypesView { get; private set; }
 
@@ -41,25 +41,25 @@ namespace TNov
                 this.OnPropertyChanged(nameof(IsSelected));
                 if (this.ElementTypesView != null && this.ElementTypes != null)
                 {
-                    foreach (typeFilterElementTypeViewModel elementTypeViewModel in this.ElementTypesView.Filter == null ? (IEnumerable<typeFilterElementTypeViewModel>)this.ElementTypes : this.ElementTypesView.Cast<typeFilterElementTypeViewModel>())
+                    foreach (TypeFilterElementTypeViewModel elementTypeViewModel in this.ElementTypesView.Filter == null ? (IEnumerable<TypeFilterElementTypeViewModel>)this.ElementTypes : this.ElementTypesView.Cast<TypeFilterElementTypeViewModel>())
                         elementTypeViewModel.IsSelected = this.isSelected;
                 }
                 else if (this.ElementTypes != null)
                 {
-                    foreach (typeFilterElementTypeViewModel elementType in this.ElementTypes)
+                    foreach (TypeFilterElementTypeViewModel elementType in this.ElementTypes)
                         elementType.IsSelected = this.isSelected;
                 }
             }
         }
 
-        public List<typeFilterElementTypeViewModel> ElementTypes
+        public List<TypeFilterElementTypeViewModel> ElementTypes
         {
             get => this.elementTypes;
             set
             {
                 if (this.elementTypes == value)
                     return;
-                this.elementTypes = value ?? new List<typeFilterElementTypeViewModel>();
+                this.elementTypes = value ?? new List<TypeFilterElementTypeViewModel>();
                 this.InitChildView();
                 this.OnPropertyChanged(nameof(ElementTypes));
             }
@@ -77,7 +77,7 @@ namespace TNov
                 this.InitChildView();
             this.ElementTypesView.Filter = !string.IsNullOrWhiteSpace(term) ? (Predicate<object>)(o =>
             {
-                string name = ((typeFilterElementTypeViewModel)o).Name;
+                string name = ((TypeFilterElementTypeViewModel)o).Name;
                 return name != null && name.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0;
             }) : (Predicate<object>)null;
             this.ElementTypesView.Refresh();

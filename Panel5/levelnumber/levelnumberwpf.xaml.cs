@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для levelnumberwpf.xaml
+    /// Логика взаимодействия для LevelNumberWPF.xaml
     /// </summary>
-    public partial class levelnumberwpf : Window
+    public partial class LevelNumberWPF : Window
     {
-        public levelnumberwpf(levelnumberwpfViewModel viewModel)
+        public LevelNumberWPF(LevelNumberViewModel viewModel)
         {
             InitializeComponent();
             this.SizeToContent = SizeToContent.Height;
@@ -25,6 +25,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
     }
 }

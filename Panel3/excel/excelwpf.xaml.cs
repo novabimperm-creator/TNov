@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для excelwpf.xaml
+    /// Логика взаимодействия для ExcelWPF.xaml
     /// </summary>
-    public partial class excelwpf : Window
+    public partial class ExcelWPF : Window
     {
-        public excelwpf(excelViewModel viewModel)
+        public ExcelWPF(ExcelViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;
@@ -24,6 +24,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
     }
 }

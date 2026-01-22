@@ -13,7 +13,7 @@ using TNov.main;
 namespace TNov
 {
     [Transaction(TransactionMode.Manual)]
-    public class plwSettings : IExternalCommand
+    public class PLWSettings : IExternalCommand
     {
         private TNovProgressBar levelsProgressBar;
         private void ThreadStartingPoint()
@@ -38,18 +38,18 @@ namespace TNov
             Logger.Log("Старт работы (настройки)", 0);
 
             //Диалог
-            var viewModel = new plwViewModel();
+            var viewModel = new PLWViewModel();
             // Десериализация
             bool forProject = false;
             json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
             if (canserialize)
             {
-                viewModel = JsonConvert.DeserializeObject<plwViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<PLWViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
 
             
-            var wpfview = new plwwpf(viewModel);
+            var wpfview = new PLWWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { }

@@ -15,7 +15,7 @@ using System.IO;
 namespace TNov
 {
     [Transaction(TransactionMode.Manual)]
-    public class rebarimages : IExternalCommand
+    public class RebarImages : IExternalCommand
     {
         private TNovProgressBar rbrProgressBar;
         private void ThreadStartingPoint()
@@ -55,15 +55,10 @@ namespace TNov
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
             }
 
-            //Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
-
             //Список используемых параметров
 
-            string N_RebarImageOn = "A_Арм Эскиз вкл";
-            if (oldProject == true) { N_RebarImageOn = "Арм.ЭскизВкл"; }
-            string N_RebarImage = "A_Арм Эскиз формы";
-            if (oldProject == true) { N_RebarImage = "Арм.ЭскизФормы"; }
+            Guid adskRebarImageOnParamGuid = new Guid("2f9abac5-9608-4bb6-b509-d75b738777cf"); //A_Арм Эскиз вкл
+            Guid adskRebarImageParamGuid = new Guid("ffd5b2a7-3613-4013-ab33-ae18647b7e98"); //A_Арм Эскиз формы
 
             Logger.Log("Сбор элементов",1);
 
@@ -78,7 +73,7 @@ namespace TNov
 
             foreach (Rebar rbr in rebar) //заполняем список арматуры с включенным параметром A_Арм Эскиз вкл
             {
-                int imageOn = rbr.LookupParameter(N_RebarImageOn).AsInteger();
+                int imageOn = rbr.get_Parameter(adskRebarImageOnParamGuid).AsInteger();
                 if (imageOn == 1)
                 {
                     rebarImageOn.Add(rbr);
@@ -108,7 +103,7 @@ namespace TNov
                     ElementId baseimage = rbr.LookupParameter("Изображение формы").AsElementId();
                     try
                     {
-                        rbr.LookupParameter(N_RebarImage)?.Set(baseimage);
+                        rbr.get_Parameter(adskRebarImageParamGuid)?.Set(baseimage);
                         Logger.Log("Элемент " + rbr.Id.ToString() + " назначено",2);
                     }
                     catch (Exception ex) { Logger.Log("Элемент " + rbr.Id.ToString() + " ошибка: "+ex.Message, 4); }

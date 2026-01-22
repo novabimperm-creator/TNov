@@ -16,59 +16,9 @@ using TNov.main;
 
 namespace TNov
 {
-    public class plwViewModel : INotifyPropertyChanged
-    {
-        private bool _pin = true;
-        public bool pin
-        {
-            get => _pin; set { _pin = value; OnPropertyChanged(); }
-        }
-        private bool _pinUpdater = true;
-        public bool pinUpdater
-        {
-            get => _pinUpdater; set { _pinUpdater = value; OnPropertyChanged(); }
-        }
-        private bool _levels = true;
-        public bool levels
-        {
-            get => _levels; set { _levels = value; OnPropertyChanged(); }
-        }
-        private bool _levelsUpdater = true;
-        public bool levelsUpdater
-        {
-            get => _levelsUpdater; set { _levelsUpdater = value; OnPropertyChanged(); }
-        }
-        private bool _worksets = true;
-        public bool worksets
-        {
-            get => _worksets; set { _worksets = value; OnPropertyChanged(); }
-        }
-        private bool _worksetsUpdater = true;
-        public bool worksetsUpdater
-        {
-            get => _worksetsUpdater; set { _worksetsUpdater = value; OnPropertyChanged(); }
-        }
-        private bool _show = false;
-        public bool show
-        {
-            get => _show; set { _show = value; OnPropertyChanged(); }
-        }
-
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-
-    }
+    
     [Transaction(TransactionMode.Manual)]
-    public class plw : IExternalCommand
+    public class PLW : IExternalCommand
     {
         private TNovProgressBar plwProgressBar;
         private void ThreadStartingPoint()
@@ -92,9 +42,7 @@ namespace TNov
             Logger.Initialize(TNovClassName);
             
 
-            //Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
-
+            
             var viewModel0 = new aboutViewModel();
             
             string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json"); 
@@ -155,19 +103,19 @@ namespace TNov
 
             Logger.Log("Диалоговое окно",1);
             //Вьюмодель (без открытия окна)
-            var viewModel = new plwViewModel();
+            var viewModel = new PLWViewModel();
             // Десериализация
             bool forProject = false;
             json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
             if (canserialize)
             {
-                viewModel = JsonConvert.DeserializeObject<plwViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<PLWViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
 
             if (viewModel.show)
             {
-                var wpfview = new plwwpf(viewModel);
+                var wpfview = new PLWWPF(viewModel);
                 viewModel.CloseRequest += (s, e) => wpfview.Close();
                 bool? ok = wpfview.ShowDialog();
                 if (ok != null && ok == true) { } 

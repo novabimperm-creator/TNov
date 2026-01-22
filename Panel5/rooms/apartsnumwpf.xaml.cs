@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для apartsnumwpf.xaml
+    /// Логика взаимодействия для ApartsNumWPF.xaml
     /// </summary>
-    public partial class apartsnumwpf : Window
+    public partial class ApartsNumWPF : Window
     {
-        public apartsnumwpf(apartsnumViewModel viewModel)
+        public ApartsNumWPF(ApartsNumViewModel viewModel)
         {
             InitializeComponent();
             textBox1.Focus();
@@ -27,6 +27,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
     }
 }

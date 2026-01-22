@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace TNov
 {
-    public class typeFilterElementTypeViewModel : INotifyPropertyChanged
+    public class TypeFilterElementTypeViewModel : INotifyPropertyChanged
     {
         public ElementType ElementType;
         private string name;

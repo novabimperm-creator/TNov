@@ -19,6 +19,35 @@ namespace TNov
             m_appId = id;
             m_updaterId = new UpdaterId(m_appId, new Guid("3C1F3F47-7B1C-4A7E-8A0A-1A1B1C1D1E1F"));
         }
+        string GetTNazn(string Nazn, string Name)
+        {
+            string TNazn = "";
+            if (Nazn.Contains("Жилое")) TNazn = Nazn;
+            else if (Nazn.Contains("Технич"))
+            {
+                if (Name.Contains("Лестн") || Name.Contains("лестн")) TNazn = "Лестница";
+                else TNazn = "Техническое";
+            }
+            else if (Nazn.Contains("Лестн")) TNazn = "Лестница";
+            else if (Nazn.Contains("Кладов")) TNazn = "Кладовые";
+            else if (Nazn.Contains("Встроен")) TNazn = "МОП";
+            else if (Nazn.Contains("Парк")) TNazn = "МОП";
+            else if (Nazn.Contains("МОП"))
+            {
+                if (Name.Contains("Лестн") || Name.Contains("лестн")) TNazn = "Лестница";
+                else if (Name.Contains("Кладов")) TNazn = "Кладовые";
+                else if (Name.Contains("Электр")) TNazn = "Техническое";
+                else if (Name.Contains("связи")) TNazn = "Техническое";
+                else if (Name.Contains("Технич")) TNazn = "Техническое";
+                else if (Name.Contains("ИТП")) TNazn = "Техническое";
+                else if (Name.Contains("Котельная")) TNazn = "Техническое";
+                else if (Name.Contains("Пульт")) TNazn = "Техническое";
+                else if (Name.Contains("Венткамера")) TNazn = "Техническое";
+                else TNazn = "МОП";
+            }
+            else TNazn = "Коммерция";
+            return TNazn;
+        }
 
         public void Execute(UpdaterData data)
         {
@@ -32,7 +61,6 @@ namespace TNov
 
             if (!allElementIds.Any()) return;
 
-            
 
             foreach (ElementId elementId in allElementIds)
             {
@@ -72,34 +100,61 @@ namespace TNov
 
         private void UpdateElementRoomParameter(Document doc, Element element)
         {
+            //параметры
+            Guid NFinishRoomParamGuid = new Guid("8b9d4aff-a6c8-4ad5-b0f5-442f2b87c765"); //N_Отделка.Помещение
+            string NFinishElemNaznParam = "Отделка.Помещение.Назначение";
+            Guid NFinishElemGroupParamGuid = new Guid("60e4ba60-55ca-4922-8ce7-22a6c43c95c2"); //N_Отделка.ГруппаТекст
+            BuiltInParameter roomNameParam = BuiltInParameter.ROOM_NAME;
+            BuiltInParameter roomNaznParam = BuiltInParameter.ROOM_DEPARTMENT;
+            Guid NFinishRoomGroupParamGuid = new Guid("76144285-f586-4eb7-af04-e4ad9902f67a"); //N_Отделка.Группа
+            Guid NTParamsNotSetParamGuid = new Guid("70879f6b-b838-49de-8ff5-35e1c7d97e0c");
+            Guid TPolozhParamGuid = new Guid("7d68b956-732c-4da9-99a8-13be56ccaf94"); //Т_Положение
+            Guid TNaznParamGuid = new Guid("2a73f7b8-05e7-410a-b22a-66498e315df4"); //Т_Назначение
+
             Room room = FindRoomForElementFast(doc, element);
 
             if (room != null)
             {
-                Parameter roomParam = element.LookupParameter("N_Отделка.Помещение");
-                Parameter roomParam2 = element.LookupParameter("Отделка.Помещение.Назначение");
-                Parameter roomParam3 = element.LookupParameter("N_Отделка.ГруппаТекст");
+                Parameter roomParam = element.get_Parameter(NFinishRoomParamGuid);
+                Parameter roomParam2 = element.LookupParameter(NFinishElemNaznParam);
+                Parameter roomParam3 = element.get_Parameter(NFinishElemGroupParamGuid);
 
-                string roomName = room.get_Parameter(BuiltInParameter.ROOM_NAME).AsString();
-                string roomNazn = room.LookupParameter("Назначение").AsString();
-                string roomGroup = room.LookupParameter("N_Отделка.Группа").AsInteger().ToString();
+                string roomName = room.get_Parameter(roomNameParam).AsString();
+                string roomNazn = room.get_Parameter(roomNaznParam)?.AsString() ?? "";
+                string roomGroup = room.get_Parameter(NFinishRoomGroupParamGuid)?.AsInteger().ToString() ?? "";
 
-                string currentValue = roomParam.AsString();
+                string currentValue = roomParam?.AsString();
                 if (currentValue != roomName)
                 {
                     roomParam.Set(roomName);
                 }
 
-                string currentValue2 = roomParam2.AsString();
+                string currentValue2 = roomParam2?.AsString();
                 if (currentValue2 != roomNazn)
                 {
                     roomParam2.Set(roomNazn);
                 }
 
-                string currentValue3 = roomParam3.AsString();
+                string currentValue3 = roomParam3?.AsString();
                 if (currentValue3 != roomGroup)
                 {
                     roomParam3.Set(roomGroup);
+                }
+
+                if (Param.ParamExistByGuid(NTParamsNotSetParamGuid, element))
+                {
+                    if (element.get_Parameter(NTParamsNotSetParamGuid).AsDouble() != 1)
+                    {
+                        string value = GetTNazn(roomNazn, roomName);
+                        if (Param.ParamExistByGuid(TPolozhParamGuid, element))
+                        {
+                            element.get_Parameter(TPolozhParamGuid).Set(value);
+                        }
+                        if (Param.ParamExistByGuid(TNaznParamGuid, element))
+                        {
+                            element.get_Parameter(TNaznParamGuid).Set(value);
+                        }
+                    }
                 }
             }
         }

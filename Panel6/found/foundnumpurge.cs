@@ -11,7 +11,7 @@ namespace TNov
 
 
     [Transaction(TransactionMode.Manual)]
-    public class foundnumpurge : IExternalCommand
+    public class FoundNumPurge : IExternalCommand
     {
                 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -25,17 +25,13 @@ namespace TNov
             //проверка подключения, запись в журнал
             bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
 
-            //Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
-
             // создание log - файла
             Logger.Initialize(TNovClassName);
-            
 
-            //Список используемых параметров
 
+            //параметры
+            Guid pileNumberParamGuid = new Guid("3df328ab-5e4d-4da0-9138-42f1a8bb54a7"); //N_Свая.Номер
             BuiltInParameter gm = BuiltInParameter.ALL_MODEL_MODEL; //параметр Группа модели
-            string parameterName = "N_Свая.Номер"; if (oldProject == true) { parameterName = "Свая.Номер"; }
 
             Logger.Log("Сбор элементов",1);
             
@@ -68,7 +64,7 @@ namespace TNov
             foreach (var p in piles1)
             {
                 Element elem = doc.GetElement(p.Id); 
-                int.TryParse(p.LookupParameter(parameterName).AsString(), out int num);
+                int.TryParse(p.get_Parameter(pileNumberParamGuid)?.AsString(), out int num);
                 Pile pl = new Pile();
                 pl.elemid = p.Id; pl.sort = num; pl.z = 0; pl.type = pl.type = elem.GetTypeId().ToString(); ;
                 pilestowork.Add(pl);
@@ -88,8 +84,8 @@ namespace TNov
                 foreach (var p in pilessorted)
                 {
                     Element elem = doc.GetElement(p.elemid);
-                    Logger.Log("Элемент " +elem.Id.ToString()+" старый номер "+elem.LookupParameter(parameterName).AsString(),1);
-                    elem.LookupParameter(parameterName)?.Set(i.ToString());
+                    Logger.Log("Элемент " +elem.Id.ToString()+" старый номер "+elem.get_Parameter(pileNumberParamGuid)?.AsString(),1);
+                    elem.get_Parameter(pileNumberParamGuid)?.Set(i.ToString());
                     Logger.Log("   новый номер " + i.ToString(),1);
                     i++;
                 }

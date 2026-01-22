@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для plwwpf.xaml
+    /// Логика взаимодействия для PLWWPF.xaml
     /// </summary>
-    public partial class plwwpf : Window
+    public partial class PLWWPF : Window
     {
-        public plwwpf(plwViewModel viewModel)
+        public PLWWPF(PLWViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;
@@ -24,6 +24,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
     }
 }

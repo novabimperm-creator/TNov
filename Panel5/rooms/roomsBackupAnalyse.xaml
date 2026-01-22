@@ -7,38 +7,119 @@
              mc:Ignorable="d" Width="930"
         
             WindowStartupLocation="CenterScreen" 
-            Background="DarkSeaGreen"
-            Title="TNov. Задание">
-    <StackPanel VerticalAlignment="Center" >
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBlock x:Name="headBlock" Text="" Margin="5" FontWeight="Bold"/>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBlock  Text="Отображаются только помещения с отличиями в площадях." Margin="5"/>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBlock  Text="Можно восстановить значения площадей всех помещений, либо выбрать восстановить для одного помещения (кнопки ниже)." Margin="5"/>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Content="Отмена" x:Name="escButton" IsCancel="True" Click="escButton_Click" MinWidth="90" MinHeight="25" Margin="5" />
-            
-            <Button Content="Восстановить" x:Name="acceptButton" IsDefault="True" Click="acceptButton_Click" MinWidth="150" MinHeight="25" Margin="5" />
-        </StackPanel>
-        
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" >
+            Background="White" BorderBrush="#FF008E43" BorderThickness="1"
+            ResizeMode="NoResize" WindowStyle="None">
+    <Window.Resources>
+        <!-- Стиль с полным шаблоном -->
+        <Style x:Key="CustomButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#F0F0F0"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <!-- Убираем SystemColors -->
+                        <ControlTemplate.Resources>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" 
+                                         Color="Transparent"/>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" 
+                                         Color="Transparent"/>
+                        </ControlTemplate.Resources>
 
-            <ScrollViewer Name="scroll" Height="350">
-                <StackPanel Orientation="Vertical" Name="sp0">
+                        <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="2">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <!-- Прямое указание цвета -->
+                                <Setter TargetName="border" 
+                                    Property="Background" 
+                                    Value="#FF008E43"/>
+                                <!-- Цвет заголовка -->
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" 
+                                    Property="Background" 
+                                    Value="#FF008E43"/>
+                                <!-- Темнее -->
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" 
+                                    Property="Opacity" 
+                                    Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="30"
+              ResizeBorderThickness="5"
+              GlassFrameThickness="0"
+              CornerRadius="0"/>
+    </WindowChrome.WindowChrome>
+    <Grid>
+        <!-- Верхняя панель (кастомный заголовок) -->
+        <Border Height="30" 
+                Background="#FF008E43" 
+                VerticalAlignment="Top"
+                MouseDown="Border_MouseDown">
+            <TextBlock Text="TNov - Резервные копии площадей" 
+                       Foreground="White"
+                       VerticalAlignment="Center"
+                       Margin="10,0"/>
+        </Border>
+
+        <!-- Основное содержимое -->
+        <Border Margin="0,30,0,0">
+
+            <StackPanel VerticalAlignment="Center" >
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock x:Name="headBlock" Text="" Margin="5" FontWeight="Bold"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock  Text="Отображаются только помещения с отличиями в площадях." Margin="5"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock  Text="Можно восстановить значения площадей всех помещений, либо выбрать восстановить для одного помещения (кнопки ниже)." Margin="5"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Style="{StaticResource CustomButtonStyle}" Content="Отмена" x:Name="escButton" IsCancel="True" Click="escButton_Click" MinWidth="90" MinHeight="25" Margin="5" />
+
+                    <Button Style="{StaticResource CustomButtonStyle}" Content="Восстановить" x:Name="acceptButton" IsDefault="True" Click="acceptButton_Click" MinWidth="150" MinHeight="25" Margin="5" />
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" >
+
+                    <ScrollViewer Name="scroll" Height="350">
+                        <StackPanel Orientation="Vertical" Name="sp0">
+
+                        </StackPanel>
+                    </ScrollViewer>
+
 
                 </StackPanel>
-            </ScrollViewer>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" >
 
 
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" >
-            
+                </StackPanel>
+            </StackPanel>
 
-        </StackPanel>
-    </StackPanel>
+        </Border>
+    </Grid>
+
     
 </Window>

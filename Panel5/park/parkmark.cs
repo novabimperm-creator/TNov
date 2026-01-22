@@ -16,59 +16,9 @@ using TNov.main;
 namespace TNov
 {
 
-    public class parkmarkViewModel : INotifyPropertyChanged
-    {
-        private string _startvalue = "1";
-        public string startvalue { get => _startvalue; set { _startvalue = value; OnPropertyChanged(); } }
-        private string _prefix = "ММ-";
-        public string prefix { get => _prefix; set { _prefix = value; OnPropertyChanged(); } }
-        [JsonIgnore] public ObservableCollection<string> paramlist { get; set; }
-        private string _param1;
-        public string param1 { get { return _param1; } set { _param1 = value; OnPropertyChanged(); } }
-        private bool _all = true;
-        public bool all { get => _all; set { _all = value; OnPropertyChanged(); } }
-        private int _paramnum = 0;
-        public int paramnum { get => _paramnum; set { _paramnum = value; OnPropertyChanged(); } }
-        public parkmarkViewModel()
-        {
-            Param();
-        }
-        private void Param()
-        {
-            paramlist = new ObservableCollection<string>
-            {
-                "Марку в Позицию",
-                "Позицию в Марку"
-            };
-            param1 = paramlist[paramnum]; 
-        }
-        
-
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event EventHandler HideRequest;
-        private void RaiseHideRequest()
-        {
-            HideRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event EventHandler ShowRequest;
-        private void RaiseShowRequest()
-        {
-            ShowRequest?.Invoke(this, EventArgs.Empty);
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-    }
+    
     [Transaction(TransactionMode.Manual)]
-    public class parkmark : IExternalCommand
+    public class ParkMark : IExternalCommand
     {
         private TNovProgressBar pmProgressBar;
         private void ThreadStartingPoint()
@@ -109,13 +59,10 @@ namespace TNov
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
             }
 
-            //Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
-
-            //Список используемых параметров
-
-            string levelnumber = "N_Эт.Номер";
-            if (oldProject == true) { levelnumber = "Эт.Номер"; }
+            //параметры
+            Guid NLevelNumberParamGuid = new Guid("4d2aa1b8-727c-43a1-8b1e-8c22dd484e11"); //N_Эт.Номер
+            Guid adskPositionParamGuid = new Guid("ae8ff999-1f22-4ed7-ad33-61503d85f0f4"); //A_Позиция
+            BuiltInParameter markParam = BuiltInParameter.DOOR_NUMBER; //Марка
 
             Logger.Log("Сбор элементов",1);
 
@@ -133,16 +80,16 @@ namespace TNov
             Logger.Log("Элементы собраны. Выбор сценария",1);
             
             //Диалог
-            var viewModel = new parkmarkViewModel();
+            var viewModel = new ParkMarkViewModel();
             // Десериализация
             bool forProject = true;
             json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
             if (canserialize)
             {
-                viewModel = JsonConvert.DeserializeObject<parkmarkViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<ParkMarkViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
-            var wpfview = new parkmarkwpf(viewModel);
+            var wpfview = new ParkMarkWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { }
@@ -155,12 +102,12 @@ namespace TNov
             }
             catch (Exception ex) { Logger.Log("Ошибка при сериализации: " + ex.Message,4); }
 
-            string param1 = viewModel.param1; string param2 = "";
-            if (param1.Contains ("Марку в Позицию")) { param1 = "Марка"; param2 = "A_Позиция"; } else { param1 = "A_Позиция"; param2 = "Марка"; }
+            string scenario = viewModel.scenario; 
+            
             bool all = viewModel.all; string allstr = " (поэтажно)"; if(all) { allstr = " сквозное заполнение"; }
             string prefix = viewModel.prefix; 
 
-            Logger.Log("Исходный параметр " + param1 + ", целевой " + param2 +", "+ allstr + ";",1);
+            Logger.Log("Сценарий: " + scenario  +", "+ allstr + ";",1);
 
             string badelems = "";
 
@@ -174,18 +121,23 @@ namespace TNov
                 Logger.Log(p.Id.ToString(),2);
                 ElementId pid = p.Id; Element elem = doc.GetElement(pid);
                 int mark = 0;
-                string param1value = elem.LookupParameter(param1).AsString(); Logger.Log("   "+ param1value, 2);
+
+                Parameter param1 = elem.get_Parameter(adskPositionParamGuid); Parameter param2 = elem.get_Parameter(markParam);
+                if (scenario.Contains("Марку в Позицию")) 
+                { param2 = elem.get_Parameter(adskPositionParamGuid); param1 = elem.get_Parameter(markParam); }
+
+                string param1value = param1.AsString(); Logger.Log("   "+ param1value, 2);
                 if(param1value==null||param1value.Length==0) { badelems += pid.ToString()+", "; Logger.Log("   исходный параметр не заполнен", 2); continue; }
                 if (param1value.Contains(prefix)) { param1value=param1value.Replace(prefix, ""); }
                 int.TryParse(param1value, out mark); Logger.Log("   " + mark.ToString(), 2);
-                double elev = p.LookupParameter(levelnumber).AsDouble();
+                double elev = p.get_Parameter(NLevelNumberParamGuid).AsDouble();
                 Park pk = new Park();
                 pk.elemid = pid; pk.elevation = elev; pk.mark= mark;
                 parkss.Add(pk);
             }
             Logger.Log("Список элементов класса Park создан",1);
 
-            if (param2.Contains("Марка")) { prefix = ""; }
+            if (scenario.Contains("Марку в Позицию")==false) { prefix = ""; } //целевой параметр - марка
 
             using (Transaction transaction = new Transaction(doc))
             {
@@ -232,9 +184,14 @@ namespace TNov
                         this.pmProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.pmProgressBar.value.Text = PBCount.ToString()));
 
                         Element elem = doc.GetElement(p.elemid);
-                        Logger.Log("Элемент " + elem.Id.ToString() +" ,"+ param1+": "+p.mark.ToString(), 2);
+                        Parameter param1 = elem.get_Parameter(adskPositionParamGuid); Parameter param2 = elem.get_Parameter(markParam);
+                        if (scenario.Contains("Марку в Позицию"))
+                        { param2 = elem.get_Parameter(adskPositionParamGuid); param1 = elem.get_Parameter(markParam); }
+
+
+                        Logger.Log("Элемент " + elem.Id.ToString() +" ,"+ param1.Definition.Name+": "+p.mark.ToString(), 2);
                         int k = j; if (!all) { k = i; }
-                        elem.LookupParameter(param2)?.Set(prefix+k.ToString());
+                        param2?.Set(prefix+k.ToString());
                         Logger.Log("   " + param2 + ": " + prefix + k.ToString(), 2);
                         i++; j++;
                     } 

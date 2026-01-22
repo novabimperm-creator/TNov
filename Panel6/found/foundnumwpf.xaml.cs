@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для foundnumwpf.xaml
+    /// Логика взаимодействия для FoundNumWPF.xaml
     /// </summary>
-    public partial class foundnumwpf : Window
+    public partial class FoundNumWPF : Window
     {
-        public foundnumwpf(foundnumViewModel viewModel)
+        public FoundNumWPF(FoundNumViewModel viewModel)
         {
             InitializeComponent();
             textBox1.Focus();
@@ -30,5 +30,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+
+        }
     }
 }

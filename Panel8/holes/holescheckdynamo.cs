@@ -6,7 +6,7 @@ namespace TNov
 {
 
     [Transaction(TransactionMode.Manual)]
-    public class holescheckdynamo : IExternalCommand
+    public class HolesCheckDynamo : IExternalCommand
     {
         
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)

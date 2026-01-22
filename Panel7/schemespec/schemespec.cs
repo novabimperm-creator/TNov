@@ -17,46 +17,10 @@ using TNov.main;
 
 namespace TNov
 {
-    public class schemespecViewModel : INotifyPropertyChanged
-    {
-
-        private string _output1 = "Ростверки кустовые"; public string output1 { get => _output1; set { _output1 = value; OnPropertyChanged(); }}
-        private string _output2 = "Ростверки ленточные"; public string output2 { get => _output2; set { _output2 = value; OnPropertyChanged(); } }
-        private string _output3 = "Приямки"; public string output3 { get => _output3; set { _output3 = value; OnPropertyChanged(); } }
-        private string _output4 = "Приямки под лифты"; public string output4 { get => _output4; set { _output4 = value; OnPropertyChanged(); } }
-        private string _output5 = "Фундаментная плита"; public string output5 { get => _output5; set { _output5 = value; OnPropertyChanged(); } }
-        private string _output6 = "Бетонные полы"; public string output6 { get => _output6; set { _output6 = value; OnPropertyChanged(); } }
-        private string _output7 = "Стены монолитные"; public string output7 { get => _output7; set { _output7 = value; OnPropertyChanged(); } }
-        private string _output8 = "Лестничная клетка"; public string output8 { get => _output8; set { _output8 = value; OnPropertyChanged(); } }
-        private string _output9 = "Лестницы монолитные"; public string output9 { get => _output9; set { _output9 = value; OnPropertyChanged(); } }
-        private string _output10 = "Лестничные площадки монолитные"; public string output10 { get => _output10; set { _output10 = value; OnPropertyChanged(); } }
-        private string _output11 = "Диафрагмы жесткости"; public string output11 { get => _output11; set { _output11 = value; OnPropertyChanged(); } }
-        private string _output12 = "Колонны"; public string output12 { get => _output12; set { _output12 = value; OnPropertyChanged(); } }
-        private string _output13 = "Пилоны"; public string output13 { get => _output13; set { _output13 = value; OnPropertyChanged(); } }
-        private string _output14 = "Плиты"; public string output14 { get => _output14; set { _output14 = value; OnPropertyChanged(); } }
-        private string _output15 = "Балки монолитные"; public string output15 { get => _output15; set { _output15 = value; OnPropertyChanged(); } }
-        private string _output16 = "Парапеты"; public string output16 { get => _output16; set { _output16 = value; OnPropertyChanged(); } }
-        private string _output17 = "Декоративные стены"; public string output17 { get => _output17; set { _output17 = value; OnPropertyChanged(); } }
-        private string _output18 = "Канал монолитный"; public string output18 { get => _output18; set { _output18 = value; OnPropertyChanged(); } }
-        private string _output19 = "Выпуски из фундамента"; public string output19 { get => _output19; set { _output19 = value; OnPropertyChanged(); } }
-
-
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-
-    }
+    
 
     [Transaction(TransactionMode.Manual)]
-    public class schemespec : IExternalCommand
+    public class Schemespec : IExternalCommand
     {
         string output1; // --версия 1.1.4--
         string output2;
@@ -146,14 +110,9 @@ namespace TNov
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
             }
 
-            //Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
-
-            //Список используемых параметров
-
-
-            string N_Par_mrk = "A_Марка конструкции";
-            if (oldProject == true) { N_Par_mrk = "Мрк.МаркаКонструкции"; }
+            //параметры
+            Guid adskCMarkParamGuid = new Guid("5d369dfb-17a2-4ae2-a1a1-bdfc33ba7405"); //A_Марка конструкции
+            Guid adskGparamGuid = new Guid("3de5f1a4-d560-4fa8-a74f-25d250fb3401");//ADSK_Группирование
 
             Logger.Log("Сбор элементов",1);
             
@@ -252,16 +211,16 @@ namespace TNov
             Logger.Log("Элементы собраны. Диалог",1);
 
             //Диалог
-            var viewModel = new schemespecViewModel();
+            var viewModel = new SchemespecViewModel();
             // Десериализация
             bool forProject = true;
             json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
             if (canserialize)
             {
-                viewModel = JsonConvert.DeserializeObject<schemespecViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<SchemespecViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
-            var wpfview = new schemespecwpf(viewModel);
+            var wpfview = new SchemespecWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { }
@@ -317,8 +276,8 @@ namespace TNov
                 {
                     //получаем параметры
                     string eid = elem.Id.ToString();
-                    string Parvalue_mrk = elem.LookupParameter(N_Par_mrk).AsValueString();
-                    Parameter Par_group = elem.LookupParameter("A_Группирование");
+                    string Parvalue_mrk = elem.get_Parameter(adskCMarkParamGuid).AsValueString();
+                    Parameter Par_group = elem.get_Parameter(adskGparamGuid);
                     
                     //группируем по маркам
                     string Parvalue_group = "-";
@@ -349,8 +308,8 @@ namespace TNov
                 {
                     //получаем параметры
                     string eid = elem.Id.ToString();
-                    string Parvalue_mrk = elem.LookupParameter(N_Par_mrk).AsValueString();
-                    Parameter Par_group = elem.LookupParameter("A_Группирование");
+                    string Parvalue_mrk = elem.get_Parameter(adskCMarkParamGuid).AsValueString();
+                    Parameter Par_group = elem.get_Parameter(adskGparamGuid);
 
                     //группируем по маркам
                     string Parvalue_group = "-";
@@ -381,8 +340,8 @@ namespace TNov
                 {
                     //получаем параметры
                     string eid = elem.Id.ToString();
-                    string Parvalue_mrk = elem.LookupParameter(N_Par_mrk).AsValueString();
-                    Parameter Par_group = elem.LookupParameter("A_Группирование");
+                    string Parvalue_mrk = elem.get_Parameter(adskCMarkParamGuid).AsValueString();
+                    Parameter Par_group = elem.get_Parameter(adskGparamGuid);
 
                     //группируем по маркам
                     string Parvalue_group = "-";
@@ -413,8 +372,8 @@ namespace TNov
                 {
                     //получаем параметры
                     string eid = elem.Id.ToString();
-                    string Parvalue_mrk = elem.LookupParameter(N_Par_mrk).AsValueString();
-                    Parameter Par_group = elem.LookupParameter("A_Группирование");
+                    string Parvalue_mrk = elem.get_Parameter(adskCMarkParamGuid).AsValueString();
+                    Parameter Par_group = elem.get_Parameter(adskGparamGuid);
 
                     //группируем по маркам
                     string Parvalue_group = "-";
@@ -445,8 +404,8 @@ namespace TNov
                 {
                     //получаем параметры
                     string eid = elem.Id.ToString();
-                    string Parvalue_mrk = elem.LookupParameter(N_Par_mrk).AsValueString();
-                    Parameter Par_group = elem.LookupParameter("A_Группирование");
+                    string Parvalue_mrk = elem.get_Parameter(adskCMarkParamGuid).AsValueString();
+                    Parameter Par_group = elem.get_Parameter(adskGparamGuid);
 
                     //группируем по маркам
                     string Parvalue_group = "-";
@@ -477,8 +436,8 @@ namespace TNov
                 {
                     //получаем параметры
                     string eid = elem.Id.ToString();
-                    string Parvalue_mrk = elem.LookupParameter(N_Par_mrk).AsValueString();
-                    Parameter Par_group = elem.LookupParameter("A_Группирование");
+                    string Parvalue_mrk = elem.get_Parameter(adskCMarkParamGuid).AsValueString();
+                    Parameter Par_group = elem.get_Parameter(adskGparamGuid);
 
                     //группируем по маркам
                     string Parvalue_group = "-";
@@ -509,8 +468,8 @@ namespace TNov
                 {
                     //получаем параметры
                     string eid = elem.Id.ToString();
-                    string Parvalue_mrk = elem.LookupParameter(N_Par_mrk).AsValueString();
-                    Parameter Par_group = elem.LookupParameter("A_Группирование");
+                    string Parvalue_mrk = elem.get_Parameter(adskCMarkParamGuid).AsValueString();
+                    Parameter Par_group = elem.get_Parameter(adskGparamGuid);
 
                     //группируем по маркам
                     string Parvalue_group = "-";
@@ -542,8 +501,8 @@ namespace TNov
                 {
                     //получаем параметры
                     string eid = elem.Id.ToString();
-                    string Parvalue_mrk = elem.LookupParameter(N_Par_mrk).AsValueString();
-                    Parameter Par_group = elem.LookupParameter("A_Группирование");
+                    string Parvalue_mrk = elem.get_Parameter(adskCMarkParamGuid).AsValueString();
+                    Parameter Par_group = elem.get_Parameter(adskGparamGuid);
 
                     //группируем по маркам
                     string Parvalue_group = "-";
@@ -574,8 +533,8 @@ namespace TNov
                 {
                     //получаем параметры
                     string eid = elem.Id.ToString();
-                    string Parvalue_mrk = elem.LookupParameter(N_Par_mrk).AsValueString();
-                    Parameter Par_group = elem.LookupParameter("A_Группирование");
+                    string Parvalue_mrk = elem.get_Parameter(adskCMarkParamGuid).AsValueString();
+                    Parameter Par_group = elem.get_Parameter(adskGparamGuid);
 
                     //группируем по маркам
                     string Parvalue_group = "-";

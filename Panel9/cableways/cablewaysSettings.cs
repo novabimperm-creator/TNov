@@ -17,7 +17,7 @@ namespace TNov
 {
 
     [Transaction(TransactionMode.Manual)]
-    public class cablewaysSettings : IExternalCommand
+    public class CableWaysSettings : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -36,16 +36,16 @@ namespace TNov
 
             //Вьюмодель
 
-            var viewModel = new cablewaysViewModel();
+            var viewModel = new CableWaysViewModel();
             // Десериализация
             bool forProject = true;
             json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
             if (canserialize)
             {
-                viewModel = JsonConvert.DeserializeObject<cablewaysViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<CableWaysViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
-            var wpfview = new cablewayswpf(viewModel); //окно настроек открывается в отдельной функции
+            var wpfview = new CableWaysWPF(viewModel); //окно настроек открывается в отдельной функции
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { } else { Logger.Log("Отменено пользователем. Завершение работы.", 3); return Result.Cancelled; }

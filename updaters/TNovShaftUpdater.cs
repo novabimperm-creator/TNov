@@ -34,6 +34,13 @@ namespace TNov
             //параметры
             ElementId familyNameParamId = new ElementId(-1002002); //id параметра Имя семейства
             Guid adskGparamGuid = new Guid("3de5f1a4-d560-4fa8-a74f-25d250fb3401");//ADSK_Группирование
+            Guid NTNovTextparamGuid = new Guid("b00446ce-acf8-498e-add9-a3603abe9028"); //N_TNov_Text
+            Guid NTaskApprovedBIMParamGuid = new Guid("94587b6e-5bdd-4fe8-bea4-4996c32801c4");//N_Согласовано BIM
+            Guid NTaskApprovedSTParamGuid = new Guid("7cb33aa5-8106-4e4c-8038-6691e34f438c");//N_Согласовано КР
+            Guid NTaskApprovedMEPParamGuid = new Guid("5c117e3e-c32b-4ab9-9cbb-99557e7c20c5");//N_Согласовано рук
+            Guid adskWidthParamGuid = new Guid("8f2e4f93-9472-4941-a65d-0ac468fd6a5d");//ADSK_Размер_Ширина
+            Guid adskHeightParamGuid = new Guid("da753fe3-ecfa-465b-9a2c-02f55d0c2ff1");//ADSK_Размер_Высота
+            Guid adskLengthParamGuid = new Guid("748a2515-4cc9-4b74-9a69-339a8d65a212");//ADSK_Размер_Длина
 
             //проверка имени файла
             string docName = doc.Title.ToString();
@@ -118,15 +125,13 @@ namespace TNov
                                 }
 
                             }
-                            string widthParam = "ADSK_Размер_Ширина"; string heightParam = "ADSK_Размер_Высота";
-                            string lengthParam = "ADSK_Размер_Длина";
                             
                             string prevValue = "0";
-                            bool TNovTextParamExist = param.ParamExist("N_TNov_Text", elem);
-                            if(TNovTextParamExist) { try { prevValue = elem.LookupParameter("N_TNov_Text").AsValueString(); } catch (Exception) { } }
+                            bool TNovTextParamExist = Param.ParamExistByGuid(NTNovTextparamGuid, elem);
+                            if(TNovTextParamExist) { try { prevValue = elem.get_Parameter(NTNovTextparamGuid).AsValueString(); } catch (Exception) { } }
                             bool prevValues = true;
                             if(prevValue==null||prevValue=="0") prevValues = false;
-                            if(prevValues)
+                            if(prevValues&&elem.Location != null)
                             {
                                 //считываем предыдущие значения параметров
                                 ///структура значения параметра: СоглРук=СоглBIM=СоглКР=СуммаРазмеров=Координаты
@@ -137,11 +142,11 @@ namespace TNov
                                 double dims0 = 0; if (pars.Length > 3 && pars[3].Length > 0) Double.TryParse(pars[3], out dims0);
                                 double point0 = 0; if(pars.Length > 4 && pars[4].Length>0) Double.TryParse(pars[4], out point0);
                                 //считываем новые значения параметров
-                                int Headstatus = elem.LookupParameter("N_Согласовано рук").AsInteger();
-                                int BIMstatus = elem.LookupParameter("N_Согласовано BIM").AsInteger();
-                                int STstatus = elem.LookupParameter("N_Согласовано КР").AsInteger();
-                                double elem_width = elem.LookupParameter(widthParam).AsDouble(); double elem_height = elem.LookupParameter(heightParam).AsDouble();
-                                double elem_length = elem.LookupParameter(lengthParam).AsDouble();
+                                int Headstatus = elem.get_Parameter(NTaskApprovedMEPParamGuid).AsInteger();
+                                int BIMstatus = elem.get_Parameter(NTaskApprovedBIMParamGuid).AsInteger();
+                                int STstatus = elem.get_Parameter(NTaskApprovedSTParamGuid).AsInteger();
+                                double elem_width = elem.get_Parameter(adskWidthParamGuid).AsDouble(); double elem_height = elem.get_Parameter(adskHeightParamGuid).AsDouble();
+                                double elem_length = elem.get_Parameter(adskLengthParamGuid).AsDouble();
                                 double dims = elem_length * 0.3048 * 1000000000 + elem_width * 0.3048 * 1000000 + elem_height * 0.3048 * 1000; dims = Math.Round(dims);
                                 LocationPoint elem_lp = (LocationPoint)elem.Location;
                                 XYZ p = elem_lp.Point; double point = p.X * 0.3048 * 1000000000 + p.Y * 0.3048 * 1000000 + p.Z * 0.3048*1000; point=Math.Round(point);
@@ -169,7 +174,7 @@ namespace TNov
                                             if (Headstatus0 == 0) 
                                             { 
                                                 Headstatus1 = Headstatus0; 
-                                                elem.LookupParameter("N_Согласовано рук").Set(Headstatus1); //галочка была неактивна - ее нельзя поставить
+                                                elem.get_Parameter(NTaskApprovedMEPParamGuid).Set(Headstatus1); //галочка была неактивна - ее нельзя поставить
                                             } 
                                             else
                                             {
@@ -178,7 +183,7 @@ namespace TNov
                                                 else 
                                                 {
                                                     Headstatus1 = 0; //выключаем галочку при любых других изменениях
-                                                    elem.LookupParameter("N_Согласовано рук").Set(Headstatus1);
+                                                    elem.get_Parameter(NTaskApprovedMEPParamGuid).Set(Headstatus1);
                                                 }
                                             }
                                             break;
@@ -196,7 +201,7 @@ namespace TNov
                                             if (BIMstatus0 == 0) 
                                             { 
                                                 BIMstatus1 = BIMstatus0; //галочка была неактивна - ее нельзя поставить
-                                                elem.LookupParameter("N_Согласовано BIM").Set(BIMstatus1);
+                                                elem.get_Parameter(NTaskApprovedBIMParamGuid).Set(BIMstatus1);
                                             }
                                             else
                                             {
@@ -205,7 +210,7 @@ namespace TNov
                                                 else
                                                 {
                                                     BIMstatus1 = 0; //выключаем галочку при любых других изменениях
-                                                    elem.LookupParameter("N_Согласовано BIM").Set(BIMstatus1);
+                                                    elem.get_Parameter(NTaskApprovedBIMParamGuid).Set(BIMstatus1);
                                                 }
                                             }
                                             break;
@@ -223,7 +228,7 @@ namespace TNov
                                             if (STstatus0 == 0) 
                                             { 
                                                 STstatus1 = STstatus0;
-                                                elem.LookupParameter("N_Согласовано КР").Set(STstatus1);
+                                                elem.get_Parameter(NTaskApprovedSTParamGuid).Set(STstatus1);
                                             }
                                             else
                                             {
@@ -232,7 +237,7 @@ namespace TNov
                                                 else 
                                                 { 
                                                     STstatus1 = 0; 
-                                                    elem.LookupParameter("N_Согласовано КР").Set(STstatus1);
+                                                    elem.get_Parameter(NTaskApprovedSTParamGuid).Set(STstatus1);
                                                 }
                                             }
                                             break;
@@ -247,7 +252,7 @@ namespace TNov
                                         case "BIM":
                                             if (STstatus == 1)
                                             {
-                                                STstatus1 = 0; elem.LookupParameter("N_Согласовано КР").Set(STstatus1);
+                                                STstatus1 = 0; elem.get_Parameter(NTaskApprovedSTParamGuid).Set(STstatus1);
                                             }
                                             break;
 
@@ -257,11 +262,11 @@ namespace TNov
                                         default:
                                             if (STstatus == 1)
                                             {
-                                                STstatus1 = 0; elem.LookupParameter("N_Согласовано КР").Set(STstatus1);
+                                                STstatus1 = 0; elem.get_Parameter(NTaskApprovedSTParamGuid).Set(STstatus1);
                                             }
                                             if (BIMstatus == 1)
                                             {
-                                                BIMstatus1 = 0; elem.LookupParameter("N_Согласовано BIM").Set(BIMstatus1);
+                                                BIMstatus1 = 0; elem.get_Parameter(NTaskApprovedBIMParamGuid).Set(BIMstatus1);
                                                 
                                             }
 
@@ -276,7 +281,7 @@ namespace TNov
                                         case "BIM":
                                             if (STstatus == 1)
                                             {
-                                                STstatus1 = 0; elem.LookupParameter("N_Согласовано КР").Set(STstatus1);
+                                                STstatus1 = 0; elem.get_Parameter(NTaskApprovedSTParamGuid).Set(STstatus1);
                                             }
                                             break;
 
@@ -286,11 +291,11 @@ namespace TNov
                                         default:
                                             if (STstatus == 1)
                                             {
-                                                STstatus1 = 0; elem.LookupParameter("N_Согласовано КР").Set(STstatus1);
+                                                STstatus1 = 0; elem.get_Parameter(NTaskApprovedSTParamGuid).Set(STstatus1);
                                             }
                                             if (BIMstatus == 1)
                                             {
-                                                BIMstatus1 = 0; elem.LookupParameter("N_Согласовано BIM").Set(BIMstatus1);
+                                                BIMstatus1 = 0; elem.get_Parameter(NTaskApprovedBIMParamGuid).Set(BIMstatus1);
 
                                             }
 
@@ -298,7 +303,7 @@ namespace TNov
                                     }
                                 }
                                 //записываем новые значения параметров
-                                elem.LookupParameter("N_TNov_Text").Set(Headstatus1.ToString() + "=" + BIMstatus1.ToString() + "=" + STstatus1.ToString() 
+                                elem.get_Parameter(NTNovTextparamGuid).Set(Headstatus1.ToString() + "=" + BIMstatus1.ToString() + "=" + STstatus1.ToString() 
                                     + "=" + dims.ToString() + "=" +point.ToString());
                                 
                                 
@@ -308,39 +313,25 @@ namespace TNov
                             }
                             else
                             {
-                                
-                                int Headstatus = elem.LookupParameter("N_Согласовано рук").AsInteger();
-                                int BIMstatus = elem.LookupParameter("N_Согласовано BIM").AsInteger();
-                                int STstatus = elem.LookupParameter("N_Согласовано КР").AsInteger();
-                                double elem_width = elem.LookupParameter(widthParam).AsDouble(); double elem_height = elem.LookupParameter(heightParam).AsDouble();
-                                double elem_length = elem.LookupParameter(lengthParam).AsDouble();
-                                double dims = elem_length * 0.3048 * 1000000000 + elem_width * 0.3048 * 1000000 + elem_height * 0.3048 * 1000; dims = Math.Round(dims);
-                                LocationPoint elem_lp = (LocationPoint)elem.Location;
-                                XYZ p = elem_lp.Point; double point = p.X * 0.3048 * 1000000000 + p.Y * 0.3048 * 1000000 + p.Z * 0.3048*1000; point = Math.Round(point);
-
-                                int Headstatus1 = Headstatus; int BIMstatus1 = BIMstatus; int STstatus1 = STstatus;
-                                /*
-                                switch (userDepartment)
+                                if (elem.Location != null)
                                 {
-                                    case "BIM":
-                                        break;
+                                    int Headstatus = elem.get_Parameter(NTaskApprovedMEPParamGuid).AsInteger();
+                                    int BIMstatus = elem.get_Parameter(NTaskApprovedBIMParamGuid).AsInteger();
+                                    int STstatus = elem.get_Parameter(NTaskApprovedSTParamGuid).AsInteger();
+                                    double elem_width = elem.get_Parameter(adskWidthParamGuid).AsDouble(); double elem_height = elem.get_Parameter(adskHeightParamGuid).AsDouble();
+                                    double elem_length = elem.get_Parameter(adskLengthParamGuid).AsDouble();
+                                    double dims = elem_length * 0.3048 * 1000000000 + elem_width * 0.3048 * 1000000 + elem_height * 0.3048 * 1000; dims = Math.Round(dims);
+                                    LocationPoint elem_lp = (LocationPoint)elem.Location;
+                                    XYZ p = elem_lp.Point; double point = p.X * 0.3048 * 1000000000 + p.Y * 0.3048 * 1000000 + p.Z * 0.3048 * 1000; point = Math.Round(point);
 
-                                    case "ST":
-                                        break;
-
-                                    default:
-                                        if (STstatus == 1) {elem.LookupParameter("N_Согласовано КР").Set(0); STstatus1=0;}
-                                        if (BIMstatus == 1) {elem.LookupParameter("N_Согласовано BIM").Set(0); BIMstatus1=0;}
-                                        break;
+                                    int Headstatus1 = Headstatus; int BIMstatus1 = BIMstatus; int STstatus1 = STstatus;
+                                    if (Param.ParamExistByGuid(NTNovTextparamGuid, elem))
+                                    {
+                                        //записываем новые значения параметров
+                                        elem.get_Parameter(NTNovTextparamGuid).Set(Headstatus1.ToString() + "=" + BIMstatus1.ToString() + "=" + STstatus1.ToString()
+                                            + "=" + dims.ToString() + "=" + point.ToString());
+                                    }
                                 }
-                                */
-                                if (param.ParamExist("N_TNov_Text",elem))
-                                {
-                                    //записываем новые значения параметров
-                                    elem.LookupParameter("N_TNov_Text").Set(Headstatus1.ToString() + "=" + BIMstatus1.ToString() + "=" + STstatus1.ToString()
-                                        + "=" + dims.ToString() + "=" + point.ToString());
-                                }
-                                
                             }
 
 

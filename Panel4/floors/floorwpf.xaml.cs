@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для floorwpf.xaml
+    /// Логика взаимодействия для FloorWPF.xaml
     /// </summary>
-    public partial class floorwpf : Window
+    public partial class FloorWPF : Window
     {
-        public floorwpf(floorViewModel viewModel)
+        public FloorWPF(FloorViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;
@@ -27,6 +27,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
     }
 }

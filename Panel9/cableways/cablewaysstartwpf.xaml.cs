@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для cablewaysstartwpf.xaml
+    /// Логика взаимодействия для CableWaysStartWPF.xaml
     /// </summary>
-    public partial class cablewaysstartwpf : Window
+    public partial class CableWaysStartWPF : Window
     {
-        public cablewaysstartwpf(cablewaysstartViewModel viewModel)
+        public CableWaysStartWPF(CableWaysStartViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;
@@ -24,6 +24,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
     }
 }

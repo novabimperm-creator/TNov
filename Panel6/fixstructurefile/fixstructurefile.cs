@@ -14,7 +14,7 @@ using TNov.main;
 namespace TNov
 {
     [Transaction(TransactionMode.Manual)]
-    public class fixstructurefile : IExternalCommand
+    public class Fixstructurefile : IExternalCommand
     {
         private TNovProgressBar fixProgressBar;
         private void ThreadStartingPoint()

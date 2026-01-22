@@ -16,7 +16,7 @@ namespace TNov
     [Transaction(TransactionMode.Manual)]
     [RegenerationAttribute(RegenerationOption.Manual)]
 
-    public class paint : IExternalCommand
+    public class Paint : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {

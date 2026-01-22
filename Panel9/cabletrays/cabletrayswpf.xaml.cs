@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для cabletrayswpf.xaml
+    /// Логика взаимодействия для CableTraysWPF.xaml
     /// </summary>
-    public partial class cabletrayswpf : Window
+    public partial class CableTraysWPF : Window
     {
-        public cabletrayswpf(cabletraysViewModel viewModel)
+        public CableTraysWPF(CableTraysViewModel viewModel)
         {
             InitializeComponent();
             textBox1.Focus();
@@ -25,6 +25,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
     }
 }

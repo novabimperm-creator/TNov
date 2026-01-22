@@ -437,7 +437,7 @@ namespace TNov
                                                                     }
                                                                     else if (measureValue == "м²")
                                                                     {
-                                                                        bool pokrovParamExist = param.ParamExist("Покровный материал", RevitAPI.Document.GetElement(elem3.elemid));
+                                                                        bool pokrovParamExist = Param.ParamExist("Покровный материал", RevitAPI.Document.GetElement(elem3.elemid));
                                                                         if (pokrovParamExist)
                                                                         {
                                                                             int pokrovYes = RevitAPI.Document.GetElement(elem3.elemid).LookupParameter("Покровный материал").AsInteger();

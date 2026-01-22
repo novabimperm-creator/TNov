@@ -13,7 +13,7 @@ namespace TNov
 
 
     [Transaction(TransactionMode.Manual)]
-    public class foundnumspec : IExternalCommand
+    public class FoundNumSpec : IExternalCommand
     {
                 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -30,10 +30,6 @@ namespace TNov
             // создание log - файла
             Logger.Initialize(TNovClassName);
             
-
-            //Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
-
             var viewModel0 = new aboutViewModel();
             
             string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
@@ -51,12 +47,12 @@ namespace TNov
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
             }
 
-            //Список используемых параметров
-
+            //параметры
             BuiltInParameter gm = BuiltInParameter.ALL_MODEL_MODEL; //параметр Группа модели
-            string parameterName = "N_Свая.Номер"; if (oldProject == true) { parameterName = "Свая.Номер"; }
-            string parameterNum1 = "N_Свая.Группа1"; if (oldProject == true) { parameterNum1 = "Свая.Группа1"; }
-            string parameterNum2 = "N_Свая.Группа2"; if (oldProject == true) { parameterNum2 = "Свая.Группа2"; }
+            Guid pileNumberParamGuid = new Guid("3df328ab-5e4d-4da0-9138-42f1a8bb54a7"); //N_Свая.Номер
+            Guid pileGroup1ParamGuid = new Guid("dd989087-a6af-486d-986e-d83b14c2d064"); //Свая.Группа1
+            Guid pileGroup2ParamGuid = new Guid("471aa5c6-a7b8-4d38-a1d7-ac20794b4920"); //Свая.Группа2
+
 
             Logger.Log("Сбор элементов",1);
             
@@ -89,7 +85,7 @@ namespace TNov
             foreach (var p in piles1)
             {
                 Element elem = doc.GetElement(p.Id);
-                int.TryParse(p.LookupParameter(parameterName).AsString(), out int num);
+                int.TryParse(p.get_Parameter(pileNumberParamGuid).AsString(), out int num);
                 double z = 0;
                 z = (double)(elem.LookupParameter("Свая.ОтмНизаРостверка")?.AsDouble()); //Свая.ОтмНизаРостверка
                 Pile pl = new Pile();
@@ -139,9 +135,9 @@ namespace TNov
                         Element elem = doc.GetElement(pl.elemid);
                         try
                         {
-                            elem.LookupParameter(parameterNum1)?.Set(parameterNum1val);
+                            elem.get_Parameter(pileGroup1ParamGuid)?.Set(parameterNum1val);
                             Logger.Log("   Элемент "+ pl.elemid.IntegerValue.ToString() + 
-                                " параметр "+ parameterNum1+" заполнен: "+ parameterNum1val, 2);
+                                " параметр N_Свая.Группа1 заполнен: "+ parameterNum1val, 2);
                         }
                         catch (Exception ex) 
                         {
@@ -204,9 +200,9 @@ namespace TNov
                             Element elem = doc.GetElement(pl.elemid);
                             try
                             {
-                                elem.LookupParameter(parameterNum2)?.Set(parameterNum2val);
+                                elem.get_Parameter(pileGroup2ParamGuid)?.Set(parameterNum2val);
                                 Logger.Log("      Элемент " + pl.elemid.IntegerValue.ToString() +
-                                    " параметр " + parameterNum2 + " заполнен: " + parameterNum2val, 2);
+                                    " параметр N_Свая.Группа2 заполнен: " + parameterNum2val, 2);
                             }
                             catch (Exception ex)
                             {

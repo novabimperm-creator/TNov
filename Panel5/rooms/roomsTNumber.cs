@@ -13,7 +13,7 @@ using TNov.main;
 namespace TNov
 {
     [Transaction(TransactionMode.Manual)]
-    public class roomsTNumber : IExternalCommand
+    public class RoomsTNumber : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {

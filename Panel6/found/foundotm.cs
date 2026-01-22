@@ -15,7 +15,7 @@ using TNov.main;
 namespace TNov
 {
     [Transaction(TransactionMode.Manual)]
-    public class foundotm : IExternalCommand
+    public class FoundOtm : IExternalCommand
     {
         
         private TNovProgressBar foundcutProgressBar;
@@ -57,11 +57,7 @@ namespace TNov
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log("Расширенные логи вкл",2);
             }
 
-            //Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
-
-            //Список используемых параметров
-
+            //параметры
             BuiltInParameter gm = BuiltInParameter.ALL_MODEL_MODEL; //параметр Группа модели
 
             Logger.Log("Сбор элементов",1);

@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для parkwpf.xaml
+    /// Логика взаимодействия для ParkWPF.xaml
     /// </summary>
-    public partial class parkwpf : Window
+    public partial class ParkWPF : Window
     {
-        public parkwpf(parkViewModel viewModel)
+        public ParkWPF(ParkViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;
@@ -22,6 +22,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
-        
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+
+        }
     }
 }

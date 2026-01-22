@@ -16,143 +16,13 @@ using TNov.main;
 
 namespace TNov
 {
-    public class levelnumberwpfViewModel : INotifyPropertyChanged
-    {
-        private string _section = "1";
-        public string section
-        {
-            get => _section; set { _section = value; OnPropertyChanged(); }
-        }
-        private bool _walls = true;
-        public bool walls
-        {
-            get => _walls; set{_walls = value;OnPropertyChanged();}
-        }
-        private bool _floors = true;
-        public bool floors
-        {
-            get => _floors; set { _floors = value; OnPropertyChanged(); }
-        }
-        private bool _ceilings = true;
-        public bool ceilings
-        {
-            get => _ceilings; set { _ceilings = value; OnPropertyChanged(); }
-        }
-        private bool _instances = true;
-        public bool instances
-        {
-            get => _instances; set { _instances = value; OnPropertyChanged(); }
-        }
-        private bool _rooms = true;
-        public bool rooms
-        {
-            get => _rooms; set { _rooms = value; OnPropertyChanged(); }
-        }
-        private bool _park = true;
-        public bool park
-        {
-            get => _park; set { _park = value; OnPropertyChanged(); }
-        }
-        private bool _other = true;
-        public bool other
-        {
-            get => _other; set { _other = value; OnPropertyChanged(); }
-        }
-        private bool _beams = true;
-        public bool beams
-        {
-            get => _beams; set { _beams = value; OnPropertyChanged(); }
-        }
-        private bool _checkBox8islocked;
-        public bool checkBox8islocked
-        {
-            get => _checkBox8islocked;
-            set
-            {
-                _checkBox8islocked = value;
-                OnPropertyChanged();
-            }
-        }
-        private bool _holes = true;
-        public bool holes
-        {
-            get => _holes; set { _holes = value; OnPropertyChanged(); }
-        }
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-
-    }
+    
 
     [Transaction(TransactionMode.Manual)]
-    public class levelnumber : IExternalCommand
+    public class LevelNumber : IExternalCommand
     {
         
-        private void SetLevelParam(ElementId elemid, in Parameter param0, in string param1, out bool success)
-        {
-            
-            string eid = elemid.ToString();
-            Element elem = RevitAPI.Document.GetElement(elemid);
-            Logger.Log("   Элемент " + eid + ":",2);
-            string level = param0.AsValueString(); //получаем значение исходного параметра
-            level = level.Replace("_", " ");
-            string[] parts = level.Split(new char[] { ' ' }); //делим имя пробелами
-            level = parts[0];
-            if (level.Contains('.'))
-            {
-                string[] parts2 = level.Split('.');
-                level = parts2[0];
-            }
-            double num = 0;
-            Double.TryParse(level, out num);
-            num = num / 0.3048 / 0.3048;
-
-            success = false;
-
-            if (param.ParamExist(param1, elem)) 
-            {
-                try
-                {
-                    elem.LookupParameter(param1)?.Set(num);
-                    success = true;
-                    Logger.Log("      назначено " + num.ToString(), 2);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Log("   Элемент " + eid + " Ошибка:" + ex.Message,4);
-                }
-            }
-
-            
-        }
-        private void SetLevelParamByHost(Railing elem, in string param1, out bool success)
-        {
-            Logger.Log("   Элемент " + elem.Id + ":", 2);
-            //получаем хост
-            Element host = RevitAPI.Document.GetElement(elem.HostId);
-            Parameter param0 = null;
-            if(host.Category.Id.IntegerValue== -2000011)
-            {
-                param0 = host.get_Parameter(BuiltInParameter.WALL_BASE_CONSTRAINT);
-            }
-            else if(host.Category.Id.IntegerValue == -2000120)
-            {
-                param0 = host.get_Parameter(BuiltInParameter.STAIRS_BASE_LEVEL_PARAM);
-            }
-            if (param0 != null)
-            {
-                SetLevelParam(elem.Id,param0,param1,out success);
-            }
-            else success = false;
-        }
+        
         private TNovProgressBar levnumProgressBar;
         private void ThreadStartingPoint()
         {
@@ -204,10 +74,8 @@ namespace TNov
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
             }
 
-            // Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
-            string N_Par_LevelNum = "N_Эт.Номер";
-            if (oldProject == true) { N_Par_LevelNum = "Эт.Номер"; }
+            //параметры
+            Guid NLevelNumberParamGuid = new Guid("4d2aa1b8-727c-43a1-8b1e-8c22dd484e11"); //N_Эт.Номер
 
             Logger.Log("Сбор элементов",1);
             List<Level> levels = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Levels)   //фильтр по категории Уровни
@@ -369,13 +237,13 @@ namespace TNov
 
             //Вьюха
             Logger.Log("Списки собраны. Диалоговое окно",1);
-            var viewModel = new levelnumberwpfViewModel();
+            var viewModel = new LevelNumberViewModel();
             // Десериализация
             bool forProject = true;
             json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
             if (canserialize)
             {
-                viewModel = JsonConvert.DeserializeObject<levelnumberwpfViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<LevelNumberViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
             //Проверка отдела пользователя
@@ -392,7 +260,7 @@ namespace TNov
                     break;
             }
             //Окно
-            var wpfview = new levelnumberwpf(viewModel);
+            var wpfview = new LevelNumberWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { }
@@ -476,7 +344,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.get_Parameter(BuiltInParameter.WALL_BASE_CONSTRAINT);
                         if (param0 != null)
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      "+elem.Id.ToString()+ " ошибка",4); }
@@ -494,7 +362,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.LookupParameter("Уровень");
                         if (param0 != null && param0.AsValueString() != "")
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -512,7 +380,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.get_Parameter(BuiltInParameter.LEVEL_PARAM);
                         if (param0 != null)
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -530,7 +398,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.LookupParameter("Уровень");
                         if (param0 != null && param0.AsValueString() != "")
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -548,7 +416,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.get_Parameter(BuiltInParameter.LEVEL_PARAM);
                         if (param0 != null)
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -566,7 +434,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.LookupParameter("Уровень");
                         if (param0 != null && param0.AsValueString() != "")
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -584,7 +452,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.LookupParameter("Уровень");
                         if (param0 != null && param0.AsValueString() != "")
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -602,7 +470,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.LookupParameter("Уровень");
                         if (param0 != null && param0.AsValueString() != "")
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -620,7 +488,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.LookupParameter("Уровень");
                         if (param0 != null && param0.AsValueString() != "")
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -638,7 +506,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.get_Parameter(BuiltInParameter.LEVEL_NAME);//получаем параметр "Уровень"
                         if (param0 != null && param0.AsValueString() != "")
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -656,7 +524,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.LookupParameter("Уровень");
                         if (param0 != null && param0.AsValueString() != "")
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -674,7 +542,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.LookupParameter("Уровень");
                         if (param0 != null && param0.AsValueString() != "")
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -692,7 +560,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.LookupParameter("Уровень");
                         if (param0 != null&&param0.AsValueString()!="")
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -710,7 +578,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.LookupParameter("Уровень");
                         if (param0 != null && param0.AsValueString() != "")
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -728,7 +596,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.get_Parameter(BuiltInParameter.SCHEDULE_LEVEL_PARAM);
                         if (param0 != null && param0.AsValueString() != "")
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -746,7 +614,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.get_Parameter(BuiltInParameter.STAIRS_BASE_LEVEL_PARAM);//получаем параметр "Нижний уровень"
                         if (param0 != null)
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -764,7 +632,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.LookupParameter("Уровень");
                         if (param0 != null && param0.AsValueString() != "")
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -782,12 +650,12 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.get_Parameter(BuiltInParameter.STAIRS_RAILING_BASE_LEVEL_PARAM);//получаем параметр "Базовый уровень"
                         if (param0 != null&&param0.AsValueString()!="") 
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else if (elem.HasHost)
                         {
-                            SetLevelParamByHost(elem, N_Par_LevelNum, out bool success);
+                            SetLevelParamByHost(elem, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -805,7 +673,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.LookupParameter("Уровень");
                         if (param0 != null && param0.AsValueString() != "")
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -823,7 +691,7 @@ namespace TNov
                         Autodesk.Revit.DB.Parameter param0 = elem.LookupParameter("Уровень");
                         if (param0 != null && param0.AsValueString() != "")
                         {
-                            SetLevelParam(elem.Id, param0, N_Par_LevelNum, out bool success);
+                            SetLevelParam(elem.Id, param0, NLevelNumberParamGuid, out bool success);
                             if (!success) { failed.Add(elem.Id.ToString()); failscount++; }
                         }
                         else { failed.Add(elem.Id.ToString()); failscount++; Logger.Log("      " + elem.Id.ToString() + " ошибка", 4); }
@@ -851,6 +719,64 @@ namespace TNov
             
             Logger.Log("Завершение работы.",5);
             return Result.Succeeded;
+        }
+
+        private void SetLevelParam(ElementId elemid, in Parameter param0, in Guid param1, out bool success)
+        {
+
+            string eid = elemid.ToString();
+            Element elem = RevitAPI.Document.GetElement(elemid);
+            Logger.Log("   Элемент " + eid + ":", 2);
+            string level = param0.AsValueString(); //получаем значение исходного параметра
+            level = level.Replace("_", " ");
+            string[] parts = level.Split(new char[] { ' ' }); //делим имя пробелами
+            level = parts[0];
+            if (level.Contains('.'))
+            {
+                string[] parts2 = level.Split('.');
+                level = parts2[0];
+            }
+            double num = 0;
+            Double.TryParse(level, out num);
+            num = num / 0.3048 / 0.3048;
+
+            success = false;
+
+            if (Param.ParamExistByGuid(param1, elem))
+            {
+                try
+                {
+                    elem.get_Parameter(param1)?.Set(num);
+                    success = true;
+                    Logger.Log("      назначено " + num.ToString(), 2);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log("   Элемент " + eid + " Ошибка:" + ex.Message, 4);
+                }
+            }
+
+
+        }
+        private void SetLevelParamByHost(Railing elem, in Guid param1, out bool success)
+        {
+            Logger.Log("   Элемент " + elem.Id + ":", 2);
+            //получаем хост
+            Element host = RevitAPI.Document.GetElement(elem.HostId);
+            Parameter param0 = null;
+            if (host.Category.Id.IntegerValue == -2000011)
+            {
+                param0 = host.get_Parameter(BuiltInParameter.WALL_BASE_CONSTRAINT);
+            }
+            else if (host.Category.Id.IntegerValue == -2000120)
+            {
+                param0 = host.get_Parameter(BuiltInParameter.STAIRS_BASE_LEVEL_PARAM);
+            }
+            if (param0 != null)
+            {
+                SetLevelParam(elem.Id, param0, param1, out success);
+            }
+            else success = false;
         }
     }
     

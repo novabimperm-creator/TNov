@@ -5,11 +5,11 @@ using System.Windows.Navigation;
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для sheetsstartwpf.xaml
+    /// Логика взаимодействия для SheetsStartWPF.xaml
     /// </summary>
-    public partial class sheetsstartwpf : Window
+    public partial class SheetsStartWPF : Window
     {
-        public sheetsstartwpf(sheetsstartViewModel viewModel)
+        public SheetsStartWPF(SheetsStartViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;
@@ -32,6 +32,11 @@ namespace TNov
 
             Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
             e.Handled = true;
+        }
+
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+
         }
     }
 }

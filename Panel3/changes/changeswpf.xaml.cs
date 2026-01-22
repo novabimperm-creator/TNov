@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для changeswpf.xaml
+    /// Логика взаимодействия для ChangesWPF.xaml
     /// </summary>
-    public partial class changeswpf : Window
+    public partial class ChangesWPF : Window
     {
-        public changeswpf(changesViewModel viewModel)
+        public ChangesWPF(ChangesViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;
@@ -24,6 +24,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
 
+        }
     }
 }

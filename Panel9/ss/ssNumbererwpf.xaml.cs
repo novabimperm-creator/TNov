@@ -3,11 +3,11 @@
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для ssNumbererwpf.xaml
+    /// Логика взаимодействия для SSNumbererWPF.xaml
     /// </summary>
-    public partial class ssNumbererwpf : Window
+    public partial class SSNumbererWPF : Window
     {
-        public ssNumbererwpf(ssNumbererViewModel viewModel)
+        public SSNumbererWPF(SSNumbererViewModel viewModel)
         {
             InitializeComponent();
             textBox1.Focus();
@@ -30,5 +30,9 @@ namespace TNov
             this.Close(); // закрытие окна
         }
 
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+
+        }
     }
 }

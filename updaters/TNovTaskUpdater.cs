@@ -34,7 +34,6 @@ namespace TNov
 
             //параметры
             ElementId familyNameParamId = new ElementId(-1002002); //id параметра Имя семейства
-            BuiltInParameter mrk = BuiltInParameter.ALL_MODEL_MARK; //Марка
             Guid adskGparamGuid = new Guid("3de5f1a4-d560-4fa8-a74f-25d250fb3401");//ADSK_Группирование
 
             //проверка имени файла

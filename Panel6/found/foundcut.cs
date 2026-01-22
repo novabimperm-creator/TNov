@@ -15,7 +15,7 @@ using TNov.main;
 namespace TNov
 {
     [Transaction(TransactionMode.Manual)]
-    public class foundcut : IExternalCommand
+    public class FoundCut : IExternalCommand
     {
         private XYZ VectorFromHorizVertAngles(double angleHorizD, double angleVertD)
         {
@@ -72,9 +72,6 @@ namespace TNov
                 bool? qok = qwpfview.ShowDialog();
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log("Расширенные логи вкл",2);
             }
-
-            //Проверка актуальности шаблона
-            templatecheck tc = new templatecheck(in commandData, out bool oldProject);
 
             //Список используемых параметров
 

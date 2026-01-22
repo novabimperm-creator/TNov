@@ -4,11 +4,11 @@ using System.Windows.Controls;
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для foundautonumwpf.xaml
+    /// Логика взаимодействия для FoundAutoNumWPF.xaml
     /// </summary>
-    public partial class foundautonumwpf : Window
+    public partial class FoundAutoNumWPF : Window
     {
-        public foundautonumwpf(foundautonumViewModel viewModel)
+        public FoundAutoNumWPF(FoundAutoNumViewModel viewModel)
         {
             InitializeComponent();
             textBox1.Focus();
@@ -31,14 +31,19 @@ namespace TNov
             DialogResult = false;
             this.Close(); // закрытие окна
         }
+
+        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+
+        }
         /*
-         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-            <TextBlock Name="text2" Margin="5" Text="Настройка:" TextWrapping="Wrap" />
-            <Slider Minimum="500" Maximum="2000" Value="{Binding tolerance}" TickPlacement="None" TickFrequency="5" IsSnapToTickEnabled="True" Name="slValue" Width="124" Margin="5"
-                    ValueChanged="Slider_ValueChanged"/>
-            <TextBox Text="{Binding ElementName=slValue, Path=Value, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center" Width="50" Margin="5" />
-        </StackPanel>
-         */
+<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+   <TextBlock Name="text2" Margin="5" Text="Настройка:" TextWrapping="Wrap" />
+   <Slider Minimum="500" Maximum="2000" Value="{Binding tolerance}" TickPlacement="None" TickFrequency="5" IsSnapToTickEnabled="True" Name="slValue" Width="124" Margin="5"
+           ValueChanged="Slider_ValueChanged"/>
+   <TextBox Text="{Binding ElementName=slValue, Path=Value, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center" Width="50" Margin="5" />
+</StackPanel>
+*/
 
     }
 }

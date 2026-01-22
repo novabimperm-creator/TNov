@@ -13,55 +13,10 @@ using TNov.main;
 
 namespace TNov
 {
-    public class unpinnerwpfViewModel : INotifyPropertyChanged
-    {
-
-        private bool _grids = true;
-        public bool grids
-        {
-            get => _grids;
-            set
-            {
-                _grids = value;
-                OnPropertyChanged();
-            }
-        }
-        private bool _levels = false;
-        public bool levels
-        {
-            get => _levels;
-            set
-            {
-                _levels = value;
-                OnPropertyChanged();
-            }
-        }
-        private bool _links = false;
-        public bool links
-        {
-            get => _links;
-            set
-            {
-                _links = value;
-                OnPropertyChanged();
-            }
-        }
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-
-    }
+    
 
     [Transaction(TransactionMode.Manual)]
-    public class unpinner : IExternalCommand
+    public class Unpinner : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -119,16 +74,16 @@ namespace TNov
 
             Logger.Log("Диалоговое окно",1);
             // Диалоговое окно
-            var viewModel = new unpinnerwpfViewModel();
+            var viewModel = new UnpinnerViewModel();
             // Десериализация
             bool forProject = false; 
             json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
             if (canserialize)
             {
-                viewModel = JsonConvert.DeserializeObject<unpinnerwpfViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<UnpinnerViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
-            var wpfview = new unpinnerwpf(viewModel);
+            var wpfview = new UnpinnerWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { }

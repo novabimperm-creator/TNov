@@ -18,40 +18,11 @@ using TNov.main;
 using Parameter = Autodesk.Revit.DB.Parameter;
 using View = Autodesk.Revit.DB.View;
 
-namespace TNov.Panel8
+namespace TNov
 {
-    public class duct3dViewModel : INotifyPropertyChanged
-    {
-        [JsonIgnore] public ObservableCollection<string> paramlist { get; set; }
-        private string _output1; public string output1 { get { return _output1; } set { _output1 = value; OnPropertyChanged(); } }
-        public duct3dViewModel()
-        {
-            Param();
-        }
-        private void Param()
-        {
-            paramlist = new ObservableCollection<string>
-            {
-                "Имя системы",
-                "ADSK_Группирование"
-            };
-            output1 = paramlist[0];
-        }
-
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-    }
+    
     [Transaction(TransactionMode.Manual)]
-    public class duct3d : IExternalCommand
+    public class Duct3D : IExternalCommand
     {
         
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -130,16 +101,16 @@ namespace TNov.Panel8
             // Диалоговое окно
             Logger.Log("Элементы собраны. Диалог",1);
 
-            var viewModel = new duct3dViewModel();
+            var viewModel = new Duct3DViewModel();
             // Десериализация
             bool forProject = true;
             json js = new json(in TNovClassName, in forProject, out bool canserialize, out string jsonpath);
             if (canserialize)
             {
-                viewModel = JsonConvert.DeserializeObject<duct3dViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<Duct3DViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
-            var wpfview = new duct3dwpf(viewModel);
+            var wpfview = new Duct3DWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { }

@@ -13,45 +13,9 @@ using TNov.main;
 
 namespace TNov
 {
-    public class excelViewModel : INotifyPropertyChanged
-    {
-
-        private bool _sc1 = false;
-        public bool sc1
-        {
-            get => _sc1; set { _sc1 = value; OnPropertyChanged(); }
-        }
-        private bool _sc2 = true;
-        public bool sc2
-        {
-            get => _sc2; set { _sc2 = value; OnPropertyChanged(); }
-        }
-        private bool _sc3 = false;
-        public bool sc3
-        {
-            get => _sc3; set { _sc3 = value; OnPropertyChanged(); }
-        }
-        private bool _show = true;
-        public bool show
-        {
-            get => _show; set { _show = value; OnPropertyChanged(); }
-        }
-
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-
-    }
+    
     [Transaction(TransactionMode.Manual)]
-    public class excel : IExternalCommand
+    public class Excel : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -95,12 +59,12 @@ namespace TNov
 
             Logger.Log("Диалоговое окно",1);
             //Вьюмодель (без открытия окна)
-            var viewModel = new excelViewModel();
+            var viewModel = new ExcelViewModel();
             // Десериализация
             string jsonpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/excel.json");
             try
             {
-                viewModel = JsonConvert.DeserializeObject<excelViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<ExcelViewModel>(File.ReadAllText(jsonpath));
                 Logger.Log("Десериализация прошла успешно",1);
             }
             catch (Exception ex) 
@@ -111,7 +75,7 @@ namespace TNov
 
             if (viewModel.show)
             {
-                var wpfview = new excelwpf(viewModel);
+                var wpfview = new ExcelWPF(viewModel);
                 viewModel.CloseRequest += (s, e) => wpfview.Close();
                 bool? ok = wpfview.ShowDialog();
                 if (ok != null && ok == true) { } 
@@ -138,12 +102,12 @@ namespace TNov
 
                         // запуск Excel
                         Logger.Log("Попытка запуска Excel",1);
-                        Excel.Application xlApp;
-                        Excel.Workbook xlWorkBook;
-                        Excel.Worksheet xlWorkSheet;
-                        Excel.Worksheet xlWorkSheetAllDim;
-                        Excel.QueryTable xlQuery;
-                        xlApp = new Excel.Application();
+                        Microsoft.Office.Interop.Excel.Application xlApp;
+                        Microsoft.Office.Interop.Excel.Workbook xlWorkBook;
+                        Microsoft.Office.Interop.Excel.Worksheet xlWorkSheet;
+                        Microsoft.Office.Interop.Excel.Worksheet xlWorkSheetAllDim;
+                        Microsoft.Office.Interop.Excel.QueryTable xlQuery;
+                        xlApp = new Microsoft.Office.Interop.Excel.Application();
                         // проверка установлен ли Excel
                         if (xlApp == null)
                         {
@@ -159,13 +123,13 @@ namespace TNov
                                                                                 // create new workbook, which by default contains at least 1 worksheet
                         xlWorkBook = xlApp.Workbooks.Add(default_value);
                         // initialize 2 worksheet variables, all referring to Sheet1 for the time being
-                        xlWorkSheetAllDim = (Excel.Worksheet)xlWorkBook.Worksheets.get_Item(1);
-                        xlWorkSheet = (Excel.Worksheet)xlWorkBook.Worksheets.get_Item(1);
+                        xlWorkSheetAllDim = (Microsoft.Office.Interop.Excel.Worksheet)xlWorkBook.Worksheets.get_Item(1);
+                        xlWorkSheet = (Microsoft.Office.Interop.Excel.Worksheet)xlWorkBook.Worksheets.get_Item(1);
 
                         Logger.Log("Разворачиваем окно Excel",1);
 
                         // maximize workbook window
-                        xlApp.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized;
+                        xlApp.ActiveWindow.WindowState = Microsoft.Office.Interop.Excel.XlWindowState.xlMaximized;
                         // show menu bars
                         xlApp.Visible = true;
 
@@ -197,7 +161,7 @@ namespace TNov
                         xlWorkSheet.QueryTables[1].TextFileCommaDelimiter = true;
                         xlWorkSheet.QueryTables[1].TextFileSpaceDelimiter = false;
                         /*xlWorkSheet.QueryTables[1].TextFileColumnDataTypes = columnDataTypes;*/
-                        xlQuery.RefreshStyle = Excel.XlCellInsertionMode.xlInsertEntireRows;
+                        xlQuery.RefreshStyle = Microsoft.Office.Interop.Excel.XlCellInsertionMode.xlInsertEntireRows;
                         xlQuery.Refresh(false); // false means refresh but not return until refresh is finished 
                         xlQuery.Delete(); // delete the query
 
@@ -217,15 +181,15 @@ namespace TNov
 
                         // запуск Excel
                         Logger.Log("Попытка запуска / получения активного экземпляра Excel",1);
-                        Excel.Application xlApp;
-                        Excel.Workbook xlWorkBook;
-                        Excel.Worksheet xlWorkSheet;
-                        Excel.Worksheet xlWorkSheetAllDim;
-                        Excel.QueryTable xlQuery;
+                        Microsoft.Office.Interop.Excel.Application xlApp;
+                        Microsoft.Office.Interop.Excel.Workbook xlWorkBook;
+                        Microsoft.Office.Interop.Excel.Worksheet xlWorkSheet;
+                        Microsoft.Office.Interop.Excel.Worksheet xlWorkSheetAllDim;
+                        Microsoft.Office.Interop.Excel.QueryTable xlQuery;
                         try
                         {
                             // Получить активный экземпляр Excel
-                            xlApp = (Excel.Application)Marshal.GetActiveObject("Excel.Application");
+                            xlApp = (Microsoft.Office.Interop.Excel.Application)Marshal.GetActiveObject("Excel.Application");
                             // define an object to represent default value
                             object default_value = System.Reflection.Missing.Value; // object = object type
                                                                                     // create new workbook, which by default contains at least 1 worksheet
@@ -233,7 +197,7 @@ namespace TNov
                         }
                         catch (COMException)
                         {
-                            xlApp = new Excel.Application();
+                            xlApp = new Microsoft.Office.Interop.Excel.Application();
                             // проверка установлен ли Excel
                             if (xlApp == null)
                             {
@@ -249,13 +213,13 @@ namespace TNov
                         }
 
                         // initialize 2 worksheet variables, all referring to Sheet1 for the time being
-                        xlWorkSheetAllDim = (Excel.Worksheet)xlWorkBook.Worksheets.get_Item(1);
-                        xlWorkSheet = (Excel.Worksheet)xlWorkBook.Worksheets.get_Item(1);
+                        xlWorkSheetAllDim = (Microsoft.Office.Interop.Excel.Worksheet)xlWorkBook.Worksheets.get_Item(1);
+                        xlWorkSheet = (Microsoft.Office.Interop.Excel.Worksheet)xlWorkBook.Worksheets.get_Item(1);
 
                         Logger.Log("Разворачиваем окно Excel",1);
 
                         // maximize workbook window
-                        xlApp.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized;
+                        xlApp.ActiveWindow.WindowState = Microsoft.Office.Interop.Excel.XlWindowState.xlMaximized;
                         // show menu bars
                         xlApp.Visible = true;
 
@@ -287,7 +251,7 @@ namespace TNov
                         xlWorkSheet.QueryTables[1].TextFileCommaDelimiter = true;
                         xlWorkSheet.QueryTables[1].TextFileSpaceDelimiter = false;
                         /*xlWorkSheet.QueryTables[1].TextFileColumnDataTypes = columnDataTypes;*/
-                        xlQuery.RefreshStyle = Excel.XlCellInsertionMode.xlInsertEntireRows;
+                        xlQuery.RefreshStyle = Microsoft.Office.Interop.Excel.XlCellInsertionMode.xlInsertEntireRows;
                         xlQuery.Refresh(false); // false means refresh but not return until refresh is finished 
                         xlQuery.Delete(); // delete the query
 
@@ -310,21 +274,21 @@ namespace TNov
 
                         // запуск Excel
                         Logger.Log("Попытка запуска / получения активного экземпляра Excel",1);
-                        Excel.Application xlApp;
-                        Excel.Workbook xlWorkBook;
-                        Excel.Worksheet xlWorkSheet;
-                        Excel.Worksheet xlWorkSheetAllDim;
-                        Excel.QueryTable xlQuery;
+                        Microsoft.Office.Interop.Excel.Application xlApp;
+                        Microsoft.Office.Interop.Excel.Workbook xlWorkBook;
+                        Microsoft.Office.Interop.Excel.Worksheet xlWorkSheet;
+                        Microsoft.Office.Interop.Excel.Worksheet xlWorkSheetAllDim;
+                        Microsoft.Office.Interop.Excel.QueryTable xlQuery;
                         int sheetNum = 1;
                         try
                         {
                             // Получить активный экземпляр Excel
-                            xlApp = (Excel.Application)Marshal.GetActiveObject("Excel.Application");
+                            xlApp = (Microsoft.Office.Interop.Excel.Application)Marshal.GetActiveObject("Excel.Application");
                             xlWorkBook = xlApp.ActiveWorkbook;
                             if (xlWorkBook != null)
                             {
                                 // Добавить новый лист в конец книги
-                                xlWorkSheet = (Excel.Worksheet)xlWorkBook.Worksheets.Add(
+                                xlWorkSheet = (Microsoft.Office.Interop.Excel.Worksheet)xlWorkBook.Worksheets.Add(
                                     After: xlWorkBook.Sheets[xlWorkBook.Sheets.Count]);
                                 sheetNum = xlWorkBook.Sheets.Count;
                                 xlWorkSheet.Name = "Лист" + sheetNum.ToString();
@@ -332,7 +296,7 @@ namespace TNov
                         }
                         catch (COMException)
                         {
-                            xlApp = new Excel.Application();
+                            xlApp = new Microsoft.Office.Interop.Excel.Application();
                             // проверка установлен ли Excel
                             if (xlApp == null)
                             {
@@ -351,14 +315,14 @@ namespace TNov
 
                         Logger.Log("Получаем страницу Excel",1);
                         // initialize 2 worksheet variables, all referring to Sheet1 for the time being
-                        xlWorkSheetAllDim = (Excel.Worksheet)xlWorkBook.Worksheets.get_Item(sheetNum);
-                        xlWorkSheet = (Excel.Worksheet)xlWorkBook.Worksheets.get_Item(sheetNum);
+                        xlWorkSheetAllDim = (Microsoft.Office.Interop.Excel.Worksheet)xlWorkBook.Worksheets.get_Item(sheetNum);
+                        xlWorkSheet = (Microsoft.Office.Interop.Excel.Worksheet)xlWorkBook.Worksheets.get_Item(sheetNum);
 
 
                         Logger.Log("Разворачиваем окно Excel", 1);
 
                         // maximize workbook window
-                        xlApp.ActiveWindow.WindowState = Excel.XlWindowState.xlMaximized;
+                        xlApp.ActiveWindow.WindowState = Microsoft.Office.Interop.Excel.XlWindowState.xlMaximized;
                         // show menu bars
                         xlApp.Visible = true;
 
@@ -390,7 +354,7 @@ namespace TNov
                         xlWorkSheet.QueryTables[1].TextFileCommaDelimiter = true;
                         xlWorkSheet.QueryTables[1].TextFileSpaceDelimiter = false;
                         /*xlWorkSheet.QueryTables[1].TextFileColumnDataTypes = columnDataTypes;*/
-                        xlQuery.RefreshStyle = Excel.XlCellInsertionMode.xlInsertEntireRows;
+                        xlQuery.RefreshStyle = Microsoft.Office.Interop.Excel.XlCellInsertionMode.xlInsertEntireRows;
                         xlQuery.Refresh(false); // false means refresh but not return until refresh is finished 
                         xlQuery.Delete(); // delete the query
 
@@ -421,10 +385,10 @@ namespace TNov
 
             return Result.Succeeded;
         }
-            private int xlRowLast(Excel.Worksheet w_s)
+            private int xlRowLast(Microsoft.Office.Interop.Excel.Worksheet w_s)
         {
             // return last used row number of worksheet
-            return w_s.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell, Type.Missing).Row;
+            return w_s.Cells.SpecialCells(Microsoft.Office.Interop.Excel.XlCellType.xlCellTypeLastCell, Type.Missing).Row;
         }
 
     }
