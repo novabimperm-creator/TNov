@@ -169,6 +169,8 @@ namespace TNov
                                             break;
                                         case "SS":
                                             break;
+                                        case "BIM": //добавлено 01.2026
+                                            break;
 
                                         default:
                                             if (Headstatus0 == 0) 
@@ -223,7 +225,8 @@ namespace TNov
                                     {
                                         case "ST":
                                             break;
-                                       
+                                        case "BIM": //добавлено 01.2026
+                                            break;
                                         default:
                                             if (STstatus0 == 0) 
                                             { 
@@ -250,11 +253,11 @@ namespace TNov
                                     switch (userDepartment)
                                     {
                                         case "BIM":
-                                            if (STstatus == 1)
+                                            /*if (STstatus == 1)
                                             {
                                                 STstatus1 = 0; elem.get_Parameter(NTaskApprovedSTParamGuid).Set(STstatus1);
-                                            }
-                                            break;
+                                            }*/
+                                            break; //изменено  01.2026
 
                                         case "ST":
                                             break;
@@ -279,11 +282,11 @@ namespace TNov
                                     switch (userDepartment)
                                     {
                                         case "BIM":
-                                            if (STstatus == 1)
+                                            /*if (STstatus == 1)
                                             {
                                                 STstatus1 = 0; elem.get_Parameter(NTaskApprovedSTParamGuid).Set(STstatus1);
-                                            }
-                                            break;
+                                            }*/
+                                            break; //изменено  01.2026
 
                                         case "ST":
                                             break;

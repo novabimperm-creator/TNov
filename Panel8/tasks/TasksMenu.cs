@@ -127,68 +127,92 @@ namespace TNov
 
                     while (showFirstWindow)
                     {
-                        List<HoleGroup> holeGroups = GetHoleGroups(linkDoc, doc, userName); //новый класс (подкласс 1 внутри)
+                        List<HoleGroup> holeGroups = TaskTools.GetHoleGroups(linkDoc, doc, userName); 
 
                         Logger.Log("Стартовое окно", 1);
 
                         //стартовое окно
                         var wpfview = new TaskListNewWPF(holeGroups);
-                        /*
-                        var viewModel = new taskViewModel();
-                        viewModel.groups = groups1; viewModel.scenario = scenario;
-                        gettaskwpf wpfview = new gettaskwpf(viewModel);*/
                         bool? ok = wpfview.ShowDialog();
                         if (ok != null && ok == true) { }
-                        else showFirstWindow = false; //{ Logger.Log("Окно закрыто пользователем. Завершение работы.", 5); return Result.Succeeded; }
+                        else showFirstWindow = false; 
 
                         string groupName = wpfview.groupName;
 
                         if (wpfview.pasted)
                         {
-                            copyGroupFromLink(groupName, doc);
-
-
-                            Logger.Log("Вставлена группа " + groupName + ". Завершение работы.", 5); //return Result.Succeeded;
+                            TaskTools.CopyGroupFromLink(groupName, doc); 
+                            Logger.Log("Вставлена группа " + groupName + ". Завершение работы.", 5); 
                         }
                         else
                         {
                             if (groupName == "-")
                             {
-                                showFirstWindow = false; //Logger.Log("Окно закрыто пользователем. Завершение работы.", 3); return Result.Succeeded;
+                                showFirstWindow = false; 
                             }
                             else if (wpfview.details)
                             {
-                                //подкласс 2
-                                List<Hole> holes = TaskTools.HolesInGroup(linkDoc, doc, groupName);
+                                bool ShowDetailsWindow = true;
+                                while (ShowDetailsWindow)
+                                {
+                                    //подкласс 2
+                                    List<Hole> holes = TaskTools.HolesInGroup(linkDoc, doc, groupName, false);
 
-                                var holes1 = holes.OrderBy(h => h.mark.Length)
-                                    .ThenBy(h => h.mark)
-                                    .ToList();
+                                    var holes1 = holes.OrderBy(h => h.holeorder)
+                                        .ThenBy(h => h.mark)
+                                        .ToList();
 
-                                Logger.Log("Открываем окно детального анализа", 2);
-                                //окно детального анализа
-                                var viewModel1 = new TaskDetailsViewModel(holes1);
-                                viewModel1.groupName = groupName; viewModel1.scenario = scenario;
-                                TaskDetailsWPF wpfview1 = new TaskDetailsWPF(viewModel1);
-                                bool? ok1 = wpfview1.ShowDialog();
-                                if (ok1 != null && ok1 == true) { }
-                                else showFirstWindow = false;//{ Logger.Log("Окно закрыто пользователем. Завершение работы.", 3); return Result.Succeeded; }
+                                    Logger.Log("Открываем окно детального анализа", 1);
+                                    //окно детального анализа
+                                    var viewModel1 = new TaskDetailsViewModel(holes1);
+                                    viewModel1.groupName = groupName; viewModel1.scenario = scenario;
+                                    TaskDetailsWPF wpfview1 = new TaskDetailsWPF(viewModel1);
+                                    bool? ok1 = wpfview1.ShowDialog();
+                                    if (wpfview1.reopen1st == false) showFirstWindow = false; else showFirstWindow = true;
+                                    if (wpfview1.reopen == false) ShowDetailsWindow = false;
+
+                                    //отработка сценариев
+                                    switch (wpfview1.scenario)
+                                    {
+                                        case 1:
+                                            Logger.Log($"Копируем отверстие {wpfview1.output}", 1);
+                                            TaskTools.CopyTaskElement(doc, wpfview1.output);
+                                            break;
+                                        case 2:
+                                            Logger.Log($"Удаляем отверстие {wpfview1.output}", 1);
+                                            TaskTools.DeleteTaskElement(doc, wpfview1.output);
+                                            break;
+                                        case 3:
+                                            Logger.Log($"Обновляем отверстие {wpfview1.output}", 1);
+                                            TaskTools.UpdateTaskElement(doc, wpfview1.output);
+                                            break;
+                                        case 4:
+                                            Logger.Log($"Заменяем группу {wpfview1.output}", 1);
+                                            TaskTools.ReplaceTaskGroup(doc, wpfview1.output);
+                                            break;
+                                        default:
+                                            ShowDetailsWindow = false;
+                                            break;
+                                    }
+                                }
+                                    
 
                             }
                         }
                     }
 
-                    //подкласс 1 (для отчета)
-                    string groups1 = TaskTools.GetGroupNames(linkDoc, doc);
+                    //экспорт данных для отчета
+                    Logger.Log("Экспорт данных для отчета", 1);
 
-                    //вывод информации в отчет
-                    Logger.Log("Формирование txt-файла для отчета", 1);
+                    string groups1 = TaskTools.GetGroupNames(linkDoc, doc);
 
                     string dName = doc.Title.ToString().Replace(",", " ");
                     string docNameUserName = "_" + userName; dName = dName.Replace(docNameUserName, "");
 
                     string taskPath = @"\\fs-nova\Distr\0.For Admin\_TNov\tasks\" + dName + ".txt";
                     File.WriteAllText(taskPath, groups1 + linkDoc.Title.ToString());
+
+                    Logger.Log("Завершение работы.", 5);
 
                     break;
 
@@ -217,7 +241,7 @@ namespace TNov
                     Logger.Log("Анализ текущей выборки", 1);
                     Autodesk.Revit.UI.Selection.Selection selection = commandData.Application.ActiveUIDocument.Selection;
                     List<Group> groupsList = new List<Group>();
-                    groupsList = GetGroupsFromCurrentSelection(doc, selection); //получаем лотки из текущей выборки
+                    groupsList = GetGroupsFromCurrentSelection(doc, selection); //получаем группы из текущей выборки
                     if (groupsList.Count == 0) //запускаем выбор элементов если ничего не выбрано
                     {
                         GroupSelectionFilter CTSelectionFilter = new GroupSelectionFilter();
@@ -339,13 +363,10 @@ namespace TNov
                         }
                         catch (Exception) { }
                     }
-
+                    Logger.Log("Завершение работы.", 5);
                     break;
             }
 
-
-            Logger.Log("Завершение работы.",5);
-            
             return Result.Succeeded;
         }
         private static List<Group> GetGroupsFromCurrentSelection(Autodesk.Revit.DB.Document doc, Autodesk.Revit.UI.Selection.Selection sel)
@@ -359,116 +380,7 @@ namespace TNov
             }
             return currentSelection;
         }
-        void copyGroupFromLink(string name, Document doc)
-        {
-            Logger.Log("Копирование группы "+name, 2);
-
-            List<RevitLinkInstance> links = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_RvtLinks)
-                                                                         .WhereElementIsNotElementType()
-                                                                         .Cast<RevitLinkInstance>()
-                                                                         .ToList();
-
-            List<RevitLinkInstance> taskLinks = new List<RevitLinkInstance>(); //пустой список связей заданий
-
-            Logger.Log("Ищем связь задания", 2);
-
-            foreach (var link in links)
-            {
-                if (link.Name.Contains("Задани") || link.Name.Contains("задани") || link.Name.Contains("-ЗД") || link.Name.Contains("_ЗД") || link.Name.Contains("ЗАДАНИЕ")) taskLinks.Add(link);
-            }
-            if(taskLinks.Count > 1)
-            {
-                Logger.Log("Слишком много моделей заданий. Завершение работы.", 3);
-                new infowindow280("Ошибка!\nСвязь задания вставлена больше одного раза, либо вставлено несколько разных связей заданий.\nОставьте только одну связь.").ShowDialog();
-                
-            }
-            else if (taskLinks.Count == 1)
-            {
-                // группы в связанной модели задания
-
-                Document linkDoc = taskLinks[0].GetLinkDocument();
-                var transform = taskLinks[0].GetTransform();
-                List<Group> linkGroups = new FilteredElementCollector(linkDoc).OfCategory(BuiltInCategory.OST_IOSModelGroups)
-                    .WhereElementIsNotElementType()
-                    .Cast<Group>()
-                    .ToList();
-                ICollection<ElementId> ids = new HashSet<ElementId>();
-
-                foreach (var linkGroup in linkGroups)
-                {
-                    string shortName = linkGroup.Name;
-                    string[] nameParts = linkGroup.Name.Split('_');
-                    if (nameParts.Length > 2) shortName = nameParts[0] + '_' + nameParts[1] + '_' + nameParts[2]; //учет групп, созданных по старой концепции
-
-                    if (shortName == name)
-                    {
-                        LocationPoint point = (LocationPoint)linkGroup.Location;
-                        ids.Add(linkGroup.Id);
-                        Logger.Log("Группа найдена", 2);
-                        break;
-                    }
-                }
-                CopyPasteOptions copyOptions = new CopyPasteOptions();
-                using (Transaction t = new Transaction(doc))
-                {
-
-                    t.Start("Задания от ИОС. Вставка группы");
-                    ICollection<ElementId> newElemIds = ElementTransformUtils.CopyElements(linkDoc, ids, doc, transform, copyOptions);
-                    t.Commit();
-                    Logger.Log("Группа вставлена", 2);
-                }
-            }
-
-
-        }
-        List<HoleGroup> GetHoleGroups(in Document linkDoc,in Document doc, in string userName)
-        {
-            //подкласс 1
-            string groups1 = TaskTools.GetGroupNames(linkDoc, doc);
-
-            int index = groups1.LastIndexOf('|');
-            groups1 = groups1.Remove(index);
-            string[] groups = groups1.Split('|');
-
-            List<HoleGroup> holeGroups = new List<HoleGroup>();
-            foreach (string group in groups)
-            {
-                string[] nameParts = group.Split('=');
-                string[] shortNameParts = nameParts[0].Split('_');
-                string pt2 = ""; if (shortNameParts.Length > 1) pt2 = shortNameParts[1];
-                string pt3 = ""; if (shortNameParts.Length > 2) pt3 = shortNameParts[2];
-                int order = 0;
-                bool buttonVisibility = true; string buttonText = "Детальный анализ";
-                string buttonToolTip = "Просмотреть информацию о каждом отверстии в группе";
-                string status = nameParts[1];
-                if (status.Contains("не вставлялось"))
-                {
-                    buttonText = "Вставить"; order = 2;
-                    buttonToolTip = "Первичная вставка группы с отверстиями в текущую модель";
-                }
-                if (status.Contains("Марка") || status.Contains("КР"))
-                {
-                    buttonVisibility = false; order = 1;
-                }
-
-                if (status.Contains("Актуально")) order = 3;
-
-                holeGroups.Add(new HoleGroup
-                {
-                    HoleGroupName = group,
-                    HoleGroupNamePart1 = shortNameParts[0],
-                    HoleGroupNamePart2 = pt2,
-                    HoleGroupNamePart3 = pt3,
-                    HoleGroupSet = nameParts[2],
-                    HoleGroupStatus = nameParts[1],
-                    ButtonText = buttonText,
-                    ButtonToolTip = buttonToolTip,
-                    IsButtonVisible = buttonVisibility,
-                    Order = order,
-                });
-            }
-            holeGroups = holeGroups.OrderBy(h => h.Order).ToList();
-            return holeGroups;
-        }
+        
+        
     }
 }

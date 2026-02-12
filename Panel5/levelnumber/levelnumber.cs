@@ -16,8 +16,6 @@ using TNov.main;
 
 namespace TNov
 {
-    
-
     [Transaction(TransactionMode.Manual)]
     public class LevelNumber : IExternalCommand
     {

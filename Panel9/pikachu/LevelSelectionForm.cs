@@ -7,14 +7,14 @@ using System.Drawing;
 
 namespace TNov
 {
-    public partial class LevelSelectionForm : System.Windows.Forms.Form
+    public partial class LevelSelectionForm : BaseForm
     {
         public Level SelectedLevel { get; private set; }
         private List<Level> _levels;
         private Document _linkDoc;
         private System.Windows.Forms.ListView _levelListView;
 
-        public LevelSelectionForm(Document linkDoc)
+        public LevelSelectionForm(Document linkDoc) : base()
         {
             _linkDoc = linkDoc;
             SelectedLevel = null;
@@ -28,124 +28,92 @@ namespace TNov
 
             InitializeForm();
             LoadLevels();
+
+            // Настройка навигации
+            this.ShowBackButton = true;
+            this.NextButtonText = "Далее →";
+
+            base.NextClicked += (s, e) => OnNextButtonClick();
+            base.BackClicked += (s, e) => { this.DialogResult = DialogResult.Abort; this.Close(); };
+            base.CancelClicked += (s, e) => { this.DialogResult = DialogResult.Cancel; this.Close(); };
         }
 
         private void InitializeForm()
         {
-            // Основные настройки формы
-            this.Text = "Выбор этажа в связанном файле";
-            this.Size = new System.Drawing.Size(600, 500);
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.BackColor = System.Drawing.Color.FromArgb(245, 255, 245);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
+            base.Text = "Выбор этажа";
+            base.Size = new System.Drawing.Size(800, 600);
 
-            // Заголовок
-            var titleLabel = new System.Windows.Forms.Label();
-            titleLabel.Text = "ВЫБОР ЭТАЖА В СВЯЗАННОМ ФАЙЛЕ";
-            titleLabel.Font = new System.Drawing.Font("Segoe UI", 14, System.Drawing.FontStyle.Bold);
-            titleLabel.ForeColor = System.Drawing.Color.FromArgb(0, 100, 0);
-            titleLabel.Location = new System.Drawing.Point(20, 20);
-            titleLabel.Size = new System.Drawing.Size(550, 30);
-            titleLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-
-            // Описание
-            var descLabel = new System.Windows.Forms.Label();
-            descLabel.Text = "Выберите этаж, на котором будут размещаться элементы:";
-            descLabel.Font = new System.Drawing.Font("Segoe UI", 10);
-            descLabel.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
-            descLabel.Location = new System.Drawing.Point(20, 60);
-            descLabel.Size = new System.Drawing.Size(550, 25);
-            descLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-
-            // ListView для уровней
-            _levelListView = new System.Windows.Forms.ListView();
-            _levelListView.Location = new System.Drawing.Point(20, 100);
-            _levelListView.Size = new System.Drawing.Size(550, 300);
-            _levelListView.View = System.Windows.Forms.View.Details;
-            _levelListView.FullRowSelect = true;
-            _levelListView.GridLines = true;
-            _levelListView.Font = new System.Drawing.Font("Segoe UI", 9);
-            _levelListView.BackColor = System.Drawing.Color.White;
-            _levelListView.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            _levelListView.MultiSelect = false;
-
-            // Колонки
-            _levelListView.Columns.Add("Этаж", 200);
-            _levelListView.Columns.Add("Отметка", 150);
-            _levelListView.Columns.Add("ID", 150);
-
-            // Панель предпросмотра
-            var previewPanel = new System.Windows.Forms.Panel();
-            previewPanel.Location = new System.Drawing.Point(20, 410);
-            previewPanel.Size = new System.Drawing.Size(550, 25);
-            previewPanel.BackColor = System.Drawing.Color.FromArgb(230, 255, 230);
-            previewPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-
-            var previewLabel = new System.Windows.Forms.Label();
-            previewLabel.Text = "Выбрано: ничего";
-            previewLabel.Font = new System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold);
-            previewLabel.ForeColor = System.Drawing.Color.FromArgb(0, 100, 0);
-            previewLabel.Location = new System.Drawing.Point(5, 3);
-            previewLabel.Size = new System.Drawing.Size(540, 18);
-            previewLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            previewLabel.Name = "previewLabel";
-            previewPanel.Controls.Add(previewLabel);
-
-            // Кнопка выбора
-            var selectButton = new System.Windows.Forms.Button();
-            selectButton.Text = "ВЫБРАТЬ ЭТАЖ";
-            selectButton.Font = new System.Drawing.Font("Segoe UI", 10, System.Drawing.FontStyle.Bold);
-            selectButton.Location = new System.Drawing.Point(200, 450);
-            selectButton.Size = new System.Drawing.Size(200, 35);
-            selectButton.BackColor = System.Drawing.Color.FromArgb(40, 167, 69);
-            selectButton.ForeColor = System.Drawing.Color.White;
-            selectButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            selectButton.Click += (s, e) =>
+            // Основной контейнер
+            var mainContainer = new System.Windows.Forms.Panel
             {
-                if (SelectedLevel != null)
-                {
-                    this.DialogResult = System.Windows.Forms.DialogResult.OK;
-                    this.Close();
-                }
-                else
-                {
-                    System.Windows.Forms.MessageBox.Show("Пожалуйста, выберите этаж", "Внимание",
-                        System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
-                }
+                Dock = DockStyle.Fill,
+                BackColor = System.Drawing.Color.Transparent,
+                Padding = new Padding(0, 10, 0, 0)
             };
 
-            // Кнопка отмены
-            var cancelButton = new System.Windows.Forms.Button();
-            cancelButton.Text = "ОТМЕНА";
-            cancelButton.Font = new System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold);
-            cancelButton.Location = new System.Drawing.Point(420, 450);
-            cancelButton.Size = new System.Drawing.Size(100, 35);
-            cancelButton.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
-            cancelButton.ForeColor = System.Drawing.Color.White;
-            cancelButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            // Заголовок
+            var titleLabel = new System.Windows.Forms.Label
+            {
+                Text = "ВЫБОР ЭТАЖА",
+                Font = new System.Drawing.Font("Segoe UI", 14, System.Drawing.FontStyle.Bold),
+                ForeColor = base.TextColor,
+                Dock = DockStyle.Top,
+                Height = 35,
+                TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
+                Margin = new Padding(0, 0, 0, 10)
+            };
 
-            // Добавляем элементы
-            this.Controls.AddRange(new System.Windows.Forms.Control[] {
-                titleLabel, descLabel, _levelListView, previewPanel, selectButton, cancelButton
+            // Описание
+            var descLabel = new System.Windows.Forms.Label
+            {
+                Text = "Выберите этаж, на котором будут размещаться элементы:",
+                Font = new System.Drawing.Font("Segoe UI", 9),
+                ForeColor = System.Drawing.Color.FromArgb(100, 100, 100),
+                Dock = DockStyle.Top,
+                Height = 40,
+                TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
+                Padding = new Padding(0, 0, 0, 10)
+            };
+
+            // ListView для уровней
+            var listPanel = new System.Windows.Forms.Panel
+            {
+                Dock = DockStyle.Fill,
+                BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle,
+                Margin = new Padding(0, 0, 0, 0)
+            };
+
+            _levelListView = new System.Windows.Forms.ListView
+            {
+                Dock = DockStyle.Fill,
+                View = System.Windows.Forms.View.Details,
+                FullRowSelect = true,
+                GridLines = true,
+                Font = new System.Drawing.Font("Segoe UI", 9),
+                BackColor = System.Drawing.Color.White,
+                Scrollable = true
+            };
+
+            // Колонки
+            _levelListView.Columns.Add("Этаж", 300);
+            _levelListView.Columns.Add("Отметка", 150);
+            _levelListView.Columns.Add("ID", 200);
+
+            listPanel.Controls.Add(_levelListView);
+
+            // Добавляем все элементы в mainContainer
+            mainContainer.Controls.AddRange(new System.Windows.Forms.Control[] {
+                listPanel,
+                descLabel,
+                titleLabel
             });
+
+            // Добавляем mainContainer в ContentPanel
+            base.ContentPanel.Controls.Add(mainContainer);
 
             // События
             _levelListView.SelectedIndexChanged += (s, e) => UpdatePreview();
-            _levelListView.DoubleClick += (s, e) =>
-            {
-                if (SelectedLevel != null)
-                {
-                    this.DialogResult = System.Windows.Forms.DialogResult.OK;
-                    this.Close();
-                }
-            };
-
-            // Назначаем кнопки
-            this.AcceptButton = selectButton;
-            this.CancelButton = cancelButton;
+            _levelListView.DoubleClick += (s, e) => OnNextButtonClick();
         }
 
         private void LoadLevels()
@@ -173,25 +141,27 @@ namespace TNov
         {
             if (_levelListView.SelectedItems.Count > 0)
             {
-                var selectedItem = _levelListView.SelectedItems[0];
-                var levelName = selectedItem.SubItems[0].Text;
-                var elevation = selectedItem.SubItems[1].Text;
-
-                var previewLabel = this.Controls.Find("previewLabel", true).FirstOrDefault() as System.Windows.Forms.Label;
-                if (previewLabel != null)
-                {
-                    previewLabel.Text = $"Выбрано: {levelName} (отметка: {elevation})";
-                    SelectedLevel = selectedItem.Tag as Level;
-                }
+                SelectedLevel = _levelListView.SelectedItems[0].Tag as Level;
+                base.EnableNextButton(SelectedLevel != null);
             }
             else
             {
-                var previewLabel = this.Controls.Find("previewLabel", true).FirstOrDefault() as System.Windows.Forms.Label;
-                if (previewLabel != null)
-                {
-                    previewLabel.Text = "Выбрано: ничего";
-                    SelectedLevel = null;
-                }
+                SelectedLevel = null;
+                base.EnableNextButton(false);
+            }
+        }
+
+        private void OnNextButtonClick()
+        {
+            if (SelectedLevel != null)
+            {
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+            else
+            {
+                MessageBox.Show("Пожалуйста, выберите этаж", "Внимание",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
     }

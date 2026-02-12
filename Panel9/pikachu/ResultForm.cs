@@ -1,4 +1,4 @@
-using System;
+п»їusing System;
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.DB;
@@ -7,95 +7,71 @@ using System.Drawing;
 
 namespace TNov
 {
-    public class ResultForm : System.Windows.Forms.Form
+    public class ResultForm : BaseForm
     {
-        public ResultForm(List<ElementId> createdElements)
+        public ResultForm(List<ElementId> createdElements) : base()
         {
             InitializeForm(createdElements);
+
+            // РќР°СЃС‚СЂРѕР№РєР° РЅР°РІРёРіР°С†РёРё
+            this.ShowBackButton = false;
+            this.NextButtonText = "Р“РѕС‚РѕРІРѕ";
+
+            base.NextClicked += (s, e) => this.Close();
+            base.CancelClicked += (s, e) => this.Close();
         }
 
         private void InitializeForm(List<ElementId> createdElements)
         {
             bool success = createdElements != null && createdElements.Count > 0;
 
-            // Основные настройки формы - ЯВНО указываем пространства имен
-            this.Text = "Результат размещения";
-            this.Size = new System.Drawing.Size(700, 400);
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.BackColor = success ?
-                System.Drawing.Color.FromArgb(240, 255, 240) :
-                System.Drawing.Color.FromArgb(255, 240, 240);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
+            base.Text = "Р РµР·СѓР»СЊС‚Р°С‚ СЂР°Р·РјРµС‰РµРЅРёСЏ";
+            base.Size = new System.Drawing.Size(600, 400);
 
-            // Заголовок
-            var titleLabel = new System.Windows.Forms.Label();
-            titleLabel.Text = success ? "РАЗМЕЩЕНИЕ УСПЕШНО" : "РАЗМЕЩЕНИЕ НЕ ВЫПОЛНЕНО";
-            titleLabel.Font = new System.Drawing.Font("Segoe UI", 14, System.Drawing.FontStyle.Bold);
-            titleLabel.ForeColor = success ?
-                System.Drawing.Color.FromArgb(0, 100, 0) :
-                System.Drawing.Color.FromArgb(220, 53, 69);
-            titleLabel.Location = new System.Drawing.Point(20, 20);
-            titleLabel.Size = new System.Drawing.Size(650, 30);
-            titleLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-
-            // Сообщение
-            var messageLabel = new System.Windows.Forms.Label();
-            if (success)
+            // РРєРѕРЅРєР° СЂРµР·СѓР»СЊС‚Р°С‚Р°
+            var iconLabel = new System.Windows.Forms.Label
             {
-                messageLabel.Text = $"Успешно размещено {createdElements.Count} элементов";
-            }
-            else
+                Text = success ? "вњ“" : "вњ—",
+                Font = new System.Drawing.Font("Segoe UI", 48),
+                ForeColor = success ? System.Drawing.Color.Green : System.Drawing.Color.Red,
+                Dock = DockStyle.Top,
+                Height = 100,
+                TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
+                BackColor = System.Drawing.Color.Transparent
+            };
+
+            // Р—Р°РіРѕР»РѕРІРѕРє
+            var titleLabel = new System.Windows.Forms.Label
             {
-                messageLabel.Text = "Элементы не были размещены";
-            }
-            messageLabel.Font = new System.Drawing.Font("Segoe UI", 10);
-            messageLabel.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
-            messageLabel.Location = new System.Drawing.Point(20, 60);
-            messageLabel.Size = new System.Drawing.Size(650, 25);
-            messageLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.Controls.Add(messageLabel);
+                Text = success ? "Р РђР—РњР•Р©Р•РќРР• РЈРЎРџР•РЁРќРћ!" : "Р РђР—РњР•Р©Р•РќРР• РќР• Р’Р«РџРћР›РќР•РќРћ",
+                Font = new System.Drawing.Font("Segoe UI", 16, System.Drawing.FontStyle.Bold),
+                ForeColor = success ? System.Drawing.Color.Green : System.Drawing.Color.Red,
+                Dock = DockStyle.Top,
+                Height = 40,
+                TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
+                BackColor = System.Drawing.Color.Transparent
+            };
 
-            // Список ID
-            if (success)
+            // РЎРѕРѕР±С‰РµРЅРёРµ
+            var messageLabel = new System.Windows.Forms.Label
             {
-                var listLabel = new System.Windows.Forms.Label();
-                listLabel.Text = $"ID размещенных элементов:";
-                listLabel.Font = new System.Drawing.Font("Segoe UI", 10, System.Drawing.FontStyle.Bold);
-                listLabel.ForeColor = System.Drawing.Color.FromArgb(0, 80, 160);
-                listLabel.Location = new System.Drawing.Point(20, 90);
-                listLabel.Size = new System.Drawing.Size(650, 25);
-                listLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-                this.Controls.Add(listLabel);
+                Text = success ?
+                    $"РЈСЃРїРµС€РЅРѕ СЂР°Р·РјРµС‰РµРЅРѕ {createdElements.Count} СЌР»РµРјРµРЅС‚РѕРІ" :
+                    "Р­Р»РµРјРµРЅС‚С‹ РЅРµ Р±С‹Р»Рё СЂР°Р·РјРµС‰РµРЅС‹",
+                Font = new System.Drawing.Font("Segoe UI", 11),
+                ForeColor = System.Drawing.Color.FromArgb(100, 100, 100),
+                Dock = DockStyle.Top,
+                Height = 40,
+                TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
+                BackColor = System.Drawing.Color.Transparent
+            };
 
-                var listBox = new System.Windows.Forms.ListBox();
-                listBox.Location = new System.Drawing.Point(20, 120);
-                listBox.Size = new System.Drawing.Size(650, 200);
-                listBox.Font = new System.Drawing.Font("Consolas", 9);
-                listBox.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-
-                foreach (var elementId in createdElements)
-                {
-                    listBox.Items.Add($"ID: {elementId.IntegerValue}");
-                }
-
-                this.Controls.Add(listBox);
-            }
-
-            // Кнопка OK
-            var okButton = new System.Windows.Forms.Button();
-            okButton.Text = "OK";
-            okButton.Font = new System.Drawing.Font("Segoe UI", 10, System.Drawing.FontStyle.Bold);
-            okButton.Location = new System.Drawing.Point(300, 330);
-            okButton.Size = new System.Drawing.Size(100, 35);
-            okButton.BackColor = System.Drawing.Color.FromArgb(0, 123, 255);
-            okButton.ForeColor = System.Drawing.Color.White;
-            okButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            okButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-
-            this.Controls.Add(okButton);
-            this.AcceptButton = okButton;
+            // Р”РѕР±Р°РІР»СЏРµРј РІСЃРµ СЌР»РµРјРµРЅС‚С‹ РІ ContentPanel
+            base.ContentPanel.Controls.AddRange(new System.Windows.Forms.Control[] {
+                iconLabel,
+                titleLabel,
+                messageLabel
+            });
         }
     }
 }

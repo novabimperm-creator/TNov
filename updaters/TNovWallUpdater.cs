@@ -44,35 +44,39 @@ namespace TNov
 
             if (allElementIds.Count == 0) return;
 
-            
-
-            foreach (ElementId elementId in allElementIds)
+            string docName = doc.Title.ToString();
+            if (docName.Contains("-АР") || docName.Contains("_АР") || docName.Contains("-АР-") || docName.Contains("_ПОФ") || docName.Contains("-ПОФ-"))
             {
-                Wall wall = doc.GetElement(elementId) as Wall;
-                if (wall == null) continue;
-
-                Element type = doc.GetElement(wall.GetTypeId());
-
-                bool gmHasValue = type.get_Parameter(BuiltInParameter.ALL_MODEL_MODEL).HasValue;
-                string gMvalue = "-";
-                if (gmHasValue) gMvalue = type.get_Parameter(BuiltInParameter.ALL_MODEL_MODEL).AsString();
-
-                if (gMvalue.Contains("Отделка"))
+                foreach (ElementId elementId in allElementIds)
                 {
-                    try
+                    Wall wall = doc.GetElement(elementId) as Wall;
+                    if (wall == null) continue;
+
+                    Element type = doc.GetElement(wall.GetTypeId());
+
+                    bool gmHasValue = type.get_Parameter(BuiltInParameter.ALL_MODEL_MODEL).HasValue;
+                    string gMvalue = "-";
+                    if (gmHasValue) gMvalue = type.get_Parameter(BuiltInParameter.ALL_MODEL_MODEL).AsString();
+
+                    if (gMvalue.Contains("Отделка"))
                     {
-                        Room wallRoom = FindWallRoom(wall, doc);
-                        SetWallRoomParameter(wall, wallRoom);
+                        try
+                        {
+                            Room wallRoom = FindWallRoom(wall, doc);
+                            SetWallRoomParameter(wall, wallRoom);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Логируем ошибку, но продолжаем обработку других стен
+                            System.Diagnostics.Debug.WriteLine($"Ошибка обработки стены {wall.Id}: {ex.Message}");
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        // Логируем ошибку, но продолжаем обработку других стен
-                        System.Diagnostics.Debug.WriteLine($"Ошибка обработки стены {wall.Id}: {ex.Message}");
-                    }
+
+
                 }
+            }
 
                 
-            }
 
                
 

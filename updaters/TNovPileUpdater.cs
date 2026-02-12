@@ -35,35 +35,41 @@ namespace TNov
 
             if (servercheck)
             {
-                BasePoint basePoint = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_ProjectBasePoint).Cast<BasePoint>().First();
-
-                List<ElementId> idsB = data.GetModifiedElementIds().ToList();
-
-                foreach (ElementId id in idsB)
+                string docName = doc.Title.ToString();
+                if (docName.Contains("-КЖ") || docName.Contains("_КЖ") || docName.Contains("-КР-") || docName.Contains("_КР_"))
                 {
-                    Element elem = doc.GetElement(id);
-                    if (elem != null& elem.Name!=null) 
-                    {
-                        if (elem.Name.Contains("Свая"))
-                        {
-                            LocationPoint elem_lp = (LocationPoint)elem.Location;
-                            if (elem_lp != null)
-                            {
-                                XYZ point = elem_lp.Point;
-                                double zz = point.Z - basePoint.Position.Z; zz = zz * 304.8;
+                    BasePoint basePoint = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_ProjectBasePoint).Cast<BasePoint>().First();
 
-                                if (Param.ParamExist("Свая.ОтмНизаРостверка", elem))
+                    List<ElementId> idsB = data.GetModifiedElementIds().ToList();
+
+                    foreach (ElementId id in idsB)
+                    {
+                        Element elem = doc.GetElement(id);
+                        if (elem != null & elem.Name != null)
+                        {
+                            if (elem.Name.Contains("Свая"))
+                            {
+                                LocationPoint elem_lp = (LocationPoint)elem.Location;
+                                if (elem_lp != null)
                                 {
-                                    Parameter param = elem.LookupParameter("Свая.ОтмНизаРостверка");
-                                    if (param != null)
+                                    XYZ point = elem_lp.Point;
+                                    double zz = point.Z - basePoint.Position.Z; zz = zz * 304.8;
+
+                                    if (Param.ParamExist("Свая.ОтмНизаРостверка", elem))
                                     {
-                                        param.Set(zz);
+                                        Parameter param = elem.LookupParameter("Свая.ОтмНизаРостверка");
+                                        if (param != null)
+                                        {
+                                            param.Set(zz);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
+
+                    
 
             }
 

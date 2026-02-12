@@ -119,14 +119,21 @@
   <ItemGroup>
     <Compile Include="FailureAndWarningHandler.cs" />
     <Compile Include="main\Logger.cs" />
-    <Compile Include="Panel10\AssignMaterialCodesCommand .cs" />
+    <Compile Include="main\CombinedElementFilter.cs" />
+    <Compile Include="Panel11\TParsOpredAR.cs" />
+    <Compile Include="Panel12\AssignMaterialCodesCommand .cs" />
     <Compile Include="Panel10\BimExportViewModel.cs" />
+    <Compile Include="Panel12\TParsNaimOboznST.cs" />
+    <Compile Include="Panel12\TParsOpredST.cs" />
+    <Compile Include="Panel13\InsulationHosts.cs" />
     <Compile Include="Panel10\RevitServer.xaml.cs">
       <DependentUpon>RevitServer.xaml</DependentUpon>
     </Compile>
     <Compile Include="Panel10\RevitServerViewModel.cs" />
-    <Compile Include="Panel10\TParsNazn.cs" />
+    <Compile Include="Panel11\TParsNazn.cs" />
     <Compile Include="Panel10\TreeBuilder.cs" />
+    <Compile Include="Panel13\TestOV.cs" />
+    <Compile Include="Panel13\TParsSpecOVVK.cs" />
     <Compile Include="Panel1\Journal.cs" />
     <Compile Include="main\_synchronize.cs" />
     <Compile Include="Panel10\FolderSelectDialog.cs" />
@@ -236,6 +243,12 @@
     </Compile>
     <Compile Include="Panel9\duct3d\Duct3DViewModel.cs" />
     <Compile Include="Panel9\efl\ElElevValuesViewModel.cs" />
+    <Compile Include="Panel9\pikachu\BaseForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Panel9\pikachu\BaseForm.Designer.cs">
+      <DependentUpon>BaseForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Panel9\pikachu\CachedElement.cs" />
     <Compile Include="Panel9\pikachu\CategorySelectionForm.cs">
       <SubType>Form</SubType>
@@ -280,8 +293,14 @@
     </Compile>
     <Compile Include="Panel9\ss\SSNumberer.cs" />
     <Compile Include="RelayCommand2.cs" />
+    <Compile Include="universal\Class1.cs" />
     <Compile Include="universal\Param.cs" />
     <Compile Include="updaters\TNovFloorCeilingUpdater.cs" />
+    <Compile Include="updaters\TNovInsulationUpdater.cs" />
+    <Compile Include="updaters\TNovParsNaimOboznSTUpdater.cs" />
+    <Compile Include="updaters\TNovParsOpredARUpdater.cs" />
+    <Compile Include="updaters\TNovParsOVVKUpdater.cs" />
+    <Compile Include="updaters\TNovParsOpredSTUpdater.cs" />
     <Compile Include="updaters\TNovRoomUpdater.cs" />
     <Compile Include="updaters\TNovShaftUpdater.cs" />
     <Compile Include="updaters\TNovWallUpdater.cs" />

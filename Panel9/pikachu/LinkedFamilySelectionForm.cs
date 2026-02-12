@@ -20,15 +20,19 @@ namespace TNov
         private System.Windows.Forms.Label _levelInfoLabel;
         private System.Windows.Forms.Label _statsLabel;
 
-        // Категории для семейства А (сантехника/вентиляция)
+        // Категории для семейства А (ОВ/ВК + ЭЛ электрооборудование)
         private static readonly BuiltInCategory[] _allowedCategoriesA = new BuiltInCategory[]
         {
+            // ОВ/ВК категории (6 категорий)
             BuiltInCategory.OST_DuctAccessory,      // Арматура воздуховодов
             BuiltInCategory.OST_PipeAccessory,      // Арматура трубопроводов
             BuiltInCategory.OST_DuctTerminal,       // Воздухораспределители
             BuiltInCategory.OST_MechanicalEquipment, // Оборудование
             BuiltInCategory.OST_DuctFitting,        // Соединительные детали воздуховодов
-            BuiltInCategory.OST_PipeFitting         // Соединительные детали трубопроводов
+            BuiltInCategory.OST_PipeFitting,        // Соединительные детали трубопроводов
+            
+            // ЭЛ категории (добавлена электрооборудование)
+            BuiltInCategory.OST_ElectricalEquipment // Электрооборудование (для файлов ЭЛ)
         };
 
         public LinkedFamilySelectionForm(Autodesk.Revit.DB.Document linkDoc, Level selectedLevel)
@@ -79,7 +83,7 @@ namespace TNov
 
             // Заголовок
             var titleLabel = new System.Windows.Forms.Label();
-            titleLabel.Text = "ВЫБОР СЕМЕЙСТВА А (ОВ/ВК)";
+            titleLabel.Text = "ВЫБОР СЕМЕЙСТВА А (ОВ/ВК/ЭЛ)";
             titleLabel.Font = new System.Drawing.Font("Segoe UI", 14, System.Drawing.FontStyle.Bold);
             titleLabel.ForeColor = System.Drawing.Color.FromArgb(0, 80, 160);
             titleLabel.Location = new System.Drawing.Point(20, 20);
@@ -97,16 +101,25 @@ namespace TNov
 
             // Описание
             var descLabel = new System.Windows.Forms.Label();
-            descLabel.Text = "Выберите семейство ОВ/ВК (Семейство А) для размещения рядом с ним электрооборудования:";
+            descLabel.Text = "Выберите семейство ОВ/ВК или электрооборудования (Семейство А) для размещения рядом с ним электрооборудования:";
             descLabel.Font = new System.Drawing.Font("Segoe UI", 10);
             descLabel.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
             descLabel.Location = new System.Drawing.Point(20, 80);
             descLabel.Size = new System.Drawing.Size(950, 25);
             descLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 
+            // Информация о типах файлов
+            var fileTypeLabel = new System.Windows.Forms.Label();
+            fileTypeLabel.Text = "Поддерживаемые категории: ОВ/ВК (6 категорий) + ЭЛ (Электрооборудование)";
+            fileTypeLabel.Font = new System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Italic);
+            fileTypeLabel.ForeColor = System.Drawing.Color.FromArgb(120, 120, 120);
+            fileTypeLabel.Location = new System.Drawing.Point(20, 105);
+            fileTypeLabel.Size = new System.Drawing.Size(950, 20);
+            fileTypeLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+
             // Панель поиска
             var searchPanel = new System.Windows.Forms.Panel();
-            searchPanel.Location = new System.Drawing.Point(20, 115);
+            searchPanel.Location = new System.Drawing.Point(20, 130);
             searchPanel.Size = new System.Drawing.Size(950, 35);
             searchPanel.BackColor = System.Drawing.Color.White;
             searchPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -151,7 +164,7 @@ namespace TNov
 
             // Статистика
             _statsLabel = new System.Windows.Forms.Label();
-            _statsLabel.Text = $"Всего семейств ОВ/ВК: {_filteredFamilies.Count}";
+            _statsLabel.Text = $"Всего семейств: {_filteredFamilies.Count}";
             _statsLabel.Font = new System.Drawing.Font("Segoe UI", 9);
             _statsLabel.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
             _statsLabel.Location = new System.Drawing.Point(520, 8);
@@ -164,7 +177,7 @@ namespace TNov
 
             // ListView для семейств
             _familyListView = new System.Windows.Forms.ListView();
-            _familyListView.Location = new System.Drawing.Point(20, 165);
+            _familyListView.Location = new System.Drawing.Point(20, 180);
             _familyListView.Size = new System.Drawing.Size(950, 450);
             _familyListView.View = System.Windows.Forms.View.Details;
             _familyListView.FullRowSelect = true;
@@ -184,7 +197,7 @@ namespace TNov
 
             // Панель предпросмотра
             var previewPanel = new System.Windows.Forms.Panel();
-            previewPanel.Location = new System.Drawing.Point(20, 625);
+            previewPanel.Location = new System.Drawing.Point(20, 640);
             previewPanel.Size = new System.Drawing.Size(950, 25);
             previewPanel.BackColor = System.Drawing.Color.FromArgb(230, 240, 255);
             previewPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -203,7 +216,7 @@ namespace TNov
             var selectButton = new System.Windows.Forms.Button();
             selectButton.Text = "ВЫБРАТЬ СЕМЕЙСТВО А";
             selectButton.Font = new System.Drawing.Font("Segoe UI", 10, System.Drawing.FontStyle.Bold);
-            selectButton.Location = new System.Drawing.Point(300, 660);
+            selectButton.Location = new System.Drawing.Point(300, 675);
             selectButton.Size = new System.Drawing.Size(250, 35);
             selectButton.BackColor = System.Drawing.Color.FromArgb(0, 123, 255);
             selectButton.ForeColor = System.Drawing.Color.White;
@@ -226,7 +239,7 @@ namespace TNov
             var cancelButton = new System.Windows.Forms.Button();
             cancelButton.Text = "ОТМЕНА";
             cancelButton.Font = new System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold);
-            cancelButton.Location = new System.Drawing.Point(570, 660);
+            cancelButton.Location = new System.Drawing.Point(570, 675);
             cancelButton.Size = new System.Drawing.Size(100, 35);
             cancelButton.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
             cancelButton.ForeColor = System.Drawing.Color.White;
@@ -235,7 +248,7 @@ namespace TNov
 
             // Добавляем элементы
             this.Controls.AddRange(new System.Windows.Forms.Control[] {
-                titleLabel, _levelInfoLabel, descLabel, searchPanel,
+                titleLabel, _levelInfoLabel, descLabel, fileTypeLabel, searchPanel,
                 _familyListView, previewPanel, selectButton, cancelButton
             });
 
@@ -269,6 +282,22 @@ namespace TNov
                     instanceCount.ToString()
                 });
                 listItem.Tag = family;
+
+                // Подсветка электрооборудования (категория ЭЛ)
+                if (family.FamilyCategory != null &&
+                    family.FamilyCategory.Id.IntegerValue == (int)BuiltInCategory.OST_ElectricalEquipment)
+                {
+                    listItem.ForeColor = System.Drawing.Color.FromArgb(220, 53, 69); // Красный для ЭЛ
+                    listItem.Font = new System.Drawing.Font(_familyListView.Font, System.Drawing.FontStyle.Bold);
+                }
+                // Подсветка ОВ/ВК категорий
+                else if (family.FamilyCategory != null &&
+                        (family.FamilyCategory.Id.IntegerValue == (int)BuiltInCategory.OST_MechanicalEquipment ||
+                         family.FamilyCategory.Id.IntegerValue == (int)BuiltInCategory.OST_DuctAccessory ||
+                         family.FamilyCategory.Id.IntegerValue == (int)BuiltInCategory.OST_PipeAccessory))
+                {
+                    listItem.ForeColor = System.Drawing.Color.FromArgb(0, 123, 255); // Синий для ОВ/ВК
+                }
 
                 _familyListView.Items.Add(listItem);
             }
@@ -328,6 +357,22 @@ namespace TNov
                 });
                 listItem.Tag = family;
 
+                // Подсветка электрооборудования (категория ЭЛ)
+                if (family.FamilyCategory != null &&
+                    family.FamilyCategory.Id.IntegerValue == (int)BuiltInCategory.OST_ElectricalEquipment)
+                {
+                    listItem.ForeColor = System.Drawing.Color.FromArgb(220, 53, 69); // Красный для ЭЛ
+                    listItem.Font = new System.Drawing.Font(_familyListView.Font, System.Drawing.FontStyle.Bold);
+                }
+                // Подсветка ОВ/ВК категорий
+                else if (family.FamilyCategory != null &&
+                        (family.FamilyCategory.Id.IntegerValue == (int)BuiltInCategory.OST_MechanicalEquipment ||
+                         family.FamilyCategory.Id.IntegerValue == (int)BuiltInCategory.OST_DuctAccessory ||
+                         family.FamilyCategory.Id.IntegerValue == (int)BuiltInCategory.OST_PipeAccessory))
+                {
+                    listItem.ForeColor = System.Drawing.Color.FromArgb(0, 123, 255); // Синий для ОВ/ВК
+                }
+
                 _familyListView.Items.Add(listItem);
             }
 
@@ -341,7 +386,7 @@ namespace TNov
             string searchText = _searchTextBox.Text.Trim();
             if (string.IsNullOrEmpty(searchText))
             {
-                _statsLabel.Text = $"Семейств ОВ/ВК: {_familyListView.Items.Count}";
+                _statsLabel.Text = $"Семейств ОВ/ВК/ЭЛ: {_familyListView.Items.Count}";
             }
             else
             {

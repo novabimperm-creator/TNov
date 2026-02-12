@@ -1,4 +1,4 @@
-using System;
+Ôªøusing System;
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.DB;
@@ -7,184 +7,217 @@ using System.Drawing;
 
 namespace TNov
 {
-    public partial class LinkSelectionForm : System.Windows.Forms.Form
+    public partial class LinkSelectionForm : BaseForm
     {
         public RevitLinkInstance SelectedLink { get; private set; }
-        private List<RevitLinkInstance> _linkInstances;
+
+        private Document _doc;
+        private List<RevitLinkInstance> _allLinks;
         private System.Windows.Forms.ListView _linkListView;
         private System.Windows.Forms.TextBox _searchTextBox;
+        private System.Windows.Forms.Label _previewLabel;
 
-        public LinkSelectionForm(Document doc)
+        public LinkSelectionForm(Document doc) : base()
         {
+            _doc = doc;
             SelectedLink = null;
 
-            // œÓÎÛ˜‡ÂÏ ‚ÒÂ Ò‚ˇÁ‡ÌÌ˚Â Ù‡ÈÎ˚
-            _linkInstances = new FilteredElementCollector(doc)
+            // –ü–æ–ª—É—á–∞–µ–º –≤—Å–µ —Å–≤—è–∑–∞–Ω–Ω—ã–µ —Ñ–∞–π–ª—ã
+            _allLinks = new FilteredElementCollector(doc)
                 .OfClass(typeof(RevitLinkInstance))
                 .Cast<RevitLinkInstance>()
-                .Where(l => l.GetLinkDocument() != null)
-                .OrderBy(l => l.Name)
+                .Where(link => link.GetLinkDocument() != null)
+                .OrderBy(link => link.Name)
                 .ToList();
 
             InitializeForm();
             LoadLinks();
+
+            // –ù–∞—Å—Ç—Ä–æ–π–∫–∞ –Ω–∞–≤–∏–≥–∞—Ü–∏–∏ - –ø–µ—Ä–≤–∞—è —Ñ–æ—Ä–º–∞, –∫–Ω–æ–ø–∫–∞ "–ù–∞–∑–∞–¥" —Å–∫—Ä—ã—Ç–∞
+            this.ShowBackButton = false;
+            this.NextButtonText = "–î–∞–ª–µ–µ ‚Üí";
+
+            base.NextClicked += (s, e) => OnNextButtonClick();
+            base.CancelClicked += (s, e) => { this.DialogResult = DialogResult.Cancel; this.Close(); };
+
+            // –ö–Ω–æ–ø–∫–∞ –ù–∞–∑–∞–¥ –Ω–µ –Ω—É–∂–Ω–∞ –Ω–∞ –ø–µ—Ä–≤–æ–π —Ñ–æ—Ä–º–µ
+            base.BackClicked += (s, e) => { this.DialogResult = DialogResult.Abort; this.Close(); };
         }
 
         private void InitializeForm()
         {
-            // ŒÒÌÓ‚Ì˚Â Ì‡ÒÚÓÈÍË ÙÓÏ˚
-            this.Text = "¬˚·Ó Ò‚ˇÁ‡ÌÌÓ„Ó Ù‡ÈÎ‡";
-            this.Size = new System.Drawing.Size(800, 500);
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.BackColor = System.Drawing.Color.FromArgb(245, 245, 255);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
+            base.Text = "–í—ã–±–æ—Ä —Å–≤—è–∑–∞–Ω–Ω–æ–≥–æ —Ñ–∞–π–ª–∞";
+            base.Size = new System.Drawing.Size(900, 700);
 
-            // «‡„ÓÎÓ‚ÓÍ
-            var titleLabel = new System.Windows.Forms.Label();
-            titleLabel.Text = "¬€¡Œ– —¬ﬂ«¿ÕÕŒ√Œ ‘¿…À¿";
-            titleLabel.Font = new System.Drawing.Font("Segoe UI", 14, System.Drawing.FontStyle.Bold);
-            titleLabel.ForeColor = System.Drawing.Color.FromArgb(0, 80, 160);
-            titleLabel.Location = new System.Drawing.Point(20, 20);
-            titleLabel.Size = new System.Drawing.Size(750, 30);
-            titleLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // –û—Å–Ω–æ–≤–Ω–æ–π –∫–æ–Ω—Ç–µ–π–Ω–µ—Ä
+            var mainContainer = new System.Windows.Forms.Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = System.Drawing.Color.Transparent,
+                Padding = new Padding(0, 10, 0, 0)
+            };
 
-            // ŒÔËÒ‡ÌËÂ
-            var descLabel = new System.Windows.Forms.Label();
-            descLabel.Text = "¬˚·ÂËÚÂ Ò‚ˇÁ‡ÌÌ˚È Ù‡ÈÎ ‰Îˇ ‡·ÓÚ˚:";
-            descLabel.Font = new System.Drawing.Font("Segoe UI", 10);
-            descLabel.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
-            descLabel.Location = new System.Drawing.Point(20, 60);
-            descLabel.Size = new System.Drawing.Size(750, 25);
-            descLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // –ó–∞–≥–æ–ª–æ–≤–æ–∫
+            var titleLabel = new System.Windows.Forms.Label
+            {
+                Text = "–í–´–ë–û–† –°–í–Ø–ó–ê–ù–ù–û–ì–û –§–ê–ô–õ–ê",
+                Font = new System.Drawing.Font("Segoe UI", 14, System.Drawing.FontStyle.Bold),
+                ForeColor = base.TextColor,
+                Dock = DockStyle.Top,
+                Height = 35,
+                TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
+                Margin = new Padding(0, 0, 0, 10)
+            };
 
-            // œ‡ÌÂÎ¸ ÔÓËÒÍ‡
-            var searchPanel = new System.Windows.Forms.Panel();
-            searchPanel.Location = new System.Drawing.Point(20, 95);
-            searchPanel.Size = new System.Drawing.Size(750, 35);
-            searchPanel.BackColor = System.Drawing.Color.White;
-            searchPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            // –û–ø–∏—Å–∞–Ω–∏–µ
+            var descLabel = new System.Windows.Forms.Label
+            {
+                Text = "–í—ã–±–µ—Ä–∏—Ç–µ —Å–≤—è–∑–∞–Ω–Ω—ã–π —Ñ–∞–π–ª Revit –¥–ª—è —Ä–∞–∑–º–µ—â–µ–Ω–∏—è —ç–ª–µ–º–µ–Ω—Ç–æ–≤ —Ä—è–¥–æ–º —Å –µ–≥–æ –æ–±—ä–µ–∫—Ç–∞–º–∏:",
+                Font = new System.Drawing.Font("Segoe UI", 9),
+                ForeColor = System.Drawing.Color.FromArgb(100, 100, 100),
+                Dock = DockStyle.Top,
+                Height = 40,
+                TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
+                Padding = new Padding(0, 0, 0, 10)
+            };
 
-            var searchLabel = new System.Windows.Forms.Label();
-            searchLabel.Text = "œÓËÒÍ:";
-            searchLabel.Font = new System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold);
-            searchLabel.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
-            searchLabel.Location = new System.Drawing.Point(10, 8);
-            searchLabel.Size = new System.Drawing.Size(50, 20);
-            searchLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // –ü–∞–Ω–µ–ª—å –ø–æ–∏—Å–∫–∞
+            var searchPanel = new System.Windows.Forms.Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 45,
+                Padding = new Padding(0, 0, 0, 10)
+            };
 
-            _searchTextBox = new System.Windows.Forms.TextBox();
-            _searchTextBox.Location = new System.Drawing.Point(65, 6);
-            _searchTextBox.Size = new System.Drawing.Size(300, 23);
-            _searchTextBox.Font = new System.Drawing.Font("Segoe UI", 9);
+            var searchLabel = new System.Windows.Forms.Label
+            {
+                Text = "–ü–æ–∏—Å–∫:",
+                Font = new System.Drawing.Font("Segoe UI", 9),
+                ForeColor = base.TextColor,
+                Location = new System.Drawing.Point(0, 12),
+                Size = new System.Drawing.Size(50, 20),
+                TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+            };
+
+            _searchTextBox = new System.Windows.Forms.TextBox
+            {
+                Location = new System.Drawing.Point(60, 10),
+                Size = new System.Drawing.Size(250, 24),
+                Font = new System.Drawing.Font("Segoe UI", 9),
+                BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+            };
             _searchTextBox.TextChanged += (s, e) => FilterLinks();
 
-            // —Ú‡ÚËÒÚËÍ‡
-            var statsLabel = new System.Windows.Forms.Label();
-            statsLabel.Text = $"Õ‡È‰ÂÌÓ Ò‚ˇÁ‡ÌÌ˚ı Ù‡ÈÎÓ‚: {_linkInstances.Count}";
-            statsLabel.Font = new System.Drawing.Font("Segoe UI", 9);
-            statsLabel.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
-            statsLabel.Location = new System.Drawing.Point(400, 8);
-            statsLabel.Size = new System.Drawing.Size(340, 20);
-            statsLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-
-            searchPanel.Controls.AddRange(new System.Windows.Forms.Control[] {
-                searchLabel, _searchTextBox, statsLabel
-            });
-
-            // ListView ‰Îˇ Ò‚ˇÁ‡ÌÌ˚ı Ù‡ÈÎÓ‚
-            _linkListView = new System.Windows.Forms.ListView();
-            _linkListView.Location = new System.Drawing.Point(20, 145);
-            _linkListView.Size = new System.Drawing.Size(750, 250);
-            _linkListView.View = System.Windows.Forms.View.Details;
-            _linkListView.FullRowSelect = true;
-            _linkListView.GridLines = true;
-            _linkListView.Font = new System.Drawing.Font("Segoe UI", 9);
-            _linkListView.BackColor = System.Drawing.Color.White;
-            _linkListView.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            _linkListView.MultiSelect = false;
-
-            //  ÓÎÓÌÍË
-            _linkListView.Columns.Add("»Ïˇ Ù‡ÈÎ‡", 400);
-            _linkListView.Columns.Add("“ËÔ", 200);
-            _linkListView.Columns.Add("—Ú‡ÚÛÒ", 150);
-
-            //  ÌÓÔÍ‡ ‚˚·Ó‡
-            var selectButton = new System.Windows.Forms.Button();
-            selectButton.Text = "¬€¡–¿“‹ ‘¿…À";
-            selectButton.Font = new System.Drawing.Font("Segoe UI", 10, System.Drawing.FontStyle.Bold);
-            selectButton.Location = new System.Drawing.Point(300, 410);
-            selectButton.Size = new System.Drawing.Size(200, 35);
-            selectButton.BackColor = System.Drawing.Color.FromArgb(0, 123, 255);
-            selectButton.ForeColor = System.Drawing.Color.White;
-            selectButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            selectButton.Click += (s, e) =>
+            var clearButton = new System.Windows.Forms.Button
             {
-                if (SelectedLink != null)
-                {
-                    this.DialogResult = System.Windows.Forms.DialogResult.OK;
-                    this.Close();
-                }
-                else
-                {
-                    System.Windows.Forms.MessageBox.Show("œÓÊ‡ÎÛÈÒÚ‡, ‚˚·ÂËÚÂ Ò‚ˇÁ‡ÌÌ˚È Ù‡ÈÎ", "¬ÌËÏ‡ÌËÂ",
-                        System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
-                }
+                Text = "–û—á–∏—Å—Ç–∏—Ç—å",
+                Font = new System.Drawing.Font("Segoe UI", 9),
+                Location = new System.Drawing.Point(320, 10),
+                Size = new System.Drawing.Size(80, 24),
+                BackColor = System.Drawing.Color.FromArgb(108, 117, 125),
+                ForeColor = System.Drawing.Color.White,
+                FlatStyle = System.Windows.Forms.FlatStyle.Flat
+            };
+            clearButton.Click += (s, e) =>
+            {
+                _searchTextBox.Text = "";
+                FilterLinks();
             };
 
-            //  ÌÓÔÍ‡ ÓÚÏÂÌ˚
-            var cancelButton = new System.Windows.Forms.Button();
-            cancelButton.Text = "Œ“Ã≈Õ¿";
-            cancelButton.Font = new System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold);
-            cancelButton.Location = new System.Drawing.Point(520, 410);
-            cancelButton.Size = new System.Drawing.Size(100, 35);
-            cancelButton.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
-            cancelButton.ForeColor = System.Drawing.Color.White;
-            cancelButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            searchPanel.Controls.AddRange(new System.Windows.Forms.Control[] { searchLabel, _searchTextBox, clearButton });
 
-            // ƒÓ·‡‚ÎˇÂÏ ˝ÎÂÏÂÌÚ˚
-            this.Controls.AddRange(new System.Windows.Forms.Control[] {
-                titleLabel, descLabel, searchPanel, _linkListView, selectButton, cancelButton
+            // ListView –¥–ª—è —Å–≤—è–∑–∞–Ω–Ω—ã—Ö —Ñ–∞–π–ª–æ–≤
+            var listPanel = new System.Windows.Forms.Panel
+            {
+                Dock = DockStyle.Fill,
+                BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle,
+                Margin = new Padding(0, 0, 0, 10)
+            };
+
+            _linkListView = new System.Windows.Forms.ListView
+            {
+                Dock = DockStyle.Fill,
+                View = System.Windows.Forms.View.Details,
+                FullRowSelect = true,
+                GridLines = true,
+                Font = new System.Drawing.Font("Segoe UI", 9),
+                BackColor = System.Drawing.Color.White,
+                Scrollable = true
+            };
+
+            // –ö–æ–ª–æ–Ω–∫–∏
+            _linkListView.Columns.Add("–ò–º—è —Ñ–∞–π–ª–∞", 400);
+            _linkListView.Columns.Add("–¢–∏–ø", 200);
+            _linkListView.Columns.Add("–°—Ç–∞—Ç—É—Å", 150);
+
+            listPanel.Controls.Add(_linkListView);
+
+            // –ü–∞–Ω–µ–ª—å –ø—Ä–µ–¥–ø—Ä–æ—Å–º–æ—Ç—Ä–∞
+            var previewPanel = new System.Windows.Forms.Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 40,
+                BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle,
+                BackColor = System.Drawing.Color.FromArgb(248, 249, 250),
+                Margin = new Padding(0, 10, 0, 0)
+            };
+
+            _previewLabel = new System.Windows.Forms.Label
+            {
+                Name = "previewLabel",
+                Dock = System.Windows.Forms.DockStyle.Fill,
+                Text = "–í—ã–±—Ä–∞–Ω–æ: –Ω–∏—á–µ–≥–æ",
+                Font = new System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold),
+                ForeColor = base.AccentColor,
+                TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
+                Padding = new Padding(10, 0, 0, 0)
+            };
+
+            previewPanel.Controls.Add(_previewLabel);
+
+            // –î–æ–±–∞–≤–ª—è–µ–º –≤—Å–µ —ç–ª–µ–º–µ–Ω—Ç—ã –≤ mainContainer
+            // –í–ê–ñ–ù–û: –¥–æ–±–∞–≤–ª—è–µ–º –≤ –æ–±—Ä–∞—Ç–Ω–æ–º –ø–æ—Ä—è–¥–∫–µ –∏–∑-–∑–∞ DockStyle
+            mainContainer.Controls.AddRange(new System.Windows.Forms.Control[] {
+                listPanel,
+                previewPanel,
+                searchPanel,
+                descLabel,
+                titleLabel
             });
 
-            // —Ó·˚ÚËˇ
-            _linkListView.SelectedIndexChanged += (s, e) => UpdateSelection();
-            _linkListView.DoubleClick += (s, e) =>
-            {
-                if (SelectedLink != null)
-                {
-                    this.DialogResult = System.Windows.Forms.DialogResult.OK;
-                    this.Close();
-                }
-            };
-            _searchTextBox.KeyDown += (s, e) => { if (e.KeyCode == System.Windows.Forms.Keys.Enter) FilterLinks(); };
+            // –î–æ–±–∞–≤–ª—è–µ–º mainContainer –≤ ContentPanel
+            base.ContentPanel.Controls.Add(mainContainer);
 
-            // Õ‡ÁÌ‡˜‡ÂÏ ÍÌÓÔÍË
-            this.AcceptButton = selectButton;
-            this.CancelButton = cancelButton;
+            // –°–æ–±—ã—Ç–∏—è
+            _linkListView.SelectedIndexChanged += (s, e) => UpdatePreview();
+            _linkListView.DoubleClick += (s, e) => OnNextButtonClick();
+            _searchTextBox.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter) FilterLinks();
+            };
         }
 
         private void LoadLinks()
         {
-            foreach (var link in _linkInstances)
+            foreach (var link in _allLinks)
             {
                 var linkDoc = link.GetLinkDocument();
+                if (linkDoc == null) continue;
+
                 var item = new System.Windows.Forms.ListViewItem(new[] {
-                    linkDoc?.Title ?? "ÕÂËÁ‚ÂÒÚÌÓ",
-                    link.GetType().Name,
-                    "ƒÓÒÚÛÔÂÌ"
+                    link.Name,
+                    "Revit Link",
+                    linkDoc.IsLinked ? "–°–≤—è–∑–∞–Ω" : "–û—à–∏–±–∫–∞"
                 });
                 item.Tag = link;
                 _linkListView.Items.Add(item);
             }
 
-            // ¬˚·Ë‡ÂÏ ÔÂ‚˚È ˝ÎÂÏÂÌÚ
+            // –í—ã–±–∏—Ä–∞–µ–º –ø–µ—Ä–≤—ã–π —ç–ª–µ–º–µ–Ω—Ç
             if (_linkListView.Items.Count > 0)
             {
                 _linkListView.Items[0].Selected = true;
-                UpdateSelection();
+                UpdatePreview();
             }
         }
 
@@ -195,37 +228,56 @@ namespace TNov
             _linkListView.Items.Clear();
             _linkListView.BeginUpdate();
 
-            var filtered = _linkInstances.Where(link =>
-            {
-                var doc = link.GetLinkDocument();
-                return doc?.Title.ToLower().Contains(searchText) == true;
-            });
+            var filtered = _allLinks.Where(link =>
+                link.Name.ToLower().Contains(searchText) ||
+                (link.GetLinkDocument()?.Title?.ToLower() ?? "").Contains(searchText));
 
             foreach (var link in filtered)
             {
                 var linkDoc = link.GetLinkDocument();
                 var item = new System.Windows.Forms.ListViewItem(new[] {
-                    linkDoc?.Title ?? "ÕÂËÁ‚ÂÒÚÌÓ",
-                    link.GetType().Name,
-                    "ƒÓÒÚÛÔÂÌ"
+                    link.Name,
+                    "Revit Link",
+                    linkDoc != null ? "–°–≤—è–∑–∞–Ω" : "–û—à–∏–±–∫–∞"
                 });
                 item.Tag = link;
                 _linkListView.Items.Add(item);
             }
 
             _linkListView.EndUpdate();
-            UpdateSelection();
+            UpdatePreview();
         }
 
-        private void UpdateSelection()
+        private void UpdatePreview()
         {
             if (_linkListView.SelectedItems.Count > 0)
             {
-                SelectedLink = _linkListView.SelectedItems[0].Tag as RevitLinkInstance;
+                var selectedItem = _linkListView.SelectedItems[0];
+                var fileName = selectedItem.SubItems[0].Text;
+
+                _previewLabel.Text = $"–í—ã–±—Ä–∞–Ω–æ: {fileName}";
+                SelectedLink = selectedItem.Tag as RevitLinkInstance;
+                base.EnableNextButton(SelectedLink != null);
             }
             else
             {
+                _previewLabel.Text = "–í—ã–±—Ä–∞–Ω–æ: –Ω–∏—á–µ–≥–æ";
                 SelectedLink = null;
+                base.EnableNextButton(false);
+            }
+        }
+
+        private void OnNextButtonClick()
+        {
+            if (SelectedLink != null)
+            {
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+            else
+            {
+                MessageBox.Show("–ü–æ–∂–∞–ª—É–π—Å—Ç–∞, –≤—ã–±–µ—Ä–∏—Ç–µ —Å–≤—è–∑–∞–Ω–Ω—ã–π —Ñ–∞–π–ª", "–í–Ω–∏–º–∞–Ω–∏–µ",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
     }

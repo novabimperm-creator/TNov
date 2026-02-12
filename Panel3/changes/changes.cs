@@ -212,11 +212,12 @@ namespace TNov
                                 double lengthSum = 0;
                                 foreach (var curve in curves) lengthSum += curve.Length;
                                 Parameter comm = rCloud.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS);
-                                if (lengthSum>0.03) 
-                                { 
+                                if (lengthSum > 0.03 && comm.IsReadOnly == false)
+                                {
                                     comm.Set(i.ToString());
-                                    Logger.Log("      Облако " + rCloud.Id.ToString() + ": назначен номер " + i.ToString(),2); 
+                                    Logger.Log("      Облако " + rCloud.Id.ToString() + ": назначен номер " + i.ToString(), 2);
                                 }
+                                else if (comm.IsReadOnly) { Logger.Log("      Изменение заблокировано в Вид - Изменения", 1); break; } //пропускаем этот изм
                                 else Logger.Log("      Облако " + rCloud.Id.ToString() + ": номер не назначен, облако малой длины", 2);
                             }
                             

@@ -29,6 +29,7 @@ namespace TNov
         public string ADSKGroup;
         public List<string> StringValues;
         public List<double> DoubleValues;
+        public List<string> CableGroupStringValues;
     }
 
     public class ElNonModelCube
@@ -91,6 +92,10 @@ namespace TNov
         {
             "Лоток_Кабель_1_Количество","Лоток_Кабель_2_Количество","Лоток_Кабель_3_Количество","Лоток_Кабель_4_Количество",
             "Лоток_Кабель_5_Количество"
+        };
+        string[] cableGroupStringParams = new string[]
+        {
+            "Кабель 1 Группирование","Кабель 2 Группирование","Кабель 3 Группирование","Кабель 4 Группирование","Кабель 5 Группирование"
         };
         private const string TargetScheduleName = "СО_Общая для ТЗ";
 
@@ -600,11 +605,11 @@ namespace TNov
                 {
                     string cType =
                         c.get_Parameter(adskGparamGuid).AsString() +
-                        c.LookupParameter("Кабель тип 1").AsElementId().IntegerValue.ToString() +
-                        c.LookupParameter("Кабель тип 2").AsElementId().IntegerValue.ToString() +
-                        c.LookupParameter("Кабель тип 3").AsElementId().IntegerValue.ToString() +
-                        c.LookupParameter("Кабель тип 4").AsElementId().IntegerValue.ToString() +
-                        c.LookupParameter("Кабель тип 5").AsElementId().IntegerValue.ToString();
+                        c.LookupParameter("Кабель тип 1").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 1 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 2").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 2 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 3").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 3 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 4").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 4 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 5").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 5 Группирование").AsString();
                     CableTrayTypes.Add(cType);
                 }
                 CableTrayTypes = CableTrayTypes.Distinct().ToList();
@@ -616,11 +621,11 @@ namespace TNov
                 {
                     string cType =
                         c.get_Parameter(adskGparamGuid).AsString() +
-                        c.LookupParameter("Кабель тип 1").AsElementId().IntegerValue.ToString() +
-                        c.LookupParameter("Кабель тип 2").AsElementId().IntegerValue.ToString() +
-                        c.LookupParameter("Кабель тип 3").AsElementId().IntegerValue.ToString() +
-                        c.LookupParameter("Кабель тип 4").AsElementId().IntegerValue.ToString() +
-                        c.LookupParameter("Кабель тип 5").AsElementId().IntegerValue.ToString() +
+                        c.LookupParameter("Кабель тип 1").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 1 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 2").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 2 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 3").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 3 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 4").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 4 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 5").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 5 Группирование").AsString() +
                         c.LookupParameter("Труба").AsElementId().IntegerValue.ToString() +
                         c.LookupParameter("Крепеж").AsElementId().IntegerValue.ToString();
                     ConduitTypes.Add(cType);
@@ -725,14 +730,14 @@ namespace TNov
                         foreach (var c in Conduit)
                         {
                             string cType1 =
-                                c.get_Parameter(adskGparamGuid).AsString() +
-                                c.LookupParameter("Кабель тип 1").AsElementId().IntegerValue.ToString() +
-                                c.LookupParameter("Кабель тип 2").AsElementId().IntegerValue.ToString() +
-                                c.LookupParameter("Кабель тип 3").AsElementId().IntegerValue.ToString() +
-                                c.LookupParameter("Кабель тип 4").AsElementId().IntegerValue.ToString() +
-                                c.LookupParameter("Кабель тип 5").AsElementId().IntegerValue.ToString() +
-                                c.LookupParameter("Труба").AsElementId().IntegerValue.ToString() +
-                                c.LookupParameter("Крепеж").AsElementId().IntegerValue.ToString();
+                        c.get_Parameter(adskGparamGuid).AsString() +
+                        c.LookupParameter("Кабель тип 1").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 1 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 2").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 2 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 3").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 3 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 4").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 4 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 5").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 5 Группирование").AsString() +
+                        c.LookupParameter("Труба").AsElementId().IntegerValue.ToString() +
+                        c.LookupParameter("Крепеж").AsElementId().IntegerValue.ToString();
                             if (cType1 == cType)
                             {
                                 cTypeElems.Add(doc.GetElement(c.Id));
@@ -741,9 +746,27 @@ namespace TNov
                         }
                         List<string> stringValues = new List<string>();
                         List<double> doubleValues = new List<double>();
+                        List<string> cableGroupStringValues = new List<string>();
                         string gvalue = "";
 
                         int cableCounter = 0; //счетчик для считывания кол-ва кабеля
+
+                        Element firstElem = cTypeElems.First();
+
+                        for(int i=0; i< cableGroupStringParams.Length;i++) //группирование для пучков
+                        {
+                            string paramName = cableGroupStringParams[i];
+                            string val = "";
+                            if (Param.ParamExist(paramName, firstElem) && firstElem.LookupParameter(paramName).HasValue)
+                            {
+                                val=firstElem.LookupParameter(paramName).AsString();
+                            }
+                            else if (Param.ParamExistByGuid(adskGparamGuid, firstElem) && firstElem.get_Parameter(adskGparamGuid).HasValue)
+                            {
+                                val=firstElem.get_Parameter(adskGparamGuid).AsString();
+                            }
+                            cableGroupStringValues.Add(val); Logger.Log("      " + val, 2);
+                        }
 
                         for (int i = 0; i < conduitStringParams.Length; i++) //проходим по списку текстовых параметров
                         {
@@ -751,13 +774,13 @@ namespace TNov
                             Logger.Log("   " + conduitParam, 2);
                             string value = "";
                             //получаем значение текстового параметра с первого короба в списке коробов данного типа
-                            bool cParamExist = Param.ParamExist(conduitParam, cTypeElems.First());
+                            bool cParamExist = Param.ParamExist(conduitParam, firstElem);
                             if (cParamExist)
                             {
-                                bool hasValue = cTypeElems.First().LookupParameter(conduitParam).HasValue;
+                                bool hasValue = firstElem.LookupParameter(conduitParam).HasValue;
                                 if (hasValue)
                                 {
-                                    string cParamValue = cTypeElems.First().LookupParameter(conduitParam).AsString();
+                                    string cParamValue = firstElem.LookupParameter(conduitParam).AsString();
                                     if (cParamValue.Length > 0)
                                     {
                                         value = cParamValue; Logger.Log("      " + cParamValue, 2);
@@ -767,13 +790,13 @@ namespace TNov
                                 else Logger.Log("      пустое значение", 2);
                             }
                             stringValues.Add(value);
-                            bool gParamExist = Param.ParamExistByGuid(adskGparamGuid, cTypeElems.First());
+                            bool gParamExist = Param.ParamExistByGuid(adskGparamGuid, firstElem);
                             if (cParamExist)
                             {
-                                bool hasValue = cTypeElems.First().get_Parameter(adskGparamGuid).HasValue;
+                                bool hasValue = firstElem.get_Parameter(adskGparamGuid).HasValue;
                                 if (hasValue)
                                 {
-                                    string gParamValue = cTypeElems.First().get_Parameter(adskGparamGuid).AsString();
+                                    string gParamValue = firstElem.get_Parameter(adskGparamGuid).AsString();
                                     if (gParamValue.Length > 0)
                                     {
                                         gvalue = gParamValue; Logger.Log("      " + gParamValue, 2);
@@ -788,7 +811,7 @@ namespace TNov
                             {
                                 cableCounter++;
                                 string cableCountParam = "Кабель тип " + cableCounter.ToString() + " колво";
-                                bool cableCountParamExist = Param.ParamExist(cableCountParam, cTypeElems.First());
+                                bool cableCountParamExist = Param.ParamExist(cableCountParam, firstElem);
 
                                 double dValue = 0;
                                 if (value.Length > 0)
@@ -835,7 +858,7 @@ namespace TNov
                             }
                         }
 
-                        cubes.Add(new ConduitCube { Name = cType, StringValues = stringValues, DoubleValues = doubleValues, ADSKGroup = gvalue });
+                        cubes.Add(new ConduitCube { Name = cType, StringValues = stringValues, DoubleValues = doubleValues, ADSKGroup = gvalue, CableGroupStringValues = cableGroupStringValues });
                     }
                     using (Transaction transactionConduit = new Transaction(doc))
                     {
@@ -871,6 +894,11 @@ namespace TNov
                             {
                                 newElem.LookupParameter(cubeConduitDoubleParams[i])?.Set(Math.Round(cc.DoubleValues[i], 1));
                                 Logger.Log("      " + cubeConduitDoubleParams[i] + ": " + Math.Round(cc.DoubleValues[i], 1).ToString(), 2);
+                            }
+                            for (int i = 0; i < cableGroupStringParams.Length; i++)
+                            {
+                                newElem.LookupParameter(cableGroupStringParams[i])?.Set(cc.CableGroupStringValues[i]);
+                                Logger.Log("      " + cableGroupStringParams[i] + ": " + cc.CableGroupStringValues[i], 2);
                             }
                             newElem.get_Parameter(adskGparamGuid)?.Set(cc.ADSKGroup);
                             PBCount++;
@@ -1075,6 +1103,11 @@ namespace TNov
                                 newElem.LookupParameter(cubeElSystemDoubleParams[i])?.Set(Math.Round(cc.DoubleValues[i], 1));
                                 Logger.Log("      " + cubeElSystemDoubleParams[i] + ": " + Math.Round(cc.DoubleValues[i], 1).ToString(), 2);
                             }
+                            for (int i = 0; i < cableGroupStringParams.Length; i++)
+                            {
+                                newElem.LookupParameter(cableGroupStringParams[i])?.Set(cc.CableGroupStringValues[i]);
+                                Logger.Log("      " + cableGroupStringParams[i] + ": " + cc.CableGroupStringValues[i], 2);
+                            }
                             newElem.get_Parameter(adskGparamGuid)?.Set(cc.ADSKGroup);
 
                             PBCount++;
@@ -1169,12 +1202,13 @@ namespace TNov
                         foreach (var c in CableTrays)
                         {
                             string cType1 =
-                                c.get_Parameter(adskGparamGuid).AsString() +
-                                c.LookupParameter("Кабель тип 1").AsElementId().IntegerValue.ToString() +
-                                c.LookupParameter("Кабель тип 2").AsElementId().IntegerValue.ToString() +
-                                c.LookupParameter("Кабель тип 3").AsElementId().IntegerValue.ToString() +
-                                c.LookupParameter("Кабель тип 4").AsElementId().IntegerValue.ToString() +
-                                c.LookupParameter("Кабель тип 5").AsElementId().IntegerValue.ToString();
+                        c.get_Parameter(adskGparamGuid).AsString() +
+                        c.LookupParameter("Кабель тип 1").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 1 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 2").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 2 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 3").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 3 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 4").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 4 Группирование").AsString() +
+                        c.LookupParameter("Кабель тип 5").AsElementId().IntegerValue.ToString() + c.LookupParameter("Кабель 5 Группирование").AsString();
+
                             if (cType1 == cType)
                             {
                                 cTypeElems.Add(doc.GetElement(c.Id));
@@ -1183,9 +1217,27 @@ namespace TNov
                         }
                         List<string> stringValues = new List<string>();
                         List<double> doubleValues = new List<double>();
+                        List<string> cableGroupStringValues = new List<string>();
                         string gvalue = "";
 
                         int cableCounter = 0; //счетчик для считывания кол-ва кабеля
+
+                        Element firstElem = cTypeElems.First();
+
+                        for (int i = 0; i < cableGroupStringParams.Length; i++) //группирование для пучков
+                        {
+                            string paramName = cableGroupStringParams[i];
+                            string val = "";
+                            if (Param.ParamExist(paramName, firstElem) && firstElem.LookupParameter(paramName).HasValue)
+                            {
+                                val = firstElem.LookupParameter(paramName).AsString();
+                            }
+                            else if (Param.ParamExistByGuid(adskGparamGuid, firstElem) && firstElem.get_Parameter(adskGparamGuid).HasValue)
+                            {
+                                val = firstElem.get_Parameter(adskGparamGuid).AsString();
+                            }
+                            cableGroupStringValues.Add(val); Logger.Log("      " + val, 2);
+                        }
 
                         for (int i = 0; i < 20; i++) //проходим по списку текстовых параметров (20 - только параметры кабеля)
                         {
@@ -1193,13 +1245,13 @@ namespace TNov
                             Logger.Log("   " + conduitParam, 2);
                             string value = "";
                             //получаем значение текстового параметра с первого лотка в списке лотков данного типа
-                            bool cParamExist = Param.ParamExist(conduitParam, cTypeElems.First());
+                            bool cParamExist = Param.ParamExist(conduitParam, firstElem);
                             if (cParamExist)
                             {
-                                bool hasValue = cTypeElems.First().LookupParameter(conduitParam).HasValue;
+                                bool hasValue = firstElem.LookupParameter(conduitParam).HasValue;
                                 if (hasValue)
                                 {
-                                    string cParamValue = cTypeElems.First().LookupParameter(conduitParam).AsString();
+                                    string cParamValue = firstElem.LookupParameter(conduitParam).AsString();
                                     if (cParamValue.Length > 0)
                                     {
                                         value = cParamValue; Logger.Log("      " + cParamValue, 2);
@@ -1209,13 +1261,13 @@ namespace TNov
                                 else Logger.Log("      пустое значение", 2);
                             }
                             stringValues.Add(value);
-                            bool gParamExist = Param.ParamExistByGuid(adskGparamGuid, cTypeElems.First());
+                            bool gParamExist = Param.ParamExistByGuid(adskGparamGuid, firstElem);
                             if (cParamExist)
                             {
-                                bool hasValue = cTypeElems.First().get_Parameter(adskGparamGuid).HasValue;
+                                bool hasValue = firstElem.get_Parameter(adskGparamGuid).HasValue;
                                 if (hasValue)
                                 {
-                                    string gParamValue = cTypeElems.First().get_Parameter(adskGparamGuid).AsString();
+                                    string gParamValue = firstElem.get_Parameter(adskGparamGuid).AsString();
                                     if (gParamValue.Length > 0)
                                     {
                                         gvalue = gParamValue; Logger.Log("      " + gParamValue, 2);
@@ -1230,7 +1282,7 @@ namespace TNov
                             {
                                 cableCounter++;
                                 string cableCountParam = "Кабель тип " + cableCounter.ToString() + " колво";
-                                bool cableCountParamExist = Param.ParamExist(cableCountParam, cTypeElems.First());
+                                bool cableCountParamExist = Param.ParamExist(cableCountParam, firstElem);
 
                                 double dValue = 0;
                                 if (value.Length > 0)
@@ -2598,13 +2650,13 @@ namespace TNov
                 {
                     string messageF = "";
                     string failed1str = "Не заполнился параметр ADSK_Группирование: ";
-                    if (failed1.Count > 0) { failed1str = failed1str + String.Join(",", failed1); messageF = messageF + failed1str + ". "; }
+                    if (failed1.Count > 0) { failed1str = failed1str + String.Join(", ", failed1); messageF = messageF + failed1str + ". "; }
                     string failed2str = "Не заполнился параметр N_Категория: ";
-                    if (failed2.Count > 0) { failed2str = failed2str + String.Join(",", failed2); messageF = messageF + failed2str + ". "; }
+                    if (failed2.Count > 0) { failed2str = failed2str + String.Join(", ", failed2); messageF = messageF + failed2str + ". "; }
                     string failed3str = "Не заполнились параметры ADSK_Наименование или ASDK_Количество: ";
-                    if (failed3.Count > 0) { failed3str = failed3str + String.Join(",", failed3); messageF = messageF + failed3str + ". "; }
+                    if (failed3.Count > 0) { failed3str = failed3str + String.Join(", ", failed3); messageF = messageF + failed3str + ". "; }
                     string failed4str = "Не обработались элементы из каталогов: ";
-                    if (failed4.Count > 0) { failed4str = failed4str + String.Join(",", failed4); messageF = messageF + failed4str + ". "; }
+                    if (failed4.Count > 0) { failed4str = failed4str + String.Join(", ", failed4); messageF = messageF + failed4str + ". "; }
 
                     Logger.Log("Открываем окно с ID проблемных элементов: " + messageF, 1);
                     // Диалоговое окно

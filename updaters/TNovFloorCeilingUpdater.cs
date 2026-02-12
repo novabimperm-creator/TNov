@@ -61,33 +61,37 @@ namespace TNov
 
             if (!allElementIds.Any()) return;
 
-
-            foreach (ElementId elementId in allElementIds)
+            string docName = doc.Title.ToString();
+            if (docName.Contains("-АР") || docName.Contains("_АР") || docName.Contains("-АР-") || docName.Contains("_ПОФ") || docName.Contains("-ПОФ-"))
             {
-                Element element = doc.GetElement(elementId);
-                if (element == null) continue;
-
-                // Проверяем категорию элемента
-                if (IsFloorOrCeiling(element))
+                foreach (ElementId elementId in allElementIds)
                 {
-                    bool parsAreEmpty = false; //проверяем, что параметры не заполнены (запуск только если любой из параметров пустой)
-                    List<string> paramNames = new List<string>() { "N_Отделка.Помещение" , "Отделка.Помещение.Назначение", "N_Отделка.ГруппаТекст" };
-                    foreach (string paramName in paramNames) 
+                    Element element = doc.GetElement(elementId);
+                    if (element == null) continue;
+
+                    // Проверяем категорию элемента
+                    if (IsFloorOrCeiling(element))
                     {
-                        Parameter param = element.LookupParameter(paramName);
-                        if (param != null)
+                        bool parsAreEmpty = false; //проверяем, что параметры не заполнены (запуск только если любой из параметров пустой)
+                        List<string> paramNames = new List<string>() { "N_Отделка.Помещение", "Отделка.Помещение.Назначение", "N_Отделка.ГруппаТекст" };
+                        foreach (string paramName in paramNames)
                         {
-                            if (param.HasValue)
+                            Parameter param = element.LookupParameter(paramName);
+                            if (param != null)
                             {
-                                if(param.AsString().Length<1) { parsAreEmpty = true; break; }
+                                if (param.HasValue)
+                                {
+                                    if (param.AsString().Length < 1) { parsAreEmpty = true; break; }
+                                }
+                                else { parsAreEmpty = true; break; }
                             }
-                            else { parsAreEmpty = true; break; }
                         }
+
+                        if (parsAreEmpty) UpdateElementRoomParameter(doc, element);
                     }
-                    
-                    if(parsAreEmpty) UpdateElementRoomParameter(doc, element);
                 }
             }
+                
 
                 
         }
@@ -295,7 +299,7 @@ namespace TNov
         public string GetAdditionalInformation() => "Обновляет имя помещения для перекрытий и потолков";
         public ChangePriority GetChangePriority() => ChangePriority.FloorsRoofsStructuralWalls;
         public UpdaterId GetUpdaterId() => m_updaterId;
-        public string GetUpdaterName() => "Room Elements Updater";
+        public string GetUpdaterName() => "TNovFloorCeilingUpdater";
     }
 
 }

@@ -17,6 +17,7 @@ using System.Threading;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using TNov.main;
+using TNov.Panel13;
 using static System.Windows.Forms.LinkLabel;
 using adWin = Autodesk.Windows;
 using RibbonItem = Autodesk.Revit.UI.RibbonItem;
@@ -25,7 +26,7 @@ using SplitButton = Autodesk.Revit.UI.SplitButton;
 
 /*
 git add .
-git commit -m "3.5.6"
+git commit -m "4.0.1"
 git push origin main
  */
 namespace TNov
@@ -118,6 +119,12 @@ namespace TNov
             ElementCategoryFilter filterGroups = new ElementCategoryFilter(BuiltInCategory.OST_IOSModelGroups);
             ElementCategoryFilter filterCeilings = new ElementCategoryFilter(BuiltInCategory.OST_Ceilings);
             ElementCategoryFilter filterRooms = new ElementCategoryFilter(BuiltInCategory.OST_Rooms);
+            ElementCategoryFilter filterPipeInsulations = new ElementCategoryFilter(BuiltInCategory.OST_PipeInsulations);
+            ElementCategoryFilter filterDuctInsulations = new ElementCategoryFilter(BuiltInCategory.OST_DuctInsulations);
+            ElementCategoryFilter filterDuctLining = new ElementCategoryFilter(BuiltInCategory.OST_DuctLinings);
+            ElementFilter combinedFilterST = CombinedElementFilter.CombinedFilterST();
+            ElementFilter combinedFilterOVVK = CombinedElementFilter.CombinedFilterOVVK();
+            ElementFilter combinedFilterAR = CombinedElementFilter.CombinedFilterAR();
 
             //объявление апдейтеров
 
@@ -178,6 +185,34 @@ namespace TNov
             UpdaterRegistry.AddTrigger(floorCeilingUpdater.GetUpdaterId(), filterCeilings, Element.GetChangeTypeElementAddition());
             UpdaterRegistry.AddTrigger(floorCeilingUpdater.GetUpdaterId(), filterCeilings, Element.GetChangeTypeAny());
 
+            TNovInsulationUpdater insulationUpdater = new TNovInsulationUpdater(application.ActiveAddInId); //изоляция
+            UpdaterRegistry.RegisterUpdater(insulationUpdater, true);
+            UpdaterRegistry.AddTrigger(insulationUpdater.GetUpdaterId(), filterPipeInsulations, Element.GetChangeTypeElementAddition());
+            UpdaterRegistry.AddTrigger(insulationUpdater.GetUpdaterId(), filterPipeInsulations, Element.GetChangeTypeAny());
+            UpdaterRegistry.AddTrigger(insulationUpdater.GetUpdaterId(), filterDuctInsulations, Element.GetChangeTypeElementAddition());
+            UpdaterRegistry.AddTrigger(insulationUpdater.GetUpdaterId(), filterDuctInsulations, Element.GetChangeTypeAny());
+            UpdaterRegistry.AddTrigger(insulationUpdater.GetUpdaterId(), filterDuctLining, Element.GetChangeTypeElementAddition());
+            UpdaterRegistry.AddTrigger(insulationUpdater.GetUpdaterId(), filterDuctLining, Element.GetChangeTypeAny());
+
+            TNovParsOpredSTUpdater parsOpredSTUpdater = new TNovParsOpredSTUpdater(application.ActiveAddInId); //Т Опред КЖ
+            UpdaterRegistry.RegisterUpdater(parsOpredSTUpdater, true);
+            //UpdaterRegistry.AddTrigger(parsOpredSTUpdater.GetUpdaterId(), combinedFilterST, Element.GetChangeTypeElementAddition());
+            UpdaterRegistry.AddTrigger(parsOpredSTUpdater.GetUpdaterId(), combinedFilterST, Element.GetChangeTypeAny());
+
+            TNovParsOVVKUpdater parsOVVKUpdater = new TNovParsOVVKUpdater(application.ActiveAddInId); //Т параметры ОВ ВК
+            UpdaterRegistry.RegisterUpdater(parsOVVKUpdater, true);
+            //UpdaterRegistry.AddTrigger(parsOVVKUpdater.GetUpdaterId(), combinedFilterOVVK, Element.GetChangeTypeElementAddition());
+            UpdaterRegistry.AddTrigger(parsOVVKUpdater.GetUpdaterId(), combinedFilterOVVK, Element.GetChangeTypeAny());
+
+            TNovParsNaimOboznSTUpdater parsNaimOboznSTUpdater = new TNovParsNaimOboznSTUpdater(application.ActiveAddInId); //Т Наим Обозн КЖ
+            UpdaterRegistry.RegisterUpdater(parsNaimOboznSTUpdater, true);
+            //UpdaterRegistry.AddTrigger(parsOpredSTUpdater.GetUpdaterId(), combinedFilterST, Element.GetChangeTypeElementAddition());
+            UpdaterRegistry.AddTrigger(parsNaimOboznSTUpdater.GetUpdaterId(), combinedFilterST, Element.GetChangeTypeAny());
+
+            TNovParsOpredARUpdater parsOpredARUpdater = new TNovParsOpredARUpdater(application.ActiveAddInId); //Т Опред АР
+            UpdaterRegistry.RegisterUpdater(parsOpredARUpdater, true);
+            UpdaterRegistry.AddTrigger(parsOpredARUpdater.GetUpdaterId(), combinedFilterAR, Element.GetChangeTypeAny());
+
             // Создание вкладок, панелей, кнопок
 
             string assemblyLocation = Assembly.GetExecutingAssembly().Location, tabName = "TNov";
@@ -225,7 +260,7 @@ namespace TNov
             string[] versionpartsC = curClientVersion.Split('.');
             double versionMathC = Convert.ToDouble(versionpartsC[0] + "000000") + Convert.ToDouble(versionpartsC[1] + "0000") +
                 Convert.ToDouble(versionpartsC[2] + "00") + Convert.ToDouble(versionpartsC[3]);
-
+ 
             string verfilePathC = nova.novaserver + "_TNov/actual/clientversion.txt";
             string actualVersionC = curClientVersion;
             try
@@ -370,22 +405,22 @@ namespace TNov
 
             panel3.AddStackedItems(buttonDataParamTable, buttonDatawiki, buttonDataedu);
 
-            /*
+            
             // кнопка "Связной"
 
-            System.Drawing.Image imglinks = Properties.Resources.logo;
-            System.Drawing.Image imglinksmin = Properties.Resources.logomin;
-            PushButtonData buttonDatalinks = new PushButtonData(nameof(links), "Связной", assemblyLocation, typeof(links).FullName)
+            System.Drawing.Image imglinks = Properties.Resources.links32;
+            System.Drawing.Image imglinksmin = Properties.Resources.links16;
+            PushButtonData buttonDatalinks = new PushButtonData(nameof(Links), "Связной", assemblyLocation, typeof(Links).FullName)
             {
                 LargeImage = GetImageSource(imglinks),
                 Image = GetImageSource(imglinksmin),
                 ToolTip = "Пакетная вставка связей с помещением их в рабочие наборы."
             };
             ContextualHelp linkshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/");
+                "https://portal.talan.group/knowledge/proektirovanie/plaginyiskriptynovatsiya/");
             buttonDatalinks.SetContextualHelp(linkshelp);
             panel3.AddItem(buttonDatalinks);
-            */
+           
 
             // кнопка с выпадающим списком "Закреплятор Уровни Наборы"
 
@@ -1187,9 +1222,9 @@ namespace TNov
             panel8.AddItem(buttonDataholes);
 
 
-            // Панель "BIM"
+            // Панель "BIM Общие"
 
-            RibbonPanel panel10 = application.CreateRibbonPanel(tabName, "BIM");
+            RibbonPanel panel10 = application.CreateRibbonPanel(tabName, "BIM Общие");
             _BIMRibbonItems.Add(panel10);
 
             // кнопка "BIM Экспорт"
@@ -1207,13 +1242,48 @@ namespace TNov
             buttonDatabim.SetContextualHelp(bimhelp);
             panel10.AddItem(buttonDatabim);
 
+            // Панель "BIM АР"
+
+            RibbonPanel panel11 = application.CreateRibbonPanel(tabName, "BIM АР");
+            _BIMRibbonItems.Add(panel11);
+
             // кнопка "Т Назначение"
-            PushButtonData buttonDataTParsNazn = new PushButtonData(nameof(TParsNazn), "Т Назначение", assemblyLocation, typeof(TParsNazn).FullName);
-            panel10.AddItem(buttonDataTParsNazn);
+            PushButtonData buttonDataTParsNazn = new PushButtonData(nameof(TParsNazn), "Т\nНазначение", assemblyLocation, typeof(TParsNazn).FullName);
+            panel11.AddItem(buttonDataTParsNazn);
+
+            // кнопка "Т Определение АР"
+            PushButtonData buttonDataTParsOpredAR = new PushButtonData(nameof(TParsOpredAR), "Т\nОпределение", assemblyLocation, typeof(TParsOpredAR).FullName);
+            panel11.AddItem(buttonDataTParsOpredAR);
+
+            // Панель "BIM КЖ"
+
+            RibbonPanel panel12 = application.CreateRibbonPanel(tabName, "BIM КЖ");
+            _BIMRibbonItems.Add(panel12);
 
             // кнопка "Коды материалов"
-            PushButtonData buttonDataMat = new PushButtonData(nameof(AssignMaterialCodesCommand), "Коды материалов", assemblyLocation, typeof(AssignMaterialCodesCommand).FullName);
-            panel10.AddItem(buttonDataMat);
+            PushButtonData buttonDataMat = new PushButtonData(nameof(AssignMaterialCodesCommand), "Коды\nматериалов", assemblyLocation, typeof(AssignMaterialCodesCommand).FullName);
+            panel12.AddItem(buttonDataMat);
+
+            // кнопка "Т Определение КЖ"
+            PushButtonData buttonDataTParsOpredST = new PushButtonData(nameof(TParsOpredST), "Т\nОпределение", assemblyLocation, typeof(TParsOpredST).FullName);
+            panel12.AddItem(buttonDataTParsOpredST);
+
+            // кнопка "Т Наименование Обозначение КЖ"
+            PushButtonData buttonDataTParsNaimOboznST = new PushButtonData(nameof(TParsNaimOboznST), "Т Наименование\nТ Обозначение", assemblyLocation, typeof(TParsNaimOboznST).FullName);
+            panel12.AddItem(buttonDataTParsNaimOboznST);
+
+            // Панель "BIM Сети"
+
+            RibbonPanel panel13 = application.CreateRibbonPanel(tabName, "BIM Сети");
+            _BIMRibbonItems.Add(panel13);
+
+            // кнопка "Хосты изоляции"
+            PushButtonData buttonDataInsulationHosts = new PushButtonData(nameof(InsulationHosts), "Хосты\nизоляции", assemblyLocation, typeof(InsulationHosts).FullName);
+            panel13.AddItem(buttonDataInsulationHosts);
+
+            // кнопка "Т Параметры ОВ ВК"
+            PushButtonData buttonDataTParsOVVK = new PushButtonData(nameof(TParsSpecOVVK), "Т Параметры\nОВ ВК", assemblyLocation, typeof(TParsSpecOVVK).FullName);
+            panel13.AddItem(buttonDataTParsOVVK);
 
             //после создания панелей скрываем лишние
             string appComboBoxJson = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/appComboBox.json");
@@ -1263,6 +1333,21 @@ namespace TNov
 
             TNovFloorCeilingUpdater floorCeilingUpdater = new TNovFloorCeilingUpdater(application.ActiveAddInId);
             UpdaterRegistry.UnregisterUpdater(floorCeilingUpdater.GetUpdaterId());
+
+            TNovInsulationUpdater insulationUpdater = new TNovInsulationUpdater(application.ActiveAddInId);
+            UpdaterRegistry.UnregisterUpdater(insulationUpdater.GetUpdaterId());
+
+            TNovParsOpredSTUpdater parsOpredSTUpdater = new TNovParsOpredSTUpdater(application.ActiveAddInId);
+            UpdaterRegistry.UnregisterUpdater(parsOpredSTUpdater.GetUpdaterId());
+
+            TNovParsOVVKUpdater parsOVVKUpdater = new TNovParsOVVKUpdater(application.ActiveAddInId);
+            UpdaterRegistry.UnregisterUpdater(parsOVVKUpdater.GetUpdaterId());
+
+            TNovParsNaimOboznSTUpdater parsNaimOboznSTUpdater = new TNovParsNaimOboznSTUpdater(application.ActiveAddInId);
+            UpdaterRegistry.UnregisterUpdater(parsNaimOboznSTUpdater.GetUpdaterId());
+
+            TNovParsOpredARUpdater parsOpredARUpdater = new TNovParsOpredARUpdater(application.ActiveAddInId); 
+            UpdaterRegistry.UnregisterUpdater(parsOpredARUpdater.GetUpdaterId());
 
             application.ControlledApplication.DocumentOpened -= OnDocumentOpened;
             application.ControlledApplication.DocumentSynchronizingWithCentral -= OnSyncCentralStart;
@@ -1314,9 +1399,11 @@ namespace TNov
             TaskDialogShowingEventArgs e2
               = e as TaskDialogShowingEventArgs;
             if (e2.Message == "RICOH MP C2011 PCL 6_2 - не может быть использовано с настройками печати А2А. Будут установлены <сеансные> настройки.") { e.OverrideResult(1); }
+            if (e2.Message == "RICOH MP C2011 PCL 6 - не может быть использовано с настройками печати А1А. Будут установлены <сеансные> настройки.") { e.OverrideResult(1); }
             if (e2.Message == "RustDesk Printer - не может быть использовано с настройками печати А2А. Будут установлены <сеансные> настройки.") { e.OverrideResult(1); }
             if (e2.Message == "При импорте не обнаружено подходящих элементов в пространстве Бумага. Импортировать их из пространства модели?") { e.OverrideResult(1); }
             if (e2.DialogId== "TaskDialog_Missing_Third_Party_Updater") { e.OverrideResult(1); }
+            if (e2.DialogId== "Dialog_Revit_DocWarnDialog") { e.OverrideResult(1); }
         }
 
         public void OnDocumentOpened(object sender, DocumentOpenedEventArgs e)

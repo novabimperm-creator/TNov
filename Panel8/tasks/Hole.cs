@@ -24,6 +24,7 @@ namespace TNov
         public double y;
         public double z;
         public int id1;
+        public int holeorder;
     }
     public class HoleGroup : INotifyPropertyChanged
     {

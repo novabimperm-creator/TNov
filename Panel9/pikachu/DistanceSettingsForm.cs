@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace TNov
 {
-    public partial class DistanceSettingsForm : System.Windows.Forms.Form
+    public partial class DistanceSettingsForm : BaseForm
     {
         public double Distance { get; private set; }
         public XYZ Direction { get; private set; }
@@ -15,257 +15,239 @@ namespace TNov
         private System.Windows.Forms.NumericUpDown _distanceNumeric;
         private System.Windows.Forms.ComboBox _unitsComboBox;
         private System.Windows.Forms.ComboBox _directionComboBox;
+        private System.Windows.Forms.Label _previewText;
 
-        public DistanceSettingsForm()
+        public DistanceSettingsForm() : base()
         {
-            Distance = 0.5; // значение по умолчанию
-            Direction = XYZ.BasisZ; // По умолчанию смещение вверх
+            Distance = 0.5;
+            Direction = XYZ.BasisZ;
+
             InitializeForm();
+
+            this.ShowBackButton = true;
+            this.NextButtonText = "Далее →";
+
+            base.NextClicked += (s, e) => OnNextButtonClick();
+            base.BackClicked += (s, e) => this.Close();
+            base.CancelClicked += (s, e) => this.Close();
         }
 
         private void InitializeForm()
         {
-            // Основные настройки формы
-            this.Text = "Настройка расстояния размещения";
-            this.Size = new System.Drawing.Size(550, 350); // Увеличено для направления
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.BackColor = System.Drawing.Color.FromArgb(255, 250, 245);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
+            base.Text = "Настройка расстояния";
+            base.Size = new System.Drawing.Size(700, 550);
 
             // Заголовок
-            var titleLabel = new System.Windows.Forms.Label();
-            titleLabel.Text = "НАСТРОЙКА РАССТОЯНИЯ РАЗМЕЩЕНИЯ";
-            titleLabel.Font = new System.Drawing.Font("Segoe UI", 14, System.Drawing.FontStyle.Bold);
-            titleLabel.ForeColor = System.Drawing.Color.FromArgb(193, 115, 0);
-            titleLabel.Location = new System.Drawing.Point(20, 20);
-            titleLabel.Size = new System.Drawing.Size(500, 30);
-            titleLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            var titleLabel = new System.Windows.Forms.Label
+            {
+                Text = "НАСТРОЙКА РАССТОЯНИЯ РАЗМЕЩЕНИЯ",
+                Font = new System.Drawing.Font("Segoe UI", 14, System.Drawing.FontStyle.Bold),
+                ForeColor = base.TextColor,
+                Dock = DockStyle.Top,
+                Height = 40,
+                TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+            };
 
-            // Описание
-            var descLabel = new System.Windows.Forms.Label();
-            descLabel.Text = "Настройте расстояние и направление между выбранными семействами:";
-            descLabel.Font = new System.Drawing.Font("Segoe UI", 10);
-            descLabel.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
-            descLabel.Location = new System.Drawing.Point(20, 60);
-            descLabel.Size = new System.Drawing.Size(500, 25);
-            descLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // Панель настроек
+            var settingsPanel = new System.Windows.Forms.Panel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(20)
+            };
 
-            // Группа настроек расстояния
-            var distanceGroup = new System.Windows.Forms.GroupBox();
-            distanceGroup.Text = "Параметры размещения";
-            distanceGroup.Font = new System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold);
-            distanceGroup.ForeColor = System.Drawing.Color.FromArgb(0, 80, 160);
-            distanceGroup.Location = new System.Drawing.Point(20, 95);
-            distanceGroup.Size = new System.Drawing.Size(500, 150);
-            distanceGroup.BackColor = System.Drawing.Color.FromArgb(240, 245, 255);
+            _defaultDistanceRadio = new System.Windows.Forms.RadioButton
+            {
+                Text = "Разместить рядом (смещение 0.5 м по вертикали вверх)",
+                Font = new System.Drawing.Font("Segoe UI", 9),
+                ForeColor = base.TextColor,
+                Location = new System.Drawing.Point(20, 20),
+                Size = new System.Drawing.Size(600, 25),
+                Checked = true
+            };
 
-            // Опция по умолчанию
-            _defaultDistanceRadio = new System.Windows.Forms.RadioButton();
-            _defaultDistanceRadio.Text = "Разместить рядом (смещение 0.5 м по вертикали вверх)";
-            _defaultDistanceRadio.Font = new System.Drawing.Font("Segoe UI", 9);
-            _defaultDistanceRadio.ForeColor = System.Drawing.Color.FromArgb(80, 80, 80);
-            _defaultDistanceRadio.Location = new System.Drawing.Point(15, 25);
-            _defaultDistanceRadio.Size = new System.Drawing.Size(470, 25);
-            _defaultDistanceRadio.Checked = true;
-            _defaultDistanceRadio.CheckedChanged += (s, e) => UpdateControlsState();
+            _customDistanceRadio = new System.Windows.Forms.RadioButton
+            {
+                Text = "Задать свое расстояние:",
+                Font = new System.Drawing.Font("Segoe UI", 9),
+                ForeColor = base.TextColor,
+                Location = new System.Drawing.Point(20, 60),
+                Size = new System.Drawing.Size(250, 25)
+            };
 
-            // Опция пользовательского расстояния
-            _customDistanceRadio = new System.Windows.Forms.RadioButton();
-            _customDistanceRadio.Text = "Задать свое расстояние:";
-            _customDistanceRadio.Font = new System.Drawing.Font("Segoe UI", 9);
-            _customDistanceRadio.ForeColor = System.Drawing.Color.FromArgb(80, 80, 80);
-            _customDistanceRadio.Location = new System.Drawing.Point(15, 55);
-            _customDistanceRadio.Size = new System.Drawing.Size(200, 25);
-            _customDistanceRadio.CheckedChanged += (s, e) => UpdateControlsState();
+            _distanceNumeric = new System.Windows.Forms.NumericUpDown
+            {
+                Location = new System.Drawing.Point(20, 95),
+                Size = new System.Drawing.Size(120, 24),
+                Font = new System.Drawing.Font("Segoe UI", 9),
+                DecimalPlaces = 2,
+                Minimum = -100,
+                Maximum = 100,
+                Value = (decimal)Distance,
+                Increment = 0.1M,
+                Enabled = false
+            };
 
-            // Числовое поле для расстояния
-            _distanceNumeric = new System.Windows.Forms.NumericUpDown();
-            _distanceNumeric.Location = new System.Drawing.Point(15, 85);
-            _distanceNumeric.Size = new System.Drawing.Size(100, 23);
-            _distanceNumeric.Font = new System.Drawing.Font("Segoe UI", 9);
-            _distanceNumeric.DecimalPlaces = 2;
-            _distanceNumeric.Minimum = -100;
-            _distanceNumeric.Maximum = 100;
-            _distanceNumeric.Value = (decimal)Distance;
-            _distanceNumeric.Increment = 0.1M;
-            _distanceNumeric.ValueChanged += (s, e) => Distance = (double)_distanceNumeric.Value;
+            _unitsComboBox = new System.Windows.Forms.ComboBox
+            {
+                Location = new System.Drawing.Point(150, 95),
+                Size = new System.Drawing.Size(120, 24),
+                Font = new System.Drawing.Font("Segoe UI", 9),
+                DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList,
+                Items = { "метры", "миллиметры" },
+                SelectedIndex = 0,
+                Enabled = false
+            };
 
-            // Выбор единиц измерения
-            _unitsComboBox = new System.Windows.Forms.ComboBox();
-            _unitsComboBox.Location = new System.Drawing.Point(125, 85);
-            _unitsComboBox.Size = new System.Drawing.Size(100, 23);
-            _unitsComboBox.Font = new System.Drawing.Font("Segoe UI", 9);
-            _unitsComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            _unitsComboBox.Items.AddRange(new object[] { "метры", "миллиметры" });
-            _unitsComboBox.SelectedIndex = 0;
-            _unitsComboBox.SelectedIndexChanged += (s, e) => UpdateDistanceUnits();
+            // Надпись для направления
+            var directionLabel = new System.Windows.Forms.Label
+            {
+                Text = "Направление:",
+                Font = new System.Drawing.Font("Segoe UI", 9),
+                ForeColor = base.TextColor,
+                Location = new System.Drawing.Point(20, 135),
+                Size = new System.Drawing.Size(100, 25),
+                TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+            };
 
-            // Подпись к полю расстояния
-            var distanceLabel = new System.Windows.Forms.Label();
-            distanceLabel.Text = "Расстояние:";
-            distanceLabel.Font = new System.Drawing.Font("Segoe UI", 9);
-            distanceLabel.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
-            distanceLabel.Location = new System.Drawing.Point(235, 88);
-            distanceLabel.Size = new System.Drawing.Size(80, 20);
-            distanceLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            _directionComboBox = new System.Windows.Forms.ComboBox
+            {
+                Location = new System.Drawing.Point(120, 135),
+                Size = new System.Drawing.Size(250, 24),
+                Font = new System.Drawing.Font("Segoe UI", 9),
+                DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList,
+                Enabled = false
+            };
 
-            // Выбор направления
-            var directionLabel = new System.Windows.Forms.Label();
-            directionLabel.Text = "Направление:";
-            directionLabel.Font = new System.Drawing.Font("Segoe UI", 9);
-            directionLabel.ForeColor = System.Drawing.Color.FromArgb(100, 100, 100);
-            directionLabel.Location = new System.Drawing.Point(15, 115);
-            directionLabel.Size = new System.Drawing.Size(100, 20);
-            directionLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-
-            _directionComboBox = new System.Windows.Forms.ComboBox();
-            _directionComboBox.Location = new System.Drawing.Point(125, 115);
-            _directionComboBox.Size = new System.Drawing.Size(200, 23);
-            _directionComboBox.Font = new System.Drawing.Font("Segoe UI", 9);
-            _directionComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             _directionComboBox.Items.AddRange(new object[] {
-                "↑ Вверх (по оси Z)",
-                "↓ Вниз (по оси -Z)",
-                "→ Вправо (по оси X)",
-                "← Влево (по оси -X)",
-                "↗ Вперед (по оси Y)",
-                "↙ Назад (по оси -Y)"
+                "Вверх (по оси Z)",
+                "Вниз (по оси -Z)",
+                "Вправо (по оси X)",
+                "Влево (по оси -X)",
+                "Вперед (по оси Y)",
+                "Назад (по оси -Y)"
             });
             _directionComboBox.SelectedIndex = 0;
-            _directionComboBox.SelectedIndexChanged += (s, e) => UpdateDirection();
 
-            distanceGroup.Controls.AddRange(new System.Windows.Forms.Control[] {
+            // Панель предпросмотра
+            var previewPanel = new System.Windows.Forms.Panel
+            {
+                Location = new System.Drawing.Point(20, 180),
+                Size = new System.Drawing.Size(620, 80),
+                BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle,
+                BackColor = System.Drawing.Color.FromArgb(248, 249, 250)
+            };
+
+            var previewTitle = new System.Windows.Forms.Label
+            {
+                Text = "Предпросмотр:",
+                Font = new System.Drawing.Font("Segoe UI", 10, System.Drawing.FontStyle.Bold),
+                ForeColor = base.AccentColor,
+                Location = new System.Drawing.Point(10, 10),
+                Size = new System.Drawing.Size(600, 25),
+                TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+            };
+
+            _previewText = new System.Windows.Forms.Label
+            {
+                Name = "previewText",
+                Text = "Размещение на расстоянии 0.5 м выше элемента",
+                Font = new System.Drawing.Font("Segoe UI", 9),
+                ForeColor = base.TextColor,
+                Location = new System.Drawing.Point(10, 40),
+                Size = new System.Drawing.Size(600, 30),
+                TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+            };
+
+            previewPanel.Controls.AddRange(new System.Windows.Forms.Control[] { previewTitle, _previewText });
+
+            // Обработчики событий для переключения режимов
+            _defaultDistanceRadio.CheckedChanged += (s, e) => UpdateControls();
+            _customDistanceRadio.CheckedChanged += (s, e) => UpdateControls();
+            _distanceNumeric.ValueChanged += (s, e) => UpdatePreview();
+            _unitsComboBox.SelectedIndexChanged += (s, e) => UpdatePreview();
+            _directionComboBox.SelectedIndexChanged += (s, e) => UpdatePreview();
+
+            settingsPanel.Controls.AddRange(new System.Windows.Forms.Control[] {
                 _defaultDistanceRadio, _customDistanceRadio, _distanceNumeric,
-                _unitsComboBox, distanceLabel, directionLabel, _directionComboBox
+                _unitsComboBox, directionLabel, _directionComboBox, previewPanel
             });
 
-            // Пояснение
-            var explanationLabel = new System.Windows.Forms.Label();
-            explanationLabel.Text = "Положительное значение - разместить выше, отрицательное - ниже исходного элемента\n" +
-                                  "Выбор направления позволяет размещать элементы не только по вертикали, но и по горизонтали";
-            explanationLabel.Font = new System.Drawing.Font("Segoe UI", 8);
-            explanationLabel.ForeColor = System.Drawing.Color.FromArgb(150, 150, 150);
-            explanationLabel.Location = new System.Drawing.Point(20, 250);
-            explanationLabel.Size = new System.Drawing.Size(500, 40);
-            explanationLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-
-            // Кнопка подтверждения
-            var confirmButton = new System.Windows.Forms.Button();
-            confirmButton.Text = "ПРИМЕНИТЬ РАССТОЯНИЕ";
-            confirmButton.Font = new System.Drawing.Font("Segoe UI", 10, System.Drawing.FontStyle.Bold);
-            confirmButton.Location = new System.Drawing.Point(150, 300);
-            confirmButton.Size = new System.Drawing.Size(200, 35);
-            confirmButton.BackColor = System.Drawing.Color.FromArgb(40, 167, 69);
-            confirmButton.ForeColor = System.Drawing.Color.White;
-            confirmButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            confirmButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-
-            // Кнопка отмены
-            var cancelButton = new System.Windows.Forms.Button();
-            cancelButton.Text = "ОТМЕНА";
-            cancelButton.Font = new System.Drawing.Font("Segoe UI", 9, System.Drawing.FontStyle.Bold);
-            cancelButton.Location = new System.Drawing.Point(370, 300);
-            cancelButton.Size = new System.Drawing.Size(100, 35);
-            cancelButton.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
-            cancelButton.ForeColor = System.Drawing.Color.White;
-            cancelButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-
-            // Добавляем элементы
-            this.Controls.AddRange(new System.Windows.Forms.Control[] {
-                titleLabel, descLabel, distanceGroup, explanationLabel, confirmButton, cancelButton
+            // Добавляем все элементы в ContentPanel
+            base.ContentPanel.Controls.AddRange(new System.Windows.Forms.Control[] {
+                titleLabel,
+                settingsPanel
             });
 
-            // Назначаем кнопки
-            this.AcceptButton = confirmButton;
-            this.CancelButton = cancelButton;
-
-            // Инициализируем состояние контролов
-            UpdateControlsState();
-            UpdateDirection();
+            UpdateControls();
         }
 
-        private void UpdateControlsState()
+        private void UpdateControls()
         {
-            bool customDistanceEnabled = _customDistanceRadio.Checked;
-            _distanceNumeric.Enabled = customDistanceEnabled;
-            _unitsComboBox.Enabled = customDistanceEnabled;
-            _directionComboBox.Enabled = customDistanceEnabled;
+            bool customMode = _customDistanceRadio.Checked;
 
-            if (!customDistanceEnabled)
-            {
-                // Устанавливаем значение по умолчанию
-                Distance = 0.5; // 0.5 метра по умолчанию
-                _directionComboBox.SelectedIndex = 0; // Вверх
-                UpdateDirection();
-            }
+            _distanceNumeric.Enabled = customMode;
+            _unitsComboBox.Enabled = customMode;
+            _directionComboBox.Enabled = customMode;
+
+            UpdatePreview();
         }
 
-        private void UpdateDistanceUnits()
+        private void UpdatePreview()
         {
-            if (_unitsComboBox.SelectedItem?.ToString() == "миллиметры")
-            {
-                // Конвертируем метры в миллиметры
-                _distanceNumeric.DecimalPlaces = 0;
-                _distanceNumeric.Value = (decimal)(Distance * 1000);
-                _distanceNumeric.Minimum = -100000;
-                _distanceNumeric.Maximum = 100000;
-                _distanceNumeric.Increment = 100;
-            }
-            else
-            {
-                // Конвертируем миллиметры в метры
-                _distanceNumeric.DecimalPlaces = 2;
-                _distanceNumeric.Value = (decimal)Distance;
-                _distanceNumeric.Minimum = -100;
-                _distanceNumeric.Maximum = 100;
-                _distanceNumeric.Increment = 0.1M;
-            }
-        }
+            double distance = 0.5;
+            string units = "м";
+            string direction = "вверх";
 
-        private void UpdateDirection()
-        {
-            switch (_directionComboBox.SelectedIndex)
+            if (_customDistanceRadio.Checked)
             {
-                case 0: Direction = XYZ.BasisZ; break;       // Вверх
-                case 1: Direction = -XYZ.BasisZ; break;      // Вниз
-                case 2: Direction = XYZ.BasisX; break;       // Вправо
-                case 3: Direction = -XYZ.BasisX; break;      // Влево
-                case 4: Direction = XYZ.BasisY; break;       // Вперед
-                case 5: Direction = -XYZ.BasisY; break;      // Назад
-                default: Direction = XYZ.BasisZ; break;
-            }
-        }
+                distance = (double)_distanceNumeric.Value;
+                units = _unitsComboBox.SelectedItem?.ToString() == "миллиметры" ? "мм" : "м";
 
-        protected override void OnFormClosing(System.Windows.Forms.FormClosingEventArgs e)
-        {
-            if (this.DialogResult == System.Windows.Forms.DialogResult.OK)
-            {
-                if (_customDistanceRadio.Checked)
+                switch (_directionComboBox.SelectedIndex)
                 {
-                    // Сохраняем значение с учетом единиц измерения
-                    if (_unitsComboBox.SelectedItem?.ToString() == "миллиметры")
-                    {
-                        Distance = (double)_distanceNumeric.Value / 1000.0; // Конвертируем мм в метры
-                    }
-                    else
-                    {
-                        Distance = (double)_distanceNumeric.Value;
-                    }
+                    case 0: direction = "вверх"; break;
+                    case 1: direction = "вниз"; break;
+                    case 2: direction = "вправо"; break;
+                    case 3: direction = "влево"; break;
+                    case 4: direction = "вперед"; break;
+                    case 5: direction = "назад"; break;
+                }
+            }
+
+            _previewText.Text = $"Размещение на расстоянии {distance} {units} {direction} от элемента";
+        }
+
+        private void OnNextButtonClick()
+        {
+            if (_customDistanceRadio.Checked)
+            {
+                if (_unitsComboBox.SelectedItem?.ToString() == "миллиметры")
+                {
+                    Distance = (double)_distanceNumeric.Value / 1000.0;
                 }
                 else
                 {
-                    // Используем расстояние по умолчанию
-                    Distance = 0.5;
+                    Distance = (double)_distanceNumeric.Value;
                 }
-
-                // Обновляем направление
-                UpdateDirection();
+            }
+            else
+            {
+                Distance = 0.5;
             }
 
-            base.OnFormClosing(e);
+            switch (_directionComboBox.SelectedIndex)
+            {
+                case 0: Direction = XYZ.BasisZ; break;
+                case 1: Direction = -XYZ.BasisZ; break;
+                case 2: Direction = XYZ.BasisX; break;
+                case 3: Direction = -XYZ.BasisX; break;
+                case 4: Direction = XYZ.BasisY; break;
+                case 5: Direction = -XYZ.BasisY; break;
+                default: Direction = XYZ.BasisZ; break;
+            }
+
+            this.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.Close();
         }
     }
 }
