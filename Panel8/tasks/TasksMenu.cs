@@ -48,23 +48,23 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
 
-            var viewModel0 = new aboutViewModel();
+            var viewModel0 = new AppVersionViewModel();
             
             string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json"); 
-            viewModel0 = JsonConvert.DeserializeObject<aboutViewModel>(File.ReadAllText(jsonpath0));
+            viewModel0 = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath0));
             if (viewModel0.extendedLogs)
             
             {
-                var qViewModel = new qwindow280ViewModel();
+                var qViewModel = new QuestionWindow280ViewModel();
                 qViewModel.headtxt = "Включены расширенные логи. " +
                     "Плагин будет работать медленнее, но соберет больше данных. " +
                     "Выключить расширенные логи для ускорения работы?";
-                var qwpfview = new qwindow280(qViewModel);
+                var qwpfview = new QuestionWindow280(qViewModel);
                 qViewModel.CloseRequest += (s, e) => qwpfview.Close();
                 bool? qok = qwpfview.ShowDialog();
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log("Расширенные логи вкл",2);
@@ -94,7 +94,7 @@ namespace TNov
                 if(links.Count == 0)
                 {
                     Logger.Log("Модель задания не загружена. Завершение работы.",3);
-                    new infowindow280("Ошибка!\nСвязь задания не вставлена в текущую модель.").ShowDialog();
+                    new InfoWindow280("Ошибка!\nСвязь задания не вставлена в текущую модель.").ShowDialog();
                     return Result.Failed;
                 }
 
@@ -108,7 +108,7 @@ namespace TNov
                 if (taskLinks.Count == 0)
                 {
                     Logger.Log("Модель задания не загружена. Завершение работы.", 3);
-                    new infowindow280("Ошибка!\nСвязь задания не вставлена в текущую модель, либо не загружена, либо вставлена не по общим координатам.").ShowDialog();
+                    new InfoWindow280("Ошибка!\nСвязь задания не вставлена в текущую модель, либо не загружена, либо вставлена не по общим координатам.").ShowDialog();
                     return Result.Failed;
                 }
             }
@@ -224,10 +224,10 @@ namespace TNov
                     int holeMaxNum = TaskTools.GetHoleMaxNumber(doc);
 
                     //диалог
-                    var qViewModel1 = new qwindow280ViewModel();
+                    var qViewModel1 = new QuestionWindow280ViewModel();
                     qViewModel1.headtxt = "Последний взятый номер отверстия: " + holeMaxNum +
                         ". Выберем группу, заполним недостающие номера?";
-                    var qwpfview1 = new qwindow280(qViewModel1);
+                    var qwpfview1 = new QuestionWindow280(qViewModel1);
                     qViewModel1.CloseRequest += (s, e) => qwpfview1.Close();
                     bool? qok1 = qwpfview1.ShowDialog();
                     if (qok1 != null && qok1 == true) { } 
@@ -235,7 +235,7 @@ namespace TNov
                     {
                         Logger.Log("Отменено. Завершение работы", 3); return Result.Cancelled;
                     }
-                    //new infowindow280("Последний взятый номер отверстия: "+holeMaxNum).ShowDialog();
+                    //new InfoWindow280("Последний взятый номер отверстия: "+holeMaxNum).ShowDialog();
 
                     //выбираем группу (либо запускаем для уже выбранной)
                     Logger.Log("Анализ текущей выборки", 1);
@@ -307,11 +307,11 @@ namespace TNov
                             //если текущий пользователь - ИОС и его отдел не соответствует отделу в имени группы - выводим предупреждение да/нет
                             if (!approveDepartment)
                             {
-                                var qViewModel = new qwindow280ViewModel();
+                                var qViewModel = new QuestionWindow280ViewModel();
                                 qViewModel.headtxt = "Группа " + group.Name +
                                     " относится к отверстиям отдела " + parts[0] +
                                     ". Вы уверены, что хотите ее редактировать?";
-                                var qwpfview = new qwindow280(qViewModel);
+                                var qwpfview = new QuestionWindow280(qViewModel);
                                 qViewModel.CloseRequest += (s, e) => qwpfview.Close();
                                 bool? qok = qwpfview.ShowDialog();
                                 if (qok != null && qok == true) { } else continue;
@@ -341,7 +341,7 @@ namespace TNov
 
 
 
-                            new infowindow280("Отверстиям без номеров в группе " + group.Name + " назначены позиции: " +
+                            new InfoWindow280("Отверстиям без номеров в группе " + group.Name + " назначены позиции: " +
                                 String.Join(", ", newNums)).ShowDialog();
                         }
 

@@ -6,7 +6,7 @@ using Autodesk.Revit.DB;
 
 namespace TNov
 {
-    public static class _Intersections
+    public static class Intersections
     {
         ///Проверить, пересекаются ли эти два элемента
         public static bool CheckElementsIsIntersect(Document doc, Element elem1, Element elem2)

@@ -22,7 +22,7 @@ namespace TNov
             UIDocument uidoc = RevitAPI.UiDocument; Document doc = RevitAPI.Document;
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             string usagefilePath = nova.novaserver + "_TNov/synchronizes.txt";
 
@@ -52,9 +52,9 @@ namespace TNov
                     if (i > 1000) break;
                     mes += "\n" + line; 
                 }
-                new infowindow400(mes).ShowDialog();
+                new InfoWindow400(mes).ShowDialog();
             }
-            else new infowindow280("В журнале пока отсутствуют записи о синхронизациях модели "+ docName + ". Статистика ведется с 03.04.2025, скоро данные появятся!").ShowDialog();
+            else new InfoWindow280("В журнале пока отсутствуют записи о синхронизациях модели "+ docName + ". Статистика ведется с 03.04.2025, скоро данные появятся!").ShowDialog();
 
             return Result.Succeeded;
         }

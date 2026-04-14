@@ -12,7 +12,8 @@ using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Threading;
-using TNov.main;
+using TNovCommon;
+using TNovCommon;
 
 namespace TNov
 {
@@ -37,7 +38,7 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
@@ -55,18 +56,18 @@ namespace TNov
 
             }
 
-            var viewModel0 = new aboutViewModel();
+            var viewModel0 = new AppVersionViewModel();
             
             string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json"); 
-            viewModel0 = JsonConvert.DeserializeObject<aboutViewModel>(File.ReadAllText(jsonpath0));
+            viewModel0 = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath0));
             if (viewModel0.extendedLogs)
             
             {
-                var qViewModel = new qwindow280ViewModel();
+                var qViewModel = new QuestionWindowViewModel();
                 qViewModel.headtxt = "Включены расширенные логи. " +
                     "Плагин будет работать медленнее, но соберет больше данных. " +
                     "Выключить расширенные логи для ускорения работы?";
-                var qwpfview = new qwindow280(qViewModel);
+                var qwpfview = new QuestionWindow280(qViewModel);
                 qViewModel.CloseRequest += (s, e) => qwpfview.Close();
                 bool? qok = qwpfview.ShowDialog();
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
@@ -308,7 +309,7 @@ namespace TNov
                     "ВВ – название уровня(например, Автостоянка, Подвал, Этаж 7, Покрытие).\r\nПример наименования уровня:\r\n" +
                     "\t - 01 - 3.200 Подвал\r\n" +
                     "\t05 + 12.850 Этаж 5\r\n";
-                var info2 = new infowindow400(info2txt); info2.ShowDialog();
+                var info2 = new InfoWindow400(info2txt); info2.ShowDialog();
                 return Result.Failed;
             }
 
@@ -705,11 +706,11 @@ namespace TNov
                 if (failscount != 0)
                 {
                     // Диалоговое окно
-                    var viewModel2 = new infowindowtextfieldViewModel();
+                    var viewModel2 = new InfoWindowTextFieldViewModel();
                     viewModel2.headtxt = "Один или несколько элементов не изменены:";
                     viewModel2.ids = String.Join(",", failed);
                     viewModel2.lowtxt = "Проверьте их вручную или посмотрите ошибки в лог-файле.";
-                    var wpfview2 = new infowindowtextfield(viewModel2);
+                    var wpfview2 = new InfoWindowTextField(viewModel2);
                     viewModel2.CloseRequest += (s, e) => wpfview2.Close();
                     bool? ok2 = wpfview2.ShowDialog();
                 }

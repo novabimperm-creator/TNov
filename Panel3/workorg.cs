@@ -14,7 +14,7 @@ namespace TNov
             UIDocument uidoc = RevitAPI.UiDocument; Document doc = RevitAPI.Document;
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             //проверка подключения, запись в журнал
-            string TNovClassName = "Методички"; bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            string TNovClassName = "Методички"; if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             string commandText = @"https://portal.talan.group/knowledge/proektirovanie/";
             var proc = new System.Diagnostics.Process();

@@ -4,9 +4,9 @@ using Autodesk.Revit.Attributes;
 using System.Collections.Generic;
 using System.Linq;
 using System;
-using TNov.main;
 using Newtonsoft.Json;
 using System.IO;
+using TNovCommon;
 
 namespace TNov
 {
@@ -25,23 +25,23 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
             
-            var viewModel0 = new aboutViewModel();
+            var viewModel0 = new AppVersionViewModel();
             
             string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
-            viewModel0 = JsonConvert.DeserializeObject<aboutViewModel>(File.ReadAllText(jsonpath0));
+            viewModel0 = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath0));
             if (viewModel0.extendedLogs)
             
             {
-                var qViewModel = new qwindow280ViewModel();
+                var qViewModel = new QuestionWindowViewModel();
                 qViewModel.headtxt = "Включены расширенные логи. " +
                     "Плагин будет работать медленнее, но соберет больше данных. " +
                     "Выключить расширенные логи для ускорения работы?";
-                var qwpfview = new qwindow280(qViewModel);
+                var qwpfview = new QuestionWindow280(qViewModel);
                 qViewModel.CloseRequest += (s, e) => qwpfview.Close();
                 bool? qok = qwpfview.ShowDialog();
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
@@ -76,7 +76,7 @@ namespace TNov
             int pc = piles1.Count;
             if(pc ==  0) 
             {
-                new infowindow280("В проекте отсутствуют сваи.").ShowDialog();
+                new InfoWindow280("В проекте отсутствуют сваи.").ShowDialog();
                 Logger.Log("В проекте отсутствуют сваи. Завершение работы.", 3);
                 return Result.Failed;
             }
@@ -213,7 +213,7 @@ namespace TNov
 
                 }
                 
-                var info1 = new infowindow280("Успешно!"); info1.ShowDialog();
+                var info1 = new InfoWindow280("Успешно!"); info1.ShowDialog();
                 transaction.Commit();
                 Logger.Log("Закрываем транзакцию",1);
 
@@ -221,6 +221,68 @@ namespace TNov
                 
             Logger.Log("Завершение работы.",5);
             return Result.Succeeded;
+        }
+        private string Numstostring(in List<int> nums)
+        {
+            string str = "";
+            int i = 0;
+            string div = "";
+            //первый этап, получаем массивы смежных чисел
+            while (i < nums.Count)
+            {
+                if (i > 0)
+                {
+                    if (nums[i] - nums[i - 1] > 1)
+                    {
+                        div = ",";
+                        str += div + nums[i].ToString();
+                    }
+                    else
+                    {
+                        div = "-";
+                        str += div + nums[i].ToString();
+                    }
+                }
+                else str += div + nums[i].ToString();
+                i++;
+            }
+
+            //второй этап, убираем лишние числа в массивах чисел
+            string result = "";
+            string[] parts = str.Split(',');
+            int i2 = 0;
+            string div2 = "";
+            foreach (string part in parts)
+            {
+                if (i2 > 0) { div2 = ","; }
+                int counthyphens = 0;
+                foreach (char ch in part)
+                {
+                    char chr = '-';
+                    if (ch == chr) { counthyphens++; }
+                }
+                switch (counthyphens)
+                {
+                    case 0:
+                        result += div2 + part;
+                        i2++;
+                        break;
+                    case 1:
+                        string[] partsofpart = part.Split('-');
+                        result += div2 + part.Replace("-", ",");
+                        i2++;
+                        break;
+                    default:
+                        string[] partsofpart1 = part.Split('-');
+                        result += div2 + partsofpart1[0] + "-" + partsofpart1[partsofpart1.Length - 1];
+                        i2++;
+                        break;
+                }
+
+            }
+            result = result.Replace("-", " - "); result = result.Replace(",", ", ");
+
+            return result;
         }
     }
     

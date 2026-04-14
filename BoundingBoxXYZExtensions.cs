@@ -3,7 +3,7 @@ using Autodesk.Revit.DB;
 
 namespace TNov
 {
-    public static class _BoundingBoxXYZExtensions
+    public static class BoundingBoxXYZExtensions
     {
         public static BoundingBoxXYZ _BbUnion(this BoundingBoxXYZ bb1, BoundingBoxXYZ bb2)
         {

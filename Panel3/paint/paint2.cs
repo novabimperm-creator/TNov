@@ -22,7 +22,7 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
@@ -56,11 +56,11 @@ namespace TNov
             Logger.Log("Диалоговое окно",1);
 
             // Диалоговое окно
-            var viewModel = new infowindowtextfieldViewModel();
+            var viewModel = new InfoWindowtextfieldViewModel();
             viewModel.headtxt = "Элементу/грани назначен следующий материал:";
             viewModel.ids = txt;
             viewModel.lowtxt = "Вы можете найти его в Диспетчере материалов.";
-            var wpfview = new infowindowtextfield(viewModel);
+            var wpfview = new InfoWindowtextfield(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
 

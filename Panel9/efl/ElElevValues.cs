@@ -10,7 +10,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 using System.IO;
-using TNov.main;
+using TNovCommon;
 
 namespace TNov
 {
@@ -29,23 +29,23 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
 
-            var viewModel0 = new aboutViewModel();
+            var viewModel0 = new AppVersionViewModel();
             
             string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
-            viewModel0 = JsonConvert.DeserializeObject<aboutViewModel>(File.ReadAllText(jsonpath0));
+            viewModel0 = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath0));
             if (viewModel0.extendedLogs)
             
             {
-                var qViewModel = new qwindow280ViewModel();
+                var qViewModel = new QuestionWindowViewModel();
                 qViewModel.headtxt = "Включены расширенные логи. " +
                     "Плагин будет работать медленнее, но соберет больше данных. " +
                     "Выключить расширенные логи для ускорения работы?";
-                var qwpfview = new qwindow280(qViewModel);
+                var qwpfview = new QuestionWindow280(qViewModel);
                 qViewModel.CloseRequest += (s, e) => qwpfview.Close();
                 bool? qok = qwpfview.ShowDialog();
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
@@ -102,7 +102,7 @@ namespace TNov
 
             if (double.TryParse(vs, out double vs_d) && double.TryParse(op, out double op_d)) { }
             else { string info1txt = "Введенная информация содержит недопустимые символы."; 
-                var info1 = new infowindow280(info1txt); info1.ShowDialog();
+                var info1 = new InfoWindow280(info1txt); info1.ShowDialog();
                 Logger.Log("Значения по умолчанию заданы в неверном формате. Завершение работы.",3); 
                 return Result.Cancelled; }
             
@@ -250,7 +250,7 @@ namespace TNov
                 string info1txt;
                 if (els.Count > 0)
                 { info1txt = "Параметры заполнены у " + els.Count.ToString() + " элементов.";} else { info1txt = "Нечего обрабатывать."; }
-                var info1 = new infowindow280(info1txt); info1.ShowDialog();
+                var info1 = new InfoWindow280(info1txt); info1.ShowDialog();
                 
 
             }

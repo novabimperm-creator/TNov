@@ -13,7 +13,7 @@ namespace TNov
         {
             if (RevitAPI.UiApplication == null) { RevitAPI.Initialize(commandData); } UIApplication uiApp = RevitAPI.UiApplication;
             
-                var info1 = new infowindow280("Сейчас откроется Проигрыватель Dynamo.\nВ нем найдите и запустите скрипт Чек-лист.Отверстия."); info1.ShowDialog();
+                var info1 = new InfoWindow280("Сейчас откроется Проигрыватель Dynamo.\nВ нем найдите и запустите скрипт Чек-лист.Отверстия."); info1.ShowDialog();
                 RevitCommandId id_built_in = RevitCommandId.LookupPostableCommandId(PostableCommand.DynamoPlayer);
                 uiApp.PostCommand(id_built_in);
                 

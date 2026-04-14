@@ -88,7 +88,7 @@ namespace TNov
                             }
                             else
                             {
-                                var info1 = new infowindow280($"Ошибка!\nУ элемента {reference.ElementId} нет параметра {parameterName}."); info1.ShowDialog();
+                                var info1 = new InfoWindow280($"Ошибка!\nУ элемента {reference.ElementId} нет параметра {parameterName}."); info1.ShowDialog();
                                 t.Commit();
                                 group.Assimilate();
                                 break;

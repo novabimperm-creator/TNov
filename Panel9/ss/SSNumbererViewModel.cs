@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using TNovCommon;
 
 namespace TNov
 {
@@ -36,7 +37,7 @@ namespace TNov
             if (circuitsection != "") prefix = prefix + circuitsection + ".";
             if (i > 200)
             {
-                new infowindow280($"Ошибка!\nПревышено максимальное количество элементов в цепи (200).").ShowDialog();
+                new InfoWindow280($"Ошибка!\nПревышено максимальное количество элементов в цепи (200).").ShowDialog();
             }
             using (TransactionGroup group = new TransactionGroup(RevitAPI.Document, "TNov - Адресатор"))
             {
@@ -127,7 +128,7 @@ namespace TNov
                 //проверяем наличие пропусков в нумерации элементов цепи
                 int maxNumber = numbersList.Max();
                 if (maxNumber > numbersList.Count + 1)
-                    new infowindow280("В цепи " + curcuit + " " + numbersList.Count.ToString() +
+                    new InfoWindow280("В цепи " + curcuit + " " + numbersList.Count.ToString() +
                         " элементов, а последний использованный номер - " + numbersList.Max().ToString() +
                         ". Брать последний номер - некорректно. Возможно, нужна перенумерация элементов.").ShowDialog();
                 else

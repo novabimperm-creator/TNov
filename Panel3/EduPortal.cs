@@ -14,7 +14,7 @@ namespace TNov
             UIDocument uidoc = RevitAPI.UiDocument; Document doc = RevitAPI.Document;
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             //проверка подключения, запись в журнал
-            string TNovClassName = "Учебный портал"; bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            string TNovClassName = "Учебный портал"; if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             string commandText = @"https://moodle.talan.group";
             var proc = new System.Diagnostics.Process();

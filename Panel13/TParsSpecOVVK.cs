@@ -11,7 +11,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using TNov.main;
+using TNovCommon;
+using TNovCommon;
 
 namespace TNov
 {
@@ -53,24 +54,24 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
 
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
 
-            var viewModel0 = new aboutViewModel();
+            var viewModel0 = new AppVersionViewModel();
 
             string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
-            viewModel0 = JsonConvert.DeserializeObject<aboutViewModel>(File.ReadAllText(jsonpath0));
+            viewModel0 = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath0));
 
             if (viewModel0.extendedLogs)
 
             {
-                var qViewModel = new qwindow280ViewModel();
+                var qViewModel = new QuestionWindowViewModel();
                 qViewModel.headtxt = "Включены расширенные логи. " +
                     "Плагин будет работать медленнее, но соберет больше данных. " +
                     "Выключить расширенные логи для ускорения работы?";
-                var qwpfview = new qwindow280(qViewModel);
+                var qwpfview = new QuestionWindow280(qViewModel);
                 qViewModel.CloseRequest += (s, e) => qwpfview.Close();
                 bool? qok = qwpfview.ShowDialog();
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log("Расширенные логи вкл", 2);
@@ -88,7 +89,7 @@ namespace TNov
             if(allcount == 0)
             {
                 string mes = "Элементы отсутствуют.";
-                new infowindow280(mes).ShowDialog();
+                new InfoWindow280(mes).ShowDialog();
                 Logger.Log(mes + " Завершение работы.", 3);
                 return Result.Failed;
             }
@@ -125,39 +126,22 @@ namespace TNov
                     }
 
                     //Т_Количество
-                    double TCountValue = 0;
-                    if (Param.ParamExistByGuid(adskCparamGuid, elem))
-                    {
-                        Parameter adskCparam = elem.get_Parameter(adskCparamGuid);
-                        if (adskCparam.HasValue && adskCparam.AsDouble() > 0)
-                        {
-                            TCountValue = adskCparam.AsDouble();
-                        }
-                    }
-                    else 
-                    {
-                        ElementId typeId = elem.GetTypeId(); if (typeId != null && typeId.IntegerValue != -1) //альтернатива - пытаемся считать с типа
-                        {
-                            Element elemType = doc.GetElement(typeId);
-                            if (Param.ParamExistByGuid(adskCparamGuid, elemType))
-                            {
-                                Parameter adskCparam = elemType.get_Parameter(adskCparamGuid);
-                                if (adskCparam.HasValue && adskCparam.AsDouble() > 0)
-                                {
-                                    TCountValue = adskCparam.AsDouble();
-                                }
-                            }
-                        }
-                    }
+                    double TCountValue = Param.GetDoubleParamValue(doc, adskCparamGuid, elem);
 
 
                     //...
 
                     //Назначение параметров
-                    if (Param.ParamExistByGuid(TCountParamGuid, elem)) 
-                    { elem.get_Parameter(TCountParamGuid).Set(TCountValue); Logger.Log("   кол-во: " + TCountValue.ToString(), 2); } //Т_Количество
-
+                    if (Param.ParamExistByGuid(TCountParamGuid, elem)) //Т_Количество
+                    {
+                        Parameter TCountParam = elem.get_Parameter(TCountParamGuid);
+                        if (TCountParam.IsReadOnly == false)
+                        {
+                            TCountParam.Set(TCountValue); Logger.Log("   кол-во: " + TCountValue.ToString(), 2);
+                        }
                     }
+                }
+
 
                 transaction.Commit(); Logger.Log("Закрываем транзакцию", 1);
             }
@@ -170,11 +154,11 @@ namespace TNov
                 failedstr = failedstr + String.Join(", ", badIds);  
                 Logger.Log("Открываем окно с ID проблемных элементов: " + failedstr, 1);
                 // Диалоговое окно
-                var viewModel1 = new infowindowtextfieldViewModel();
+                var viewModel1 = new InfoWindowTextFieldViewModel();
                 viewModel1.headtxt = "Журнал работы:";
                 viewModel1.ids = failedstr;
                 viewModel1.lowtxt = "Проверьте их вручную или посмотрите ошибки в лог-файле.";
-                var wpfview1 = new infowindowtextfield(viewModel1);
+                var wpfview1 = new InfoWindowTextField(viewModel1);
                 viewModel1.CloseRequest += (s, e) => wpfview1.Close();
                 bool? ok1 = wpfview1.ShowDialog();
                 Logger.Log(viewModel1.ids, 1);

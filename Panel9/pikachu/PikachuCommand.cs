@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using TNov.main;
+using TNovCommon;
 
 namespace TNov
 {
@@ -24,7 +24,7 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
 
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
@@ -304,7 +304,7 @@ namespace TNov
                 message = $"Ошибка NullReferenceException: {nre.Message}\n\nВероятно, одна из форм не была правильно инициализирована.\n\nStack Trace:\n{nre.StackTrace}";
                 Debug.WriteLine($"NullReferenceException: {nre.Message}");
                 Debug.WriteLine($"Stack Trace: {nre.StackTrace}");
-                new infowindow280(message).ShowDialog();
+                new InfoWindow280(message).ShowDialog();
                 Logger.Log(message, 4);
                 return Result.Failed;
             }
@@ -313,7 +313,7 @@ namespace TNov
                 message = $"Ошибка: {ex.Message}";
                 Debug.WriteLine($"Exception: {ex.Message}");
                 Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
-                new infowindow280(message).ShowDialog();
+                new InfoWindow280(message).ShowDialog();
                 Logger.Log(message, 4);
                 return Result.Failed;
             }

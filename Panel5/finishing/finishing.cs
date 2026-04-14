@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using TNov.main;
+using TNovCommon;
 
 namespace TNov
 {
@@ -32,7 +32,7 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
 
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             //параметры
             Guid NFinishRoomParamGuid = new Guid("8b9d4aff-a6c8-4ad5-b0f5-442f2b87c765"); //N_Отделка.Помещение
@@ -101,7 +101,7 @@ namespace TNov
                 Logger.Log("Закрываем транзакцию.", 1);
             }
 
-            new infowindow280("Готово! Параметры отделки заполнены.").ShowDialog();
+            new InfoWindow280("Готово! Параметры отделки заполнены.").ShowDialog();
 
             Logger.Log("Завершение работы.", 5);
             return Result.Succeeded;

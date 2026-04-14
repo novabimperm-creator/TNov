@@ -7,7 +7,8 @@ using System.Windows.Threading;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
 using Microsoft.Office.Interop.Excel;
-using TNov.main;
+using TNovCommon;
+using TNovCommon;
 
 namespace TNov
 {
@@ -79,7 +80,7 @@ namespace TNov
                     if (xlApp == null)
                     {
                         string info2txt = "Ошибка! MS Excel не установлен на данном компьютере.";
-                        var info2 = new infowindow280(info2txt); info2.ShowDialog();
+                        var info2 = new InfoWindow280(info2txt); info2.ShowDialog();
                         Logger.Log("MS Excel не установлен на данном компьютере.", 1);
                     }
                     Logger.Log("Открываем книгу Excel", 1);
@@ -263,7 +264,7 @@ namespace TNov
                                     else if (j == 0)
                                     {
                                         Logger.Log("   Кубик для данного типа отсутствует в модели.", 1);
-                                        new infowindow280("Отсутствует хотя бы 1 размещенный экземпляр семейства pmN.Условное семейство Экземпляр с типом " + type + ". Разместите его в любом удобном месте в модели.").ShowDialog();
+                                        new InfoWindow280("Отсутствует хотя бы 1 размещенный экземпляр семейства pmN.Условное семейство Экземпляр с типом " + type + ". Разместите его в любом удобном месте в модели.").ShowDialog();
                                     }
                                     break;
                                 }

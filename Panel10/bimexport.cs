@@ -12,7 +12,7 @@ using Autodesk.Revit.DB.Electrical;
 using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
 using Newtonsoft.Json;
-using TNov.main;
+using TNovCommon;
 using static System.Windows.Forms.LinkLabel;
 using Document = Autodesk.Revit.DB.Document;
 
@@ -54,25 +54,25 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
             
 
-            var viewModel0 = new aboutViewModel();
+            var viewModel0 = new AppVersionViewModel();
             
             string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
-            viewModel0 = JsonConvert.DeserializeObject<aboutViewModel>(File.ReadAllText(jsonpath0));
+            viewModel0 = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath0));
 
             if (viewModel0.extendedLogs)
 
             {
-                var qViewModel = new qwindow280ViewModel();
+                var qViewModel = new QuestionWindowViewModel();
                 qViewModel.headtxt = "Включены расширенные логи. " +
                     "Плагин будет работать медленнее, но соберет больше данных. " +
                     "Выключить расширенные логи для ускорения работы?";
-                var qwpfview = new qwindow280(qViewModel);
+                var qwpfview = new QuestionWindow280(qViewModel);
                 qViewModel.CloseRequest += (s, e) => qwpfview.Close();
                 bool? qok = qwpfview.ShowDialog();
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log("Расширенные логи вкл", 2);
@@ -157,7 +157,7 @@ namespace TNov
                 Logger.Log("Используется Revit Server", 2);
                 if(rvtPathRS.Length<3)
                 {
-                    new infowindow280("Модели в дереве Revit Server не были выбраны.").ShowDialog();
+                    new InfoWindow280("Модели в дереве Revit Server не были выбраны.").ShowDialog();
                     Logger.Log("Не выбраны модели на RS. Завершение работы.",3);
                     return Result.Cancelled;
                 }
@@ -170,7 +170,7 @@ namespace TNov
                 foreach (string rvtFile in rvtFilesFromPath) rvtFiles.Add( rvtFile );
                 if (rvtFiles.Count == 0)
                 {
-                    new infowindow280("Файлы не выбраны.").ShowDialog(); return Result.Failed;
+                    new InfoWindow280("Файлы не выбраны.").ShowDialog(); return Result.Failed;
                 }
 
                 
@@ -188,9 +188,9 @@ namespace TNov
                 }
                 if (viewModel.RVTcheck && oldFilesCount > 0)
                 {
-                    var qViewModel = new qwindow280ViewModel();
+                    var qViewModel = new QuestionWindowViewModel();
                     qViewModel.headtxt = "В папке _RVT имеются устаревшие модели: " + oldFilesNames + "Продолжить работу?";
-                    var qwpfview = new qwindow280(qViewModel);
+                    var qwpfview = new QuestionWindow280(qViewModel);
                     qViewModel.CloseRequest += (s, e) => qwpfview.Close();
                     bool? qok = qwpfview.ShowDialog();
                     if (qok != null && qok == true) { } else { return Result.Cancelled; }
@@ -344,6 +344,7 @@ namespace TNov
                         NavisworksExportOptions navisworksExportOptions = new NavisworksExportOptions();
                         navisworksExportOptions.ExportScope = NavisworksExportScope.View;
                         navisworksExportOptions.ConvertElementProperties = true;
+                        navisworksExportOptions.ExportLinks = false; //добавлено 03.26
                         navisworksExportOptions.ConvertLinkedCADFormats = false;
                         navisworksExportOptions.DivideFileIntoLevels = false;
                         navisworksExportOptions.FindMissingMaterials = false;
@@ -560,7 +561,7 @@ namespace TNov
 
             this.bimExportProgressBar.Dispatcher.Invoke((System.Action)(() => this.bimExportProgressBar.Close()));
 
-            new infowindow400(log).ShowDialog();
+            new InfoWindow400(log).ShowDialog();
             if (viewModel.NWC) Process.Start("explorer.exe", nwcPath);
             if (viewModel.NWC&& desktopNWCcount>0) Process.Start("explorer.exe", nwcPathD);
             if (viewModel.RVT||viewModel.NWC2) Process.Start("explorer.exe", rvtPath2);

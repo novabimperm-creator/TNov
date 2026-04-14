@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TNov.main;
+using TNovCommon;
+using TNovCommon;
 
 namespace TNov
 {
@@ -62,35 +63,17 @@ namespace TNov
                     if (elem.get_Parameter(NTParamsNotSetParamGuid).AsDouble() == 1) continue;
 
                     //Т_Количество
-                    double TCountValue = 0;
-                    if (Param.ParamExistByGuid(adskCparamGuid, elem))
-                    {
-                        Parameter adskCparam = elem.get_Parameter(adskCparamGuid);
-                        if (adskCparam.HasValue && adskCparam.AsDouble() > 0)
-                        {
-                            TCountValue = adskCparam.AsDouble();
-                        }
-                    }
-                    else
-                    {
-                        ElementId typeId = elem.GetTypeId(); if (typeId != null && typeId.IntegerValue != -1) //альтернатива - пытаемся считать с типа
-                        {
-                            Element elemType = doc.GetElement(typeId);
-                            if (Param.ParamExistByGuid(adskCparamGuid, elemType))
-                            {
-                                Parameter adskCparam = elemType.get_Parameter(adskCparamGuid);
-                                if (adskCparam.HasValue && adskCparam.AsDouble() > 0)
-                                {
-                                    TCountValue = adskCparam.AsDouble();
-                                }
-                            }
-                        }
-                    }
+                    double TCountValue = Param.GetDoubleParamValue(doc, adskCparamGuid, elem);
+
 
                     //...
 
                     //Назначение параметров
-                    if (Param.ParamExistByGuid(TCountParamGuid, elem)) elem.get_Parameter(TCountParamGuid).Set(TCountValue); //Т_Количество
+                    if (Param.ParamExistByGuid(TCountParamGuid, elem)) //Т_Количество
+                    {
+                        Parameter TCountParam = elem.get_Parameter(TCountParamGuid);
+                        if (TCountParam.IsReadOnly == false) TCountParam.Set(TCountValue);
+                    } 
 
                 }
             }

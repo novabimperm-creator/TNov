@@ -12,7 +12,7 @@ using System.IO;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using System.Threading;
-using TNov.main;
+using TNovCommon;
 
 namespace TNov
 {
@@ -46,7 +46,7 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
@@ -119,7 +119,7 @@ namespace TNov
                         string info1txt = "Ошибка! Текущий открытый вид не является ведомостью расхода стали.\n" +
                             "Если все же является - щелкните мышью на любую из ячеек таблицы.\n" +
                             "В имени спецификации должно содержаться ВРС либо Ведомость расхода стали";
-                        var info1 = new infowindow280(info1txt); info1.ShowDialog();
+                        var info1 = new InfoWindow280(info1txt); info1.ShowDialog();
                         Logger.Log("Текущий вид не является ВРС. Завершение работы.",3);
                         return Result.Cancelled;
                     }
@@ -235,7 +235,7 @@ namespace TNov
 
                     }
 
-                    //var info1 = new infowindow280("Успешно!\nВсе ВРС в проекте подчищены"); info1.ShowDialog();
+                    //var info1 = new InfoWindow280("Успешно!\nВсе ВРС в проекте подчищены"); info1.ShowDialog();
                     transaction.Commit();
                     this.steelProgressBar.Dispatcher.Invoke((System.Action)(() => this.steelProgressBar.Close()));
                     Logger.Log("Закрываем транзакцию",1);

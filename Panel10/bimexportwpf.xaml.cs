@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
-using TNov.main;
+using TNovCommon;
 
 namespace TNov
 {

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using TNov.main;
+using TNovCommon;
 
 namespace TNov
 {
@@ -1012,7 +1013,7 @@ namespace TNov
             if (taskLinks.Count > 1)
             {
                 Logger.Log("Слишком много моделей заданий!", 4);
-                new infowindow280("Ошибка!\nСвязь задания вставлена больше одного раза, либо вставлено несколько разных связей заданий.\nОставьте только одну связь.").ShowDialog();
+                new InfoWindow280("Ошибка!\nСвязь задания вставлена больше одного раза, либо вставлено несколько разных связей заданий.\nОставьте только одну связь.").ShowDialog();
 
             }
             else if (taskLinks.Count == 1)
@@ -1080,7 +1081,7 @@ namespace TNov
             if (taskLinks.Count > 1)
             {
                 Logger.Log("Слишком много моделей заданий!", 4);
-                new infowindow280("Ошибка!\nСвязь задания вставлена больше одного раза, либо вставлено несколько разных связей заданий.\nОставьте только одну связь.").ShowDialog();
+                new InfoWindow280("Ошибка!\nСвязь задания вставлена больше одного раза, либо вставлено несколько разных связей заданий.\nОставьте только одну связь.").ShowDialog();
 
             }
             else if (taskLinks.Count == 1)
@@ -1205,7 +1206,7 @@ namespace TNov
                                 if (groupsWithSameType.Count > 1)
                                 {
                                     Logger.Log($"Найдено {groupsWithSameType.Count} групп с типом {groupType.Name}. Должна быть только одна.", 4);
-                                    new infowindow280($"Ошибка!\nНайдено несколько групп с типом '{groupType.Name}'.\nВ модели должна быть только одна группа с таким типом.").ShowDialog();
+                                    new InfoWindow280($"Ошибка!\nНайдено несколько групп с типом '{groupType.Name}'.\nВ модели должна быть только одна группа с таким типом.").ShowDialog();
                                     throw new Exception("Найдено несколько групп с одинаковым типом");
                                 }
 
@@ -1278,7 +1279,7 @@ namespace TNov
 
                         t.Commit(); Logger.Log("Закрываем транзакцию", 1);
 
-                        //new infowindow280("Успешно!").ShowDialog();
+                        //new InfoWindow280("Успешно!").ShowDialog();
                     }
 
                     //Открытие 3D-вида
@@ -1377,7 +1378,7 @@ namespace TNov
                             if (groupsWithSameType.Count > 1)
                             {
                                 Logger.Log($"Найдено {groupsWithSameType.Count} групп с типом {groupType.Name}. Должна быть только одна.", 4);
-                                new infowindow280($"Ошибка!\nНайдено несколько групп с типом '{groupType.Name}'.\nВ модели должна быть только одна группа с таким типом.").ShowDialog();
+                                new InfoWindow280($"Ошибка!\nНайдено несколько групп с типом '{groupType.Name}'.\nВ модели должна быть только одна группа с таким типом.").ShowDialog();
                                 throw new Exception("Найдено несколько групп с одинаковым типом");
                             }
 
@@ -1453,7 +1454,7 @@ namespace TNov
                     Logger.Log("Элемент удален из группы", 1);
 
                     t.Commit(); Logger.Log("Закрываем транзакцию", 1);
-                    //new infowindow280("Успешно!").ShowDialog();
+                    //new InfoWindow280("Успешно!").ShowDialog();
                 }
 
 
@@ -1499,7 +1500,7 @@ namespace TNov
             if (taskLinks.Count > 1)
             {
                 Logger.Log("Слишком много моделей заданий. Завершение работы.", 3);
-                new infowindow280("Ошибка!\nСвязь задания вставлена больше одного раза, либо вставлено несколько разных связей заданий.\nОставьте только одну связь.").ShowDialog();
+                new InfoWindow280("Ошибка!\nСвязь задания вставлена больше одного раза, либо вставлено несколько разных связей заданий.\nОставьте только одну связь.").ShowDialog();
 
             }
             else if (taskLinks.Count == 1)
@@ -1595,7 +1596,7 @@ namespace TNov
                                 if (groupsWithSameType.Count > 1)
                                 {
                                     Logger.Log($"Найдено {groupsWithSameType.Count} групп с типом {groupType.Name}. Должна быть только одна.", 4);
-                                    new infowindow280($"Ошибка!\nНайдено несколько групп с типом '{groupType.Name}'.\nВ модели должна быть только одна группа с таким типом.").ShowDialog();
+                                    new InfoWindow280($"Ошибка!\nНайдено несколько групп с типом '{groupType.Name}'.\nВ модели должна быть только одна группа с таким типом.").ShowDialog();
                                     throw new Exception("Найдено несколько групп с одинаковым типом");
                                 }
 
@@ -1789,7 +1790,7 @@ namespace TNov
                                     }
                                 }
                                 Logger.Log("Элемент изменен в группе: " + fullGroupName, 1);
-                                //new infowindow280("Успешно!").ShowDialog();
+                                //new InfoWindow280("Успешно!").ShowDialog();
                             }
                             catch (Exception ex)
                             {
@@ -1799,7 +1800,7 @@ namespace TNov
 
                         t.Commit(); Logger.Log("Закрываем транзакцию", 1);
 
-                        //new infowindow280("Успешно!").ShowDialog();
+                        //new InfoWindow280("Успешно!").ShowDialog();
                     }
 
 
@@ -1847,31 +1848,18 @@ namespace TNov
         }
         public static void ReplaceTaskGroup(in Document doc, in string Name)
         {
-            //удаление
-            List<Group> groups = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_IOSModelGroups)
-                .WhereElementIsNotElementType()
-                .Cast<Group>()
-                .ToList();
-            ICollection<ElementId> elemstoremove = new List<ElementId>();
-            foreach (var group in groups)
+            QuestionWindow280ViewModel qViewModel1 = new QuestionWindow280ViewModel();
+            qViewModel1.headtxt = "Внимание! При перевставке группы с отверстиями удаляются все размеры и марки, " +
+                "привязанные к отверстиям этой группы. Продолжить?";
+            var qwpfview1 = new QuestionWindow280(qViewModel1);
+            qViewModel1.CloseRequest += (s, e) => qwpfview1.Close();
+            bool? qok1 = qwpfview1.ShowDialog();
+            if (qok1 != null && qok1 == true) { }
+            else
             {
-                string[] nameParts1 = group.Name.Split('_');
-                string shortName1 = group.Name;
-                if (nameParts1.Length > 2) shortName1 = nameParts1[0] + '_' + nameParts1[1] + '_' + nameParts1[2];
-                if (shortName1 == Name)
-                {
-                    elemstoremove.Add(group.Id);
-                    //break;не надо - удаляем все такие группы!
-                }
-            }
-            using (Transaction t = new Transaction(doc))
-            {
-                t.Start("Задания от ИОС. Удаление группы");
-                if (elemstoremove.Count > 0) doc.Delete(elemstoremove.ToArray());
-                t.Commit();
+                Logger.Log("Отменено. Завершение работы", 3); return;
             }
 
-            //вставка
             List<RevitLinkInstance> links = new FilteredElementCollector(RevitAPI.Document).OfCategory(BuiltInCategory.OST_RvtLinks)
                                                                          .WhereElementIsNotElementType()
                                                                          .Cast<RevitLinkInstance>()
@@ -1887,38 +1875,66 @@ namespace TNov
             if (taskLinks.Count > 1)
             {
                 Logger.Log("Слишком много моделей заданий. Завершение работы.", 3);
-                new infowindow280("Ошибка!\nСвязь задания вставлена больше одного раза, либо вставлено несколько разных связей заданий.\nОставьте только одну связь.").ShowDialog();
-
+                new InfoWindow280("Ошибка!\nСвязь задания вставлена больше одного раза, либо вставлено несколько разных связей заданий.\nОставьте только одну связь.").ShowDialog();
+                return;
             }
-            else if (taskLinks.Count == 1)
+
+            //удаление
+            List<Group> groups = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_IOSModelGroups)
+                .WhereElementIsNotElementType()
+                .Cast<Group>()
+                .ToList();
+            ICollection<ElementId> elemstoremove = new List<ElementId>();
+            string gName = "";
+            foreach (var group in groups)
             {
-                // группы в связанной модели задания
-
-                Document linkDoc = taskLinks[0].GetLinkDocument(); var transform = taskLinks[0].GetTransform();
-                List<Group> linkGroups = new FilteredElementCollector(linkDoc).OfCategory(BuiltInCategory.OST_IOSModelGroups)
-                    .WhereElementIsNotElementType()
-                    .Cast<Group>()
-                    .ToList();
-                ICollection<ElementId> ids = new HashSet<ElementId>();
-                foreach (var linkGroup in linkGroups)
+                string[] nameParts1 = group.Name.Split('_');
+                string shortName1 = group.Name;
+                if (nameParts1.Length > 2) shortName1 = nameParts1[0] + '_' + nameParts1[1] + '_' + nameParts1[2];
+                if (shortName1 == Name)
                 {
-                    string[] nameParts = linkGroup.Name.Split('_');
-                    string shortName = linkGroup.Name;
-                    if (nameParts.Length > 2) shortName = nameParts[0] + '_' + nameParts[1] + '_' + nameParts[2];
-                    if (shortName == Name)
-                    {
-                        ids.Add(linkGroup.Id);
-                        break;
-                    }
-                }
-                CopyPasteOptions copyOptions = new CopyPasteOptions();
-                using (Transaction t2 = new Transaction(doc))
-                {
-                    t2.Start("Задания от ИОС. Вставка группы");
-                    ElementTransformUtils.CopyElements(linkDoc, ids, doc, transform, copyOptions);
-                    t2.Commit();
+                    elemstoremove.Add(group.Id); gName = group.Name;
+                    //break;не надо - удаляем все такие группы!
                 }
             }
+            using (Transaction t = new Transaction(doc))
+            {
+                t.Start("Задания от ИОС. Удаление группы");
+                Logger.Log("Выбран сценарий перевставки группы. Завершение работы", 5);
+                Logger.Initialize("Задания Перевставка");
+                if (elemstoremove.Count > 0) doc.Delete(elemstoremove.ToArray());
+                t.Commit();
+            }
+            Logger.Log($"Группа {gName} удалена", 1);
+
+            // группы в связанной модели задания
+
+            Document linkDoc = taskLinks[0].GetLinkDocument(); var transform = taskLinks[0].GetTransform();
+            List<Group> linkGroups = new FilteredElementCollector(linkDoc).OfCategory(BuiltInCategory.OST_IOSModelGroups)
+                .WhereElementIsNotElementType()
+                .Cast<Group>()
+                .ToList();
+            ICollection<ElementId> ids = new HashSet<ElementId>();
+            foreach (var linkGroup in linkGroups)
+            {
+                string[] nameParts = linkGroup.Name.Split('_');
+                string shortName = linkGroup.Name;
+                if (nameParts.Length > 2) shortName = nameParts[0] + '_' + nameParts[1] + '_' + nameParts[2];
+                if (shortName == Name)
+                {
+                    ids.Add(linkGroup.Id);
+                    break;
+                }
+            }
+            CopyPasteOptions copyOptions = new CopyPasteOptions();
+            using (Transaction t2 = new Transaction(doc))
+            {
+                t2.Start("Задания от ИОС. Вставка группы");
+                ElementTransformUtils.CopyElements(linkDoc, ids, doc, transform, copyOptions);
+                t2.Commit();
+            }
+            Logger.Log($"Группа {gName} вставлена. Завершение работы", 5);
+            Logger.Initialize("Задание получить");
         }
     }
 }

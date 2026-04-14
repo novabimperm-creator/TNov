@@ -11,7 +11,7 @@ using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 using System.IO;
 using System.Collections;
-using TNov.main;
+using TNovCommon;
 
 namespace TNov
 {
@@ -42,23 +42,23 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
 
-            var viewModel0 = new aboutViewModel();
+            var viewModel0 = new AppVersionViewModel();
             
             string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
-            viewModel0 = JsonConvert.DeserializeObject<aboutViewModel>(File.ReadAllText(jsonpath0));
+            viewModel0 = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath0));
             if (viewModel0.extendedLogs)
             
             {
-                var qViewModel = new qwindow280ViewModel();
+                var qViewModel = new QuestionWindowViewModel();
                 qViewModel.headtxt = "Включены расширенные логи. " +
                     "Плагин будет работать медленнее, но соберет больше данных. " +
                     "Выключить расширенные логи для ускорения работы?";
-                var qwpfview = new qwindow280(qViewModel);
+                var qwpfview = new QuestionWindow280(qViewModel);
                 qViewModel.CloseRequest += (s, e) => qwpfview.Close();
                 bool? qok = qwpfview.ShowDialog();
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
@@ -96,7 +96,7 @@ namespace TNov
             if (CTList.Count < 1) 
             { 
                 Logger.Log("Отсутствуют лотки в модели. Завершение работы", 3);
-                new infowindow280("В модели отсутствуют лотки.").ShowDialog();
+                new InfoWindow280("В модели отсутствуют лотки.").ShowDialog();
                 return Result.Cancelled; 
             }
 
@@ -177,13 +177,13 @@ namespace TNov
             Logger.Log("Проверяем наличие крышек в проекте", 1);
             if (captypes.Count == 0) 
             { 
-                new infowindow280("Ошибка! В проекте отсутствуют загруженные семейства крышек.").ShowDialog();
+                new InfoWindow280("Ошибка! В проекте отсутствуют загруженные семейства крышек.").ShowDialog();
                 Logger.Log("Отсутствуют семейства крышек. Завершение работы.", 3);
                 return Result.Failed; }
             Logger.Log("Проверяем наличие перегородок в проекте", 1);
             if (partitiontypes.Count == 0) 
             { 
-                new infowindow280("Ошибка! В проекте отсутствуют загруженные семейства перегородок лотков.").ShowDialog();
+                new InfoWindow280("Ошибка! В проекте отсутствуют загруженные семейства перегородок лотков.").ShowDialog();
                 Logger.Log("Отсутствуют семейства перегородок. Завершение работы.", 3);
                 return Result.Failed; 
             }
@@ -678,7 +678,7 @@ namespace TNov
                 {
                     Logger.Log("Модель НЕ является файлом хранилища. Завершение работы.", 3);
                     string info1txt = "Ошибка!\nТекущий документ не является файлом хранилища. Наборы не созданы.";
-                    var info1 = new infowindow280(info1txt); info1.ShowDialog();
+                    var info1 = new InfoWindow280(info1txt); info1.ShowDialog();
 
                 }
                 
@@ -690,20 +690,20 @@ namespace TNov
 
             if (count1 > 0 && count2 > 0)
             {
-                var info = new infowindow280("Успешно!\nСозданы крышки в количестве " + count1.ToString() + " шт." +
+                var info = new InfoWindow280("Успешно!\nСозданы крышки в количестве " + count1.ToString() + " шт." +
                     "\nи перегородки в количестве " + count2.ToString() + " шт."); info.ShowDialog();
             }
             else
             {
                 if (count1 > 0)
                 {
-                    if (count1 == 1) { var info1 = new infowindow280("Успешно!\nКрышка для лотка создана."); info1.ShowDialog(); }
-                    else { var info1 = new infowindow280("Успешно!\nСозданы крышки в количестве " + count1.ToString() + " шт."); info1.ShowDialog(); }
+                    if (count1 == 1) { var info1 = new InfoWindow280("Успешно!\nКрышка для лотка создана."); info1.ShowDialog(); }
+                    else { var info1 = new InfoWindow280("Успешно!\nСозданы крышки в количестве " + count1.ToString() + " шт."); info1.ShowDialog(); }
                 }
                 if (count2 > 0)
                 {
-                    if (count2 == 1) { var info1 = new infowindow280("Успешно!\nПерегородка для лотка создана."); info1.ShowDialog(); }
-                    else { var info2 = new infowindow280("Успешно!\nСозданы перегородки в количестве " + count2.ToString() + " шт."); info2.ShowDialog(); }
+                    if (count2 == 1) { var info1 = new InfoWindow280("Успешно!\nПерегородка для лотка создана."); info1.ShowDialog(); }
+                    else { var info2 = new InfoWindow280("Успешно!\nСозданы перегородки в количестве " + count2.ToString() + " шт."); info2.ShowDialog(); }
                 }
             }
             Logger.Log("Завершение работы.", 5);

@@ -27,7 +27,7 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
@@ -42,7 +42,7 @@ namespace TNov
             
             if (runIt == false)
             {
-                new infowindow280("Ошибка! Текущий открытый вид не является спецификацией.\n" +
+                new InfoWindow280("Ошибка! Текущий открытый вид не является спецификацией.\n" +
                     "Если все же является - щелкните мышью на любую из ячеек таблицы.").ShowDialog();
                 Logger.Log("Текущий вид не является спецификацией. Завершение работы",3);
                 return Result.Cancelled;
@@ -111,7 +111,7 @@ namespace TNov
                         // проверка установлен ли Excel
                         if (xlApp == null)
                         {
-                            new infowindow280("Ошибка! MS Excel не установлен на данном компьютере.").ShowDialog();
+                            new InfoWindow280("Ошибка! MS Excel не установлен на данном компьютере.").ShowDialog();
                             Logger.Log("MS Excel не установлен на данном компьютере. Завершение работы.",3);
                             return Result.Cancelled;
                         }
@@ -201,7 +201,7 @@ namespace TNov
                             // проверка установлен ли Excel
                             if (xlApp == null)
                             {
-                                new infowindow280("Ошибка! MS Excel не установлен на данном компьютере.").ShowDialog();
+                                new InfoWindow280("Ошибка! MS Excel не установлен на данном компьютере.").ShowDialog();
                                 Logger.Log("MS Excel не установлен на данном компьютере. Завершение работы.",3);
                                 return Result.Cancelled;
                             }
@@ -300,7 +300,7 @@ namespace TNov
                             // проверка установлен ли Excel
                             if (xlApp == null)
                             {
-                                new infowindow280("Ошибка! MS Excel не установлен на данном компьютере.").ShowDialog();
+                                new InfoWindow280("Ошибка! MS Excel не установлен на данном компьютере.").ShowDialog();
                                 Logger.Log("MS Excel не установлен на данном компьютере. Завершение работы.",3);
                                 return Result.Cancelled;
                             }

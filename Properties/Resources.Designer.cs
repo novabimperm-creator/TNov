@@ -363,6 +363,36 @@ namespace TNov.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap CopyWindows16 {
+            get {
+                object obj = ResourceManager.GetObject("CopyWindows16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap CopyWindows32 {
+            get {
+                object obj = ResourceManager.GetObject("CopyWindows32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap CopyWindows64 {
+            get {
+                object obj = ResourceManager.GetObject("CopyWindows64", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap dynpl16 {
             get {
                 object obj = ResourceManager.GetObject("dynpl16", resourceCulture);
@@ -446,6 +476,36 @@ namespace TNov.Properties {
         public static System.Drawing.Bitmap efl64 {
             get {
                 object obj = ResourceManager.GetObject("efl64", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap elsync16 {
+            get {
+                object obj = ResourceManager.GetObject("elsync16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap elsync32 {
+            get {
+                object obj = ResourceManager.GetObject("elsync32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap elsync64 {
+            get {
+                object obj = ResourceManager.GetObject("elsync64", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

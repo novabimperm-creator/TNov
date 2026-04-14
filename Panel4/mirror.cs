@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using Parameter = Autodesk.Revit.DB.Parameter;
-using TNov.main;
+using TNovCommon;
 
 namespace TNov
 {
@@ -22,7 +22,7 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
@@ -100,17 +100,17 @@ namespace TNov
                 if (failscount == 0) 
                 {
                     string info1txt = "Отлично! Отзеркаленные элементы отсутствуют.";
-                    var info1 = new infowindow400(info1txt); info1.ShowDialog();
+                    var info1 = new InfoWindow400(info1txt); info1.ShowDialog();
                 }
                 else
                 {
                     Logger.Log("Открываем окно с ID проблемных элементов", 1);
                     // Диалоговое окно
-                    var viewModel = new infowindowtextfieldViewModel();
+                    var viewModel = new InfoWindowTextFieldViewModel();
                     viewModel.headtxt = "Один или несколько элементов отзеркалены:";
                     viewModel.ids = String.Join(",", failed);
                     viewModel.lowtxt = "Требуется исправить это недоразумение.";
-                    var wpfview = new infowindowtextfield(viewModel);
+                    var wpfview = new InfoWindowTextField(viewModel);
                     viewModel.CloseRequest += (s, e) => wpfview.Close();
                     bool? ok = wpfview.ShowDialog();
                     Logger.Log(viewModel.ids, 1);

@@ -18,8 +18,9 @@ using System.Threading;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Threading;
-using TNov.main;
+using TNovCommon;
 using Parameter = Autodesk.Revit.DB.Parameter;
+using TNovCommon;
 
 namespace TNov
 {
@@ -461,23 +462,23 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
 
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
 
-            var viewModel0 = new aboutViewModel();
+            var viewModel0 = new AppVersionViewModel();
 
             string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
-            viewModel0 = JsonConvert.DeserializeObject<aboutViewModel>(File.ReadAllText(jsonpath0));
+            viewModel0 = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath0));
             if (viewModel0.extendedLogs)
 
             {
-                var qViewModel = new qwindow280ViewModel();
+                var qViewModel = new QuestionWindowViewModel();
                 qViewModel.headtxt = "Включены расширенные логи. " +
                     "Плагин будет работать медленнее, но соберет больше данных. " +
                     "Выключить расширенные логи для ускорения работы?";
-                var qwpfview = new qwindow280(qViewModel);
+                var qwpfview = new QuestionWindow280(qViewModel);
                 qViewModel.CloseRequest += (s, e) => qwpfview.Close();
                 bool? qok = qwpfview.ShowDialog();
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log("Расширенные логи вкл", 2);
@@ -705,7 +706,7 @@ namespace TNov
                     else if (j == 0)
                     {
                         Logger.Log("   Кубик с типом Короб отсутствует в модели. Завершение работы.", 3);
-                        new infowindow280("Отсутствует хотя бы 1 размещенный экземпляр семейства pmN.Условное семейство СС ПС с типом Короб. " +
+                        new InfoWindow280("Отсутствует хотя бы 1 размещенный экземпляр семейства pmN.Условное семейство СС ПС с типом Короб. " +
                             "Разместите его в любом удобном месте в модели.").ShowDialog();
                         this.adskgProgressBar.Dispatcher.Invoke((System.Action)(() => this.adskgProgressBar.Close()));
                         return Result.Cancelled;
@@ -961,7 +962,7 @@ namespace TNov
                     else if (j2 == 0)
                     {
                         Logger.Log("   Кубик с типом Цепь отсутствует в модели. Завершение работы.", 3);
-                        new infowindow280("Отсутствует хотя бы 1 размещенный экземпляр семейства pmN.Условное семейство СС ПС с типом Цепь. " +
+                        new InfoWindow280("Отсутствует хотя бы 1 размещенный экземпляр семейства pmN.Условное семейство СС ПС с типом Цепь. " +
                             "Разместите его в любом удобном месте в модели.").ShowDialog();
                         this.adskgProgressBar.Dispatcher.Invoke((System.Action)(() => this.adskgProgressBar.Close()));
                         return Result.Cancelled;
@@ -1177,7 +1178,7 @@ namespace TNov
                     else if (k == 0)
                     {
                         Logger.Log("   Кубик с типом Лоток отсутствует в модели. Завершение работы.", 3);
-                        new infowindow280("Отсутствует хотя бы 1 размещенный экземпляр семейства pmN.Условное семейство СС ПС с типом Лоток. " +
+                        new InfoWindow280("Отсутствует хотя бы 1 размещенный экземпляр семейства pmN.Условное семейство СС ПС с типом Лоток. " +
                             "Разместите его в любом удобном месте в модели.").ShowDialog();
                         this.adskgProgressBar.Dispatcher.Invoke((System.Action)(() => this.adskgProgressBar.Close()));
                         return Result.Cancelled;
@@ -1572,7 +1573,7 @@ namespace TNov
 
                     this.adskgProgressBar.Dispatcher.Invoke((System.Action)(() => this.adskgProgressBar.Close()));
 
-                    if (allcount == 0) new infowindow280("Нечего обрабатывать.").ShowDialog();
+                    if (allcount == 0) new InfoWindow280("Нечего обрабатывать.").ShowDialog();
 
                     group.Assimilate();
                 }
@@ -1590,11 +1591,11 @@ namespace TNov
 
                     Logger.Log("Открываем окно с ID проблемных элементов: " + messageF, 1);
                     // Диалоговое окно
-                    var viewModel1 = new infowindowtextfieldViewModel();
+                    var viewModel1 = new InfoWindowTextFieldViewModel();
                     viewModel1.headtxt = "Журнал работы:";
                     viewModel1.ids = messageF;
                     viewModel1.lowtxt = "Проверьте их вручную или посмотрите ошибки в лог-файле.";
-                    var wpfview1 = new infowindowtextfield(viewModel1);
+                    var wpfview1 = new InfoWindowTextField(viewModel1);
                     viewModel1.CloseRequest += (s, e) => wpfview1.Close();
                     bool? ok1 = wpfview1.ShowDialog();
                     Logger.Log(viewModel1.ids, 1);
@@ -1616,7 +1617,7 @@ namespace TNov
 
                 if (schedules.Count == 0)
                 {
-                    new infowindow280($"Спецификация с именем '{TargetScheduleName}' не найдена.").ShowDialog();
+                    new InfoWindow280($"Спецификация с именем '{TargetScheduleName}' не найдена.").ShowDialog();
                     Logger.Log($"Спецификация с именем '{TargetScheduleName}' не найдена. Завершение работы.", 4);
                     return Result.Failed;
                 }
@@ -1759,7 +1760,7 @@ namespace TNov
                 if (gmCounter > collector1.Count())
                 {
                     Logger.Log("Размещенных кубиков недостаточно. Завершение работы.", 4);
-                    new infowindow280("В модели размещено " + collector1.Count().ToString() + " кубиков, а требуется не менее " + gmCounter.ToString() + ". Разместите больше кубиков.").ShowDialog();
+                    new InfoWindow280("В модели размещено " + collector1.Count().ToString() + " кубиков, а требуется не менее " + gmCounter.ToString() + ". Разместите больше кубиков.").ShowDialog();
                     return Result.Cancelled;
                 }
 
@@ -2043,7 +2044,7 @@ namespace TNov
                 }
                 if (typeMarksString.Length == 0)
                 {
-                    new infowindow280("В данной модели отсутствуют элементы для обработки!").ShowDialog();
+                    new InfoWindow280("В данной модели отсутствуют элементы для обработки!").ShowDialog();
                     Logger.Log("Элементы в модели отсутствуют. Завершение работы.", 3); return Result.Cancelled;
                 }
                 //данные вне сериализации
@@ -2137,7 +2138,7 @@ namespace TNov
                     if (xlApp == null)
                     {
                         string info2txt = "Ошибка! MS Excel не установлен на данном компьютере.";
-                        var info2 = new infowindow280(info2txt); info2.ShowDialog();
+                        var info2 = new InfoWindow280(info2txt); info2.ShowDialog();
                         Logger.Log("MS Excel не установлен на данном компьютере.", 4);
                     }
                     workbooks = xlApp.Workbooks;
@@ -2148,7 +2149,7 @@ namespace TNov
                     string info2txt = "Ошибка! Имеются неполадки в работе MS Excel на данном компьютере. " +
                         "Перезапустите плагин без галочек Обрабатывать каталоги и Построить немоделируемые." +
                         "Этот функционал доступен только при нормальной работе Excel.";
-                    var info2 = new infowindow280(info2txt); info2.ShowDialog();
+                    var info2 = new InfoWindow280(info2txt); info2.ShowDialog();
                     Logger.Log(e.Message, 4);
                 }
                 finally
@@ -2644,7 +2645,7 @@ namespace TNov
                     }
                 }
 
-                if (allcount == 0) new infowindow280("Нечего обрабатывать.").ShowDialog();
+                if (allcount == 0) new InfoWindow280("Нечего обрабатывать.").ShowDialog();
 
                 if (failscount > 0)
                 {
@@ -2660,11 +2661,11 @@ namespace TNov
 
                     Logger.Log("Открываем окно с ID проблемных элементов: " + messageF, 1);
                     // Диалоговое окно
-                    var viewModel1 = new infowindowtextfieldViewModel();
+                    var viewModel1 = new InfoWindowTextFieldViewModel();
                     viewModel1.headtxt = "Журнал работы:";
                     viewModel1.ids = messageF;
                     viewModel1.lowtxt = "Проверьте их вручную или посмотрите ошибки в лог-файле.";
-                    var wpfview1 = new infowindowtextfield(viewModel1);
+                    var wpfview1 = new InfoWindowTextField(viewModel1);
                     viewModel1.CloseRequest += (s, e) => wpfview1.Close();
                     bool? ok1 = wpfview1.ShowDialog();
                     Logger.Log(viewModel1.ids, 1);
@@ -2672,7 +2673,7 @@ namespace TNov
             }
             else
             {
-                new infowindow280("Плагин работает по разным сценариям в зависимости от раздела. Похоже, ваш файл не относится к" +
+                new InfoWindow280("Плагин работает по разным сценариям в зависимости от раздела. Похоже, ваш файл не относится к" +
                 " разделу ВК/ПТ/ОВ/ЭЛ/СС. Раздел должен содержаться в имени модели.").ShowDialog();
                 Logger.Log("Раздел не является ВК/ПТ/ОВ/ЭЛ/СС. Завершение работы.", 3);
 

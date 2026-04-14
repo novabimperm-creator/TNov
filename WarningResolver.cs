@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TNov
 {
-    public class WarningResolver : IFailuresPreprocessor
+    public class WarningResolver : IFailuresPreprocessor//...
     {
         public FailureProcessingResult PreprocessFailures(FailuresAccessor accessor)
         {

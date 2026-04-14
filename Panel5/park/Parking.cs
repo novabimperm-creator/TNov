@@ -33,7 +33,7 @@ namespace TNov
                     ParkMark Command2 = new ParkMark(); Command2.Execute(commandData, ref message, elements);
                     break;
                 case 3:
-                    var info1 = new infowindow280("Сейчас откроется Проигрыватель Dynamo.\nВ нем найдите и запустите скрипт Паркоместа.Площади."); info1.ShowDialog();
+                    var info1 = new InfoWindow280("Сейчас откроется Проигрыватель Dynamo.\nВ нем найдите и запустите скрипт Паркоместа.Площади."); info1.ShowDialog();
                     RevitCommandId id_built_in = RevitCommandId.LookupPostableCommandId(PostableCommand.DynamoPlayer);
                     uiApp.PostCommand(id_built_in);
                     break;

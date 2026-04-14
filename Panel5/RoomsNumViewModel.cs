@@ -52,7 +52,7 @@ namespace TNov
                             }
                             else
                             {
-                                new infowindow280($"Ошибка!\nУ элемента {reference.ElementId} нет параметра {parameter.Definition.Name}.").ShowDialog();
+                                new InfoWindow280($"Ошибка!\nУ элемента {reference.ElementId} нет параметра {parameter.Definition.Name}.").ShowDialog();
                                 t.Commit();
                                 group.Assimilate();
                                 break;

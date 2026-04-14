@@ -4,7 +4,7 @@ using Autodesk.Revit.Attributes;
 using System;
 using Newtonsoft.Json;
 using System.IO;
-using TNov.main;
+using TNovCommon;
 
 namespace TNov
 {
@@ -24,7 +24,7 @@ namespace TNov
             string TNovClassName1 = TNovClassName+".Настройки";
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName1, out check); if (check == false) { return Result.Failed; }
+            bool check = false; Servercheck sc = new Servercheck(in TNovClassName1, out check); if (check == false) { return Result.Failed; }
 
             // создание log - файла
             Logger.Initialize(TNovClassName);

@@ -11,7 +11,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using TNov.main;
+using TNovCommon;
+using TNovCommon;
 
 namespace TNov
 {
@@ -37,24 +38,24 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
 
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
 
-            var viewModel0 = new aboutViewModel();
+            var viewModel0 = new AppVersionViewModel();
 
             string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
-            viewModel0 = JsonConvert.DeserializeObject<aboutViewModel>(File.ReadAllText(jsonpath0));
+            viewModel0 = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath0));
 
             if (viewModel0.extendedLogs)
 
             {
-                var qViewModel = new qwindow280ViewModel();
+                var qViewModel = new QuestionWindowViewModel();
                 qViewModel.headtxt = "Включены расширенные логи. " +
                     "Плагин будет работать медленнее, но соберет больше данных. " +
                     "Выключить расширенные логи для ускорения работы?";
-                var qwpfview = new qwindow280(qViewModel);
+                var qwpfview = new QuestionWindow280(qViewModel);
                 qViewModel.CloseRequest += (s, e) => qwpfview.Close();
                 bool? qok = qwpfview.ShowDialog();
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log("Расширенные логи вкл", 2);
@@ -286,7 +287,7 @@ namespace TNov
             if(allcount == 0)
             {
                 string mes = "Параметр N_Т Параметры вручную не добавлен ни к одной из нужных категорий.";
-                new infowindow280(mes).ShowDialog();
+                new InfoWindow280(mes).ShowDialog();
                 Logger.Log(mes + " Завершение работы.", 3);
                 return Result.Failed;
             }
@@ -506,7 +507,7 @@ namespace TNov
             if (badCats.Count > 0)
             {
                 badCats.Distinct();
-                new infowindow280("Параметр N_Т Параметры вручную отсутствует у категорий: " + string.Join(", ", badCats) +
+                new InfoWindow280("Параметр N_Т Параметры вручную отсутствует у категорий: " + string.Join(", ", badCats) +
                     ". Эти категории не обработаны.").ShowDialog();
             }
                 

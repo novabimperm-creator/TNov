@@ -9,63 +9,16 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
-using TNov.main;
+using TNovCommon;
 using adWin = Autodesk.Windows;
 using File = System.IO.File;
 
 namespace TNov
 {
-    public class aboutViewModel : INotifyPropertyChanged
-    {
-        public string headtxt { get; set; }
-        public string url { get; set; }
-        private bool _extendedLogs = false;
-        public bool extendedLogs
-        {
-            get => _extendedLogs; set { _extendedLogs = value; OnPropertyChanged(); }
-        }
-        [JsonIgnore] public string userName {  get; set; }
-        [JsonIgnore] public string userDep { get; set; }
-        [JsonIgnore] public string userDepRole { get; set; }
-
-        [JsonIgnore] public ObservableCollection<string> synclist { get; set; }
-        private string _sync1;
-        public string sync1 { get { return _sync1; } set { _sync1 = value; OnPropertyChanged(); } }
-        private int _paramnum = 0;
-        public int paramnum { get => _paramnum; set { _paramnum = value; OnPropertyChanged(); } }
-        public aboutViewModel()
-        {
-            Param();
-        }
-        private void Param()
-        {
-            synclist = new ObservableCollection<string>
-            {
-                "Подсветка 20/30 минут",
-                "Подсветка 30/60 минут",
-                "Подсветка 40/60 минут",
-                "Подсветка 60/90 минут",
-                "Без подсветки панелей (не рекомендуется)",
-                "Подсветка 1/2 минуты :-)"
-            }; 
-            sync1 = synclist[paramnum];
-        }
-
-        public event EventHandler CloseRequest;
-        private void RaiseCloseRequest()
-        {
-            CloseRequest?.Invoke(this, EventArgs.Empty);
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        void OnPropertyChanged([CallerMemberName] string PropertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
-        }
-    }
+    
     
     [Transaction(TransactionMode.Manual)]
-    public class appversion : IExternalCommand
+    public class AppVersion : IExternalCommand
     {
         
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -76,7 +29,7 @@ namespace TNov
             UIDocument uidoc = RevitAPI.UiDocument; Document doc = RevitAPI.Document;
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             //версии
             string TNovVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -112,13 +65,13 @@ namespace TNov
                 case "user": userDepRole = "исполнитель"; break;
             }
 #endif
-            var viewModel = new aboutViewModel();
+            var viewModel = new AppVersionViewModel();
             // Десериализация
 
             string jsonpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
             try
             {
-                viewModel = JsonConvert.DeserializeObject<aboutViewModel>(File.ReadAllText(jsonpath));
+                viewModel = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath));
             }
             catch (Exception) { }
             
@@ -127,7 +80,7 @@ namespace TNov
                 "Версия программы - " + TNovVersion + ". Актуальная версия - " + actualVersion;
             viewModel.url = "https://portal.talan.group/knowledge/proektirovanie/plaginyiskriptynovatsiya/";
             viewModel.userName = userName; viewModel.userDep = userDepartment; viewModel.userDepRole = userDepRole;
-            var wpfview = new about(viewModel);
+            var wpfview = new AppVersionWPF(viewModel);
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { } else { return Result.Cancelled; }

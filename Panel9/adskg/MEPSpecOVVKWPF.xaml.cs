@@ -92,7 +92,6 @@ namespace TNov
 
         private void escButton_Click(object sender, RoutedEventArgs e)
         {
-            DialogResult = false;
             this.Close(); // закрытие окна
         }
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)

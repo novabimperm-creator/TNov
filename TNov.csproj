@@ -11,33 +11,28 @@
     <AssemblyName>TNov</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
+    <Deterministic>false</Deterministic>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'config1|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>true</Optimize>
     <OutputPath>\\fs-nova\Distr\0.For Admin\_TNov\build\config1\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;config1</DefineConstants>
+    <DefineConstants>TRACE;config1</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'config2|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>true</Optimize>
     <OutputPath>\\fs-nova\Distr\0.For Admin\_TNov\build\config2\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;config2</DefineConstants>
+    <DefineConstants>TRACE;config2</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'config2outsource|AnyCPU'">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>\\fs-nova\Distr\0.For Admin\_TNov\build\config2outsource\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;config2outsource</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AdWindows, Version=3.1.7.0, Culture=neutral, processorArchitecture=MSIL">
@@ -86,22 +81,6 @@
     <Reference Include="RevitAPIUI">
       <HintPath>C:\Program Files\Autodesk\Revit 2022\RevitAPIUI.dll</HintPath>
     </Reference>
-    <Reference Include="RS.Enterprise.Common.ClientServer.DataContract">
-      <HintPath>Panel10\ServerExport\RS.Enterprise.Common.ClientServer.DataContract.dll</HintPath>
-    </Reference>
-    <Reference Include="RS.Enterprise.Common.ClientServer.Helper">
-      <HintPath>Panel10\ServerExport\RS.Enterprise.Common.ClientServer.Helper.dll</HintPath>
-    </Reference>
-    <Reference Include="RS.Enterprise.Common.ClientServer.Proxy, Version=22.0.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Panel10\ServerExport\RS.Enterprise.Common.ClientServer.Proxy.dll</HintPath>
-    </Reference>
-    <Reference Include="RS.Enterprise.Common.ClientServer.ServiceContract.Local">
-      <HintPath>Panel10\ServerExport\RS.Enterprise.Common.ClientServer.ServiceContract.Local.dll</HintPath>
-    </Reference>
-    <Reference Include="RS.Enterprise.Common.ClientServer.ServiceContract.Model">
-      <HintPath>Panel10\ServerExport\RS.Enterprise.Common.ClientServer.ServiceContract.Model.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -117,373 +96,22 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FailureAndWarningHandler.cs" />
-    <Compile Include="main\Logger.cs" />
-    <Compile Include="main\CombinedElementFilter.cs" />
-    <Compile Include="Panel11\TParsOpredAR.cs" />
-    <Compile Include="Panel12\AssignMaterialCodesCommand .cs" />
-    <Compile Include="Panel10\BimExportViewModel.cs" />
-    <Compile Include="Panel12\TParsNaimOboznST.cs" />
-    <Compile Include="Panel12\TParsOpredST.cs" />
-    <Compile Include="Panel13\InsulationHosts.cs" />
-    <Compile Include="Panel10\RevitServer.xaml.cs">
-      <DependentUpon>RevitServer.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel10\RevitServerViewModel.cs" />
-    <Compile Include="Panel11\TParsNazn.cs" />
-    <Compile Include="Panel10\TreeBuilder.cs" />
-    <Compile Include="Panel13\TestOV.cs" />
-    <Compile Include="Panel13\TParsSpecOVVK.cs" />
-    <Compile Include="Panel1\Journal.cs" />
-    <Compile Include="main\_synchronize.cs" />
-    <Compile Include="Panel10\FolderSelectDialog.cs" />
-    <Compile Include="Panel3\changes\Changes.cs" />
-    <Compile Include="Panel3\changes\ChangesViewModel.cs" />
-    <Compile Include="Panel3\changes\ChangesWPF.xaml.cs">
-      <DependentUpon>ChangesWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel3\excel\ExcelSettings.cs" />
-    <Compile Include="Panel3\excel\ExcelViewModel.cs" />
-    <Compile Include="Panel3\idselection\IdSelectionViewModel.cs" />
-    <Compile Include="Panel3\links\Links.cs" />
-    <Compile Include="Panel3\plw\PLWViewModel.cs" />
-    <Compile Include="Panel3\plw\PLWWPF.xaml.cs">
-      <DependentUpon>PLWWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel3\plw\UnpinnerViewModel.cs" />
-    <Compile Include="Panel3\sheets\SheetNumWPF.xaml.cs">
-      <DependentUpon>SheetNumWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel3\sheets\SheetsStartViewModel.cs" />
-    <Compile Include="Panel3\sheets\SheetsStartWPF.xaml.cs">
-      <DependentUpon>SheetsStartWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel3\sheets\Sheets.cs" />
-    <Compile Include="Panel3\sheets\TNovSheet.cs" />
-    <Compile Include="Panel3\typefilter\ElementTypeComparer.cs" />
-    <Compile Include="Panel3\typefilter\TypeFilter.cs" />
-    <Compile Include="Panel3\typefilter\CategoryComparer.cs" />
-    <Compile Include="Panel3\typefilter\TypeFilterCategoryViewModel.cs" />
-    <Compile Include="Panel3\typefilter\TypeFilterElementTypeViewModel.cs" />
-    <Compile Include="Panel3\typefilter\TypeFilterWPF.xaml.cs">
-      <DependentUpon>TypeFilterWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel4\beams\BeamsViewModel.cs" />
-    <Compile Include="Panel4\floors\FloorViewModel.cs" />
-    <Compile Include="Panel5\finishing\Finishing.cs" />
-    <Compile Include="Panel5\FloorImages.cs" />
-    <Compile Include="Panel5\levelnumber\LevelNumberViewModel.cs" />
-    <Compile Include="Panel5\park\ParkMarkViewModel.cs" />
-    <Compile Include="Panel5\park\ParkNumViewModel.cs" />
-    <Compile Include="Panel5\park\ParkViewModel.cs" />
-    <Compile Include="Panel5\RoomsNumViewModel.cs" />
-    <Compile Include="Panel5\rooms\ApartsNumAtLevelViewModel.cs" />
-    <Compile Include="Panel5\rooms\ApartsNumViewModel.cs" />
-    <Compile Include="Panel5\rooms\RoomsViewModel.cs" />
-    <Compile Include="Panel5\rooms\RoomsTNumber.cs" />
-    <Compile Include="Panel5\rooms\RoomsBackup.cs" />
-    <Compile Include="Panel5\rooms\roomsBackupLoad.xaml.cs">
-      <DependentUpon>roomsBackupLoad.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel5\rooms\roomsBackupSave.xaml.cs">
-      <DependentUpon>roomsBackupSave.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel5\rooms\roomsBackupStart.xaml.cs">
-      <DependentUpon>roomsBackupStart.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel5\rooms\roomsBackupAnalyse.xaml.cs">
-      <DependentUpon>roomsBackupAnalyse.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel4\beams\BeamsWPF.xaml.cs">
-      <DependentUpon>BeamsWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel6\found\FoundAutoNumViewModel.cs" />
-    <Compile Include="Panel6\found\FoundNumViewModel.cs" />
-    <Compile Include="Panel6\found\FoundOtm.cs" />
-    <Compile Include="Panel6\found\FoundViewModel.cs" />
-    <Compile Include="Panel7\schemespec\SchemespecViewModel.cs" />
-    <Compile Include="Panel7\steelschedule\SteelScheduleViewModel.cs" />
-    <Compile Include="Panel8\holes\HolesCheckDynamo.cs" />
-    <Compile Include="Panel3\excel\ExcelWPF.xaml.cs">
-      <DependentUpon>ExcelWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel8\holes\HolesViewModel.cs" />
-    <Compile Include="Panel8\tasks\TaskDetailsViewModel.cs" />
-    <Compile Include="Panel8\tasks\Hole.cs" />
-    <Compile Include="Panel8\tasks\idselectionTasks\IdSelectionTasks.cs" />
-    <Compile Include="Panel8\tasks\idselectionTasks\IdSelectionTasksViewModel.cs" />
-    <Compile Include="Panel8\tasks\idselectionTasks\IdSelectionTasksWPF.xaml.cs">
-      <DependentUpon>IdSelectionTasksWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel8\tasks\TaskListNewWPF.xaml.cs">
-      <DependentUpon>TaskListNewWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel8\tasks\TaskListViewModel.cs" />
-    <Compile Include="Panel8\tasks\TaskTools.cs" />
-    <Compile Include="Panel9\adskg\MEPSpecOVVKViewModel.cs" />
-    <Compile Include="Panel9\adskg\MEPSpecOVVKParamsViewModel.cs" />
-    <Compile Include="Panel9\adskg\MEPSpecSSWPF.xaml.cs">
-      <DependentUpon>MEPSpecSSWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel9\adskg\MEPSpecOVVKParamsWPF.xaml.cs">
-      <DependentUpon>MEPSpecOVVKParamsWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel9\adskg\MEPSpecSSViewModel.cs" />
-    <Compile Include="Panel9\adskg\MEPSpecTools.cs" />
-    <Compile Include="Panel9\cabletrays\CableTraysViewModel.cs" />
-    <Compile Include="Panel9\cableways\CableWaysSettings.cs" />
-    <Compile Include="Panel9\cableways\CableWays.cs" />
-    <Compile Include="Panel9\cableways\CableWaysStartViewModel.cs" />
-    <Compile Include="Panel9\cableways\CableWaysViewModel.cs" />
-    <Compile Include="Panel9\cableways\CableWaysWPF.xaml.cs">
-      <DependentUpon>CableWaysWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel9\cableways\CableWaysStartWPF.xaml.cs">
-      <DependentUpon>CableWaysStartWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel9\duct3d\Duct3DViewModel.cs" />
-    <Compile Include="Panel9\efl\ElElevValuesViewModel.cs" />
-    <Compile Include="Panel9\pikachu\BaseForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Panel9\pikachu\BaseForm.Designer.cs">
-      <DependentUpon>BaseForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Panel9\pikachu\CachedElement.cs" />
-    <Compile Include="Panel9\pikachu\CategorySelectionForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Panel9\pikachu\ConfirmationForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Panel9\pikachu\CurrentFamilySelectionForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Panel9\pikachu\DistanceSettingsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Panel9\pikachu\IntersectionCheckCommand.cs" />
-    <Compile Include="Panel9\pikachu\IntersectionResult.cs" />
-    <Compile Include="Panel9\pikachu\IntersectionResultsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Panel9\pikachu\LevelSelectionForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Panel9\pikachu\LinkedFamilySelectionForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Panel9\pikachu\LinkSelectionForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Panel9\pikachu\PikachuCommand.cs" />
-    <Compile Include="Panel9\pikachu\ProgressForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Panel9\pikachu\ResultForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Panel9\pikachu\SingleCategorySelectionForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Panel9\pikachu\SpatialIndex.cs" />
-    <Compile Include="Panel9\ss\SSNumbererViewModel.cs" />
-    <Compile Include="Panel9\ss\SSNumbererWPF.xaml.cs">
-      <DependentUpon>SSNumbererWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel9\ss\SSNumberer.cs" />
-    <Compile Include="RelayCommand2.cs" />
+    <Compile Include="Properties\VersionInfo.cs" />
     <Compile Include="universal\Class1.cs" />
-    <Compile Include="universal\Param.cs" />
-    <Compile Include="updaters\TNovFloorCeilingUpdater.cs" />
-    <Compile Include="updaters\TNovInsulationUpdater.cs" />
-    <Compile Include="updaters\TNovParsNaimOboznSTUpdater.cs" />
-    <Compile Include="updaters\TNovParsOpredARUpdater.cs" />
-    <Compile Include="updaters\TNovParsOVVKUpdater.cs" />
-    <Compile Include="updaters\TNovParsOpredSTUpdater.cs" />
-    <Compile Include="updaters\TNovRoomUpdater.cs" />
-    <Compile Include="updaters\TNovShaftUpdater.cs" />
-    <Compile Include="updaters\TNovWallUpdater.cs" />
-    <Compile Include="updaters\TNovTaskUpdater.cs" />
-    <Compile Include="updaters\TNovPileUpdater.cs" />
-    <Compile Include="updaters\TNovPinUpdater.cs" />
-    <Compile Include="updaters\TNovWorksetUpdater.cs" />
-    <Compile Include="updaters\TNovHoleUpdater.cs" />
-    <Compile Include="Panel8\tasks\TaskDetailsWPF.xaml.cs">
-      <DependentUpon>TaskDetailsWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel8\tasks\TaskListWPF.xaml.cs">
-      <DependentUpon>TaskListWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel8\tasks\TasksMenu.cs" />
-    <Compile Include="Panel10\BimExportWPF.xaml.cs">
-      <DependentUpon>BimExportWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel4\floors\AlphanumComparatorFastString.cs" />
-    <Compile Include="main\about.xaml.cs">
-      <DependentUpon>about.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="main\Application.cs" />
-    <Compile Include="main\appversion.cs" />
-    <Compile Include="main\nova.cs" />
-    <Compile Include="numstostring.cs" />
-    <Compile Include="Panel3\excel\Excel.cs" />
-    <Compile Include="Panel3\idselection\IdSelection.cs" />
-    <Compile Include="Panel3\idselection\IdSelectionWPF.xaml.cs">
-      <DependentUpon>IdSelectionWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel3\plw\PLWSettings.cs" />
-    <Compile Include="Panel3\paint\Paint.cs" />
-    <Compile Include="Panel3\paint\Paint2.cs" />
-    <Compile Include="Panel3\plw\PLW.cs" />
-    <Compile Include="Panel3\paint\revitpaint.cs" />
-    <Compile Include="Panel3\paint\revitpaintdel.cs" />
-    <Compile Include="Panel3\paint\revitsplitface.cs" />
-    <Compile Include="Panel3\plw\Unpinner.cs" />
-    <Compile Include="Panel3\plw\UnpinnerWPF.xaml.cs">
-      <DependentUpon>UnpinnerWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel3\ParamTable.cs" />
-    <Compile Include="Panel1\CDE.cs" />
-    <Compile Include="Panel3\EduPortal.cs" />
-    <Compile Include="Panel3\WorkOrg.cs" />
-    <Compile Include="Panel4\floors\Floors.cs" />
-    <Compile Include="Panel4\floors\FloorWPF.xaml.cs">
-      <DependentUpon>FloorWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel4\Mirror.cs" />
-    <Compile Include="Panel5\rooms\Aparts.cs" />
-    <Compile Include="Panel5\rooms\ApartsNum.cs" />
-    <Compile Include="Panel5\rooms\ApartsNumAtLevel.cs" />
-    <Compile Include="Panel5\rooms\ApartsNumAtLevelWPF.xaml.cs">
-      <DependentUpon>ApartsNumAtLevelWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel5\rooms\ApartsNumWPF.xaml.cs">
-      <DependentUpon>ApartsNumWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel5\rooms\PurgeFailedRooms.cs" />
-    <Compile Include="Panel5\levelnumber\LevelNumber.cs" />
-    <Compile Include="Panel5\levelnumber\LevelNumberWPF.xaml.cs">
-      <DependentUpon>LevelNumberWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel5\rooms\Offices.cs" />
-    <Compile Include="Panel5\rooms\RoomsWPF.xaml.cs">
-      <DependentUpon>RoomsWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel5\park\Parking.cs" />
-    <Compile Include="Panel5\park\ParkMark.cs" />
-    <Compile Include="Panel5\park\ParkMarkWPF.xaml.cs">
-      <DependentUpon>ParkMarkWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel5\park\ParkNum.cs" />
-    <Compile Include="Panel5\park\ParkNumWPF.xaml.cs">
-      <DependentUpon>ParkNumWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel5\park\ParkWPF.xaml.cs">
-      <DependentUpon>ParkWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel5\rooms\RoomsNum.cs" />
-    <Compile Include="Panel5\rooms\RoomsNumWPF.xaml.cs">
-      <DependentUpon>RoomsNumWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel5\rooms\RoomsRound.cs" />
-    <Compile Include="Panel4\beams\Beams.cs" />
-    <Compile Include="Panel6\fixstructurefile\Fixstructurefile.cs" />
-    <Compile Include="Panel6\found\Found.cs" />
-    <Compile Include="Panel6\found\FoundAutoNum.cs" />
-    <Compile Include="Panel6\found\FoundAutoNumWPF.xaml.cs">
-      <DependentUpon>FoundAutoNumWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel6\found\FoundCut.cs" />
-    <Compile Include="Panel6\found\FoundNum.cs" />
-    <Compile Include="Panel6\found\FoundNumPurge.cs" />
-    <Compile Include="Panel6\found\FoundNumSpec.cs" />
-    <Compile Include="Panel6\found\FoundNumWPF.xaml.cs">
-      <DependentUpon>FoundNumWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel6\found\FoundWPF.xaml.cs">
-      <DependentUpon>FoundWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel8\holes\Holes.cs" />
-    <Compile Include="Panel8\holes\HolesWPF.xaml.cs">
-      <DependentUpon>HolesWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel7\RebarImages.cs" />
-    <Compile Include="Panel7\schemespec\Schemespec.cs" />
-    <Compile Include="Panel7\schemespec\SchemespecWPF.xaml.cs">
-      <DependentUpon>SchemespecWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel7\steelschedule\SteelSchedule.cs" />
-    <Compile Include="Panel7\steelschedule\SteelScheduleWPF.xaml.cs">
-      <DependentUpon>SteelScheduleWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel9\adskg\IsolNonModel.cs" />
-    <Compile Include="Panel9\adskg\MEPSpec.cs" />
-    <Compile Include="Panel9\adskg\modulePEX.cs" />
-    <Compile Include="Panel9\DuctThicknessClasses.cs" />
-    <Compile Include="Panel10\PurgeDoc.cs" />
-    <Compile Include="windows\TNovProgressBar.cs" />
-    <Compile Include="Panel9\duct3d\Duct3DWPF.xaml.cs">
-      <DependentUpon>Duct3DWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel9\adskg\MEPSpecOVVKWPF.xaml.cs">
-      <DependentUpon>MEPSpecOVVKWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel9\cabletrays\CableTrays.cs" />
-    <Compile Include="Panel9\cabletrays\CableTraysSettings.cs" />
-    <Compile Include="Panel9\cabletrays\CableTraysWPF.xaml.cs">
-      <DependentUpon>CableTraysWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel9\duct3d\Duct3D.cs" />
-    <Compile Include="Panel9\efl\ElElevValuesSettings.cs" />
-    <Compile Include="Panel9\efl\ElElevValues.cs" />
-    <Compile Include="Panel9\efl\ElElevValuesWPF.xaml.cs">
-      <DependentUpon>ElElevValuesWPF.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Panel6\found\Pile.cs" />
-    <Compile Include="Panel10\BimExport.cs" />
+    <Compile Include="Application.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="main\_json.cs" />
-    <Compile Include="main\_servercheck.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="RelayCommand.cs" />
     <Compile Include="Settings.Designer.cs" />
     <Compile Include="Settings1.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="TransactionHandler.cs" />
-    <Compile Include="WarningResolver.cs" />
-    <Compile Include="WarningSkipper.cs" />
-    <Compile Include="WarningSwallower.cs" />
-    <Compile Include="_BoundingBoxXYZExtensions.cs" />
-    <Compile Include="windows\_infowindow280.xaml.cs">
-      <DependentUpon>_infowindow280.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="windows\_infowindow400.xaml.cs">
-      <DependentUpon>_infowindow400.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="windows\_infowindowtextfield.xaml.cs">
-      <DependentUpon>_infowindowtextfield.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="windows\_infowindowtextfieldViewModel.cs" />
-    <Compile Include="_Intersections.cs" />
-    <Compile Include="Panel6\fixstructurefile\_MyParameterValue.cs" />
-    <Compile Include="Panel6\fixstructurefile\_MyProjectSharedParameter.cs" />
-    <Compile Include="Panel6\fixstructurefile\_MyRebarType.cs" />
-    <Compile Include="windows\_qwindow280.xaml.cs">
-      <DependentUpon>_qwindow280.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="windows\_qwindow280ViewModel.cs" />
-    <Compile Include="_RevitAPI.cs" />
-    <Compile Include="_selectandplacegroup.cs" />
-    <Compile Include="Panel6\fixstructurefile\_SharedParamsFileTools.cs" />
-    <Compile Include="universal\CheckOldTemplateProject.cs" />
+    <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -491,216 +119,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="main\about.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel10\RevitServer.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel3\changes\ChangesWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel3\excel\ExcelWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel3\plw\PLWWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel3\sheets\SheetNumWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel3\sheets\SheetsStartWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel3\typefilter\TypeFilterWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel5\rooms\roomsBackupLoad.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel5\rooms\roomsBackupSave.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel5\rooms\roomsBackupStart.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel5\rooms\roomsBackupAnalyse.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel4\beams\BeamsWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel8\tasks\idselectionTasks\IdSelectionTasksWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel8\tasks\TaskListNewWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel8\tasks\TaskDetailsWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel8\tasks\TaskListWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel10\BimExportWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel3\idselection\IdSelectionWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel3\plw\UnpinnerWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel4\floors\FloorWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel5\rooms\ApartsNumAtLevelWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel5\rooms\ApartsNumWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel5\levelnumber\LevelNumberWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel5\rooms\RoomsWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel5\park\ParkMarkWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel5\park\ParkNumWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel5\park\ParkWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel5\rooms\RoomsNumWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel6\found\FoundAutoNumWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel6\found\FoundNumWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel6\found\FoundWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel8\holes\HolesWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel7\schemespec\SchemespecWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel7\steelschedule\SteelScheduleWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel9\adskg\MEPSpecSSWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel9\adskg\MEPSpecOVVKParamsWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel9\cableways\CableWaysWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel9\cableways\CableWaysStartWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel9\ss\SSNumbererWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="windows\TNovProgressBar.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel9\duct3d\Duct3DWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel9\adskg\MEPSpecOVVKWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel9\cabletrays\CableTraysWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Panel9\efl\ElElevValuesWPF.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="windows\_infowindow280.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="windows\_infowindow400.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="windows\_infowindowtextfield.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="windows\_qwindow280.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Panel9\pikachu\IntersectionResultsForm.resx">
-      <DependentUpon>IntersectionResultsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Panel9\pikachu\LinkSelectionForm.resx">
-      <DependentUpon>LinkSelectionForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Panel9\pikachu\ResultForm.resx">
-      <DependentUpon>ResultForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Panel9\pikachu\SingleCategorySelectionForm.resx">
-      <DependentUpon>SingleCategorySelectionForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -1184,7 +602,73 @@
   <ItemGroup>
     <None Include="resources\ssNumberer32.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\TNovBeams\TNovBeams.csproj">
+      <Project>{03bec1e7-bcd9-4638-b7ce-e569861184fd}</Project>
+      <Name>TNovBeams</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TNovBIMUtils\TNovBIMUtils.csproj">
+      <Project>{5e93d603-7d2c-4397-a18b-4efcb942841e}</Project>
+      <Name>TNovBIMUtils</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TNovCommon\TNovCommon.csproj">
+      <Project>{214dc0ec-f948-4bc6-a123-d93abb39ac23}</Project>
+      <Name>TNovCommon</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\TNovElectrical\TNovElectrical.csproj">
+      <Project>{db889f73-73f6-42db-8a36-356304fbf5d2}</Project>
+      <Name>TNovElectrical</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TNovFinishing\TNovFinishing.csproj">
+      <Project>{9c5d8deb-e63e-4e77-819f-736705ee63d2}</Project>
+      <Name>TNovFinishing</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TNovMEPSpec\TNovMEPSpec.csproj">
+      <Project>{c89d852b-b461-4acf-86ca-2d8a65d55d56}</Project>
+      <Name>TNovMEPSpec</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TNovParking\TNovParking.csproj">
+      <Project>{57a9aeb6-d264-4117-8b58-b5fa85a5643d}</Project>
+      <Name>TNovParking</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TNovPiles\TNovPiles.csproj">
+      <Project>{b4b91540-f1a1-4628-acc2-ddf4737c3320}</Project>
+      <Name>TNovPiles</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TNovRooms\TNovRooms.csproj">
+      <Project>{c6df59b6-07a1-4b56-92a6-6d86cc7e67de}</Project>
+      <Name>TNovRooms</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TNovSS\TNovSS.csproj">
+      <Project>{236cd423-0f47-4216-89b7-dbe203f36564}</Project>
+      <Name>TNovSS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TNovTasks\TNovTasks.csproj">
+      <Project>{69de9821-2f13-4ce5-9f04-e249d2bccd33}</Project>
+      <Name>TNovTasks</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TNovUtilsAR\TNovUtilsAR.csproj">
+      <Project>{88730ed1-7018-4a9a-a770-10e8084c653a}</Project>
+      <Name>TNovUtilsAR</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TNovUtilsST\TNovUtilsST.csproj">
+      <Project>{a538202f-9eaf-4e05-9972-ebefdc98a148}</Project>
+      <Name>TNovUtilsST</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TNovUtils\TNovUtils.csproj">
+      <Project>{f8cf0557-f13d-4dfa-a817-d2380449a712}</Project>
+      <Name>TNovUtils</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TNovVent\TNovVent.csproj">
+      <Project>{eda54d6b-e20d-410b-a88f-2b02194d9a54}</Project>
+      <Name>TNovVent</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TNovViewsSheets\TNovViewsSheets.csproj">
+      <Project>{837ae96c-3ac2-4064-aba4-0711a1c7acdf}</Project>
+      <Name>TNovViewsSheets</Name>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
     <None Include="resources\typefilter32.png" />
   </ItemGroup>
@@ -1194,8 +678,12 @@
   <ItemGroup>
     <None Include="resources\typefilter16.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>call roaming.bat</PostBuildEvent>
+    <PostBuildEvent>start /d "Z:\DEV\TNovDebug\bin\Release\net9.0" TNovDebug.exe</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>powershell -ExecutionPolicy Bypass -File "$(ProjectDir)UpdateVersion.ps1" -Major 4 -Minor 4</PreBuildEvent>
   </PropertyGroup>
 </Project>

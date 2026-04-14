@@ -29,7 +29,7 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
@@ -122,7 +122,7 @@ namespace TNov
             }
             if( GMIds.Count == 0)
             {
-                new infowindow280("Отсутствуют элементы с заданными марками.").ShowDialog();
+                new InfoWindow280("Отсутствуют элементы с заданными марками.").ShowDialog();
                 Logger.Log("Отсутствуют элементы с заданными марками. Завершение работы.", 3); return Result.Cancelled;
             }
 

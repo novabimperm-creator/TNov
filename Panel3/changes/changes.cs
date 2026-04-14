@@ -40,24 +40,24 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
             
 
-            var viewModel0 = new aboutViewModel();
+            var viewModel0 = new AppVersionViewModel();
             
             string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json"); 
-            viewModel0 = JsonConvert.DeserializeObject<aboutViewModel>(File.ReadAllText(jsonpath0));
+            viewModel0 = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath0));
             if (viewModel0.extendedLogs) 
             
             {
-                var qViewModel = new qwindow280ViewModel();
+                var qViewModel = new QuestionWindow280ViewModel();
                 qViewModel.headtxt = "Включены расширенные логи. " +
                     "Плагин будет работать медленнее, но соберет больше данных. " +
                     "Выключить расширенные логи для ускорения работы?";
-                var qwpfview = new qwindow280(qViewModel);
+                var qwpfview = new QuestionWindow280(qViewModel);
                 qViewModel.CloseRequest += (s, e) => qwpfview.Close();
                 bool? qok = qwpfview.ShowDialog();
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
@@ -138,6 +138,11 @@ namespace TNov
             List<ViewSheet> ViewSheetList = new List<ViewSheet>();
             ViewSheetList = GetViewSheetsFromCurrentSelection(doc, selection); //получаем ViewSheet из текущей выборки
             */
+
+            //настройки нумерации изменений в проекте
+            RevisionSettings revSettings = RevisionSettings.GetRevisionSettings(doc);
+
+
             using (Transaction t = new Transaction(doc))
             {
                 if (clouds.Count>0)
@@ -147,7 +152,7 @@ namespace TNov
                     else Logger.Log("Сценарий: все листы",1);
                     if (viewModel.visible&&sheetView==false)
                     {
-                        new infowindow280("Ошибка! В настоящий момент активным окном является не лист.\n" +
+                        new InfoWindow280("Ошибка! В настоящий момент активным окном является не лист.\n" +
                             "Если все же является - щелкните мышью 1 раз в пространстве листа.").ShowDialog();
                         Logger.Log("Текущий вид не является листом. Завершение работы.", 3);
                         return Result.Cancelled;
@@ -157,6 +162,8 @@ namespace TNov
                     //обработка элементов
                     t.Start("TNov - Пометочные облака");
                     Logger.Log("Открываем транзакцию 1 (пометочные облака)",1);
+
+                    revSettings.RevisionNumbering = RevisionNumbering.PerProject;
 
                     var сloudsSortedBySheet = from cloud in clouds //сортированный список облаков по листам
                                                 orderby cloud.OwnerViewId.ToString()

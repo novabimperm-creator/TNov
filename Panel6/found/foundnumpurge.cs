@@ -4,7 +4,7 @@ using Autodesk.Revit.Attributes;
 using System.Collections.Generic;
 using System.Linq;
 using System;
-using TNov.main;
+using TNovCommon;
 
 namespace TNov
 {
@@ -23,7 +23,7 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
@@ -55,7 +55,7 @@ namespace TNov
             int pc = piles1.Count;
             if(pc ==  0) 
             { 
-                new infowindow280("В проекте отсутствуют сваи.").ShowDialog();
+                new InfoWindow280("В проекте отсутствуют сваи.").ShowDialog();
                 Logger.Log("В проекте отсутствуют сваи. Завершение работы.", 3);
                 return Result.Failed; 
             }
@@ -90,7 +90,7 @@ namespace TNov
                     i++;
                 }
                 
-                var info1 = new infowindow280("Успешно!"); info1.ShowDialog();
+                var info1 = new InfoWindow280("Успешно!"); info1.ShowDialog();
                 transaction.Commit();
                 Logger.Log("Закрываем транзакцию",1);
 

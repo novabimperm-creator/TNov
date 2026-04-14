@@ -12,7 +12,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using TNov.main;
+using TNovCommon;
 using Floor = Autodesk.Revit.DB.Floor;
 using Parameter = Autodesk.Revit.DB.Parameter;
 
@@ -32,7 +32,7 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             //параметры
             
@@ -50,18 +50,18 @@ namespace TNov
             BuiltInParameter gm = BuiltInParameter.ALL_MODEL_MODEL; //параметр Группа модели
             BuiltInParameter hal = BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM; //параметр Смещение от уровня
 
-            var viewModel0 = new aboutViewModel();
+            var viewModel0 = new AppVersionViewModel();
             
             string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
-            viewModel0 = JsonConvert.DeserializeObject<aboutViewModel>(File.ReadAllText(jsonpath0));
+            viewModel0 = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath0));
             if (viewModel0.extendedLogs)
             
             {
-                var qViewModel = new qwindow280ViewModel();
+                var qViewModel = new QuestionWindow280ViewModel();
                 qViewModel.headtxt = "Включены расширенные логи. " +
                     "Плагин будет работать медленнее, но соберет больше данных. " +
                     "Выключить расширенные логи для ускорения работы?";
-                var qwpfview = new qwindow280(qViewModel);
+                var qwpfview = new QuestionWindow280(qViewModel);
                 qViewModel.CloseRequest += (s, e) => qwpfview.Close();
                 bool? qok = qwpfview.ShowDialog();
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log("Расширенные логи вкл",2);
@@ -89,7 +89,7 @@ namespace TNov
             if (list1.Count == 0)
             {
                 string info1txt = "Ошибка! В проекте отсутствуют типы полов. Необходимо наличие перекрытий со значением параметра Группа модели, содержащим слово Пол.";
-                var info1 = new infowindow400(info1txt); info1.ShowDialog();
+                var info1 = new InfoWindow400(info1txt); info1.ShowDialog();
                 string commandText = @"https://portal.talan.group/knowledge/proektirovanie/poly/";
                 var proc = new System.Diagnostics.Process();
                 proc.StartInfo.FileName = commandText;
@@ -302,8 +302,8 @@ namespace TNov
             }
             if (created > 0)
             {
-                if (created == 1) { var info1 = new infowindow280("Успешно!\nПол в выбранном помещении создан."); info1.ShowDialog(); }
-                else { var info1 = new infowindow280("Успешно!\nСозданы полы в количестве " + created.ToString() + " шт."); info1.ShowDialog(); }
+                if (created == 1) { var info1 = new InfoWindow280("Успешно!\nПол в выбранном помещении создан."); info1.ShowDialog(); }
+                else { var info1 = new InfoWindow280("Успешно!\nСозданы полы в количестве " + created.ToString() + " шт."); info1.ShowDialog(); }
             }
             Logger.Log("Завершение работы.", 5);
             return Result.Succeeded;

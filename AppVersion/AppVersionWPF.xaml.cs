@@ -9,11 +9,11 @@ using System.IO;
 namespace TNov
 {
     /// <summary>
-    /// Логика взаимодействия для about.xaml
+    /// Логика взаимодействия для AppVersionWPF.xaml
     /// </summary>
-    public partial class about : Window
+    public partial class AppVersionWPF : Window
     {
-        public about(aboutViewModel viewModel)
+        public AppVersionWPF(AppVersionViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;

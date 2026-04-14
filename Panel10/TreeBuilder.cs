@@ -2,7 +2,7 @@
 using System.Windows.Forms;
 using System.IO;
 using System.Linq;
-using TNov.main;
+using TNovCommon;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 

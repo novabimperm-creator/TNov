@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 using System.IO;
 using System.Windows.Threading;
 using System.Threading;
-using TNov.main;
+using TNovCommon;
 
 namespace TNov
 {
@@ -36,24 +36,24 @@ namespace TNov
             UIApplication uiApp = RevitAPI.UiApplication; Autodesk.Revit.ApplicationServices.Application rvtApp = uiApp.Application;
             
             //проверка подключения, запись в журнал
-            bool check = false; servercheck sc = new servercheck(in TNovClassName, out check); if (check == false) { return Result.Failed; }
+            if(ServerUtils.CheckConnection(TNovClassName)==false) return Result.Failed;
 
             // создание log - файла
             Logger.Initialize(TNovClassName);
             
 
-            var viewModel0 = new aboutViewModel();
+            var viewModel0 = new AppVersionViewModel();
             
             string jsonpath0 = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json"); 
-            viewModel0 = JsonConvert.DeserializeObject<aboutViewModel>(File.ReadAllText(jsonpath0));
+            viewModel0 = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath0));
             if (viewModel0.extendedLogs)
             
             {
-                var qViewModel = new qwindow280ViewModel();
+                var qViewModel = new QuestionWindowViewModel();
                 qViewModel.headtxt = "Включены расширенные логи. " +
                     "Плагин будет работать медленнее, но соберет больше данных. " +
                     "Выключить расширенные логи для ускорения работы?";
-                var qwpfview = new qwindow280(qViewModel);
+                var qwpfview = new QuestionWindow280(qViewModel);
                 qViewModel.CloseRequest += (s, e) => qwpfview.Close();
                 bool? qok = qwpfview.ShowDialog();
                 if (qok != null && qok == true) { Logger.TurnOffExtendedLogs(); } else Logger.Log( "Расширенные логи вкл", 2);
@@ -74,7 +74,7 @@ namespace TNov
 
             int pc = parks.Count;
             if(pc ==  0) 
-            { var info1 = new infowindow280("В проекте отсутствуют элементы паркинга."); info1.ShowDialog(); return Result.Failed; }
+            { var info1 = new InfoWindow280("В проекте отсутствуют элементы паркинга."); info1.ShowDialog(); return Result.Failed; }
 
             ElementId workviewid = uidoc.ActiveView.Id;
             Logger.Log("Элементы собраны. Выбор сценария",1);
@@ -209,11 +209,11 @@ namespace TNov
                 badelems = badelems.Remove(ind);
                 ind--; badelems = badelems.Remove(ind);
                 // Диалоговое окно
-                var viewModel1 = new infowindowtextfieldViewModel();
+                var viewModel1 = new InfoWindowTextFieldViewModel();
                 viewModel1.headtxt = "У некоторых паркомест на заполнен исходный параметр:";
                 viewModel1.ids = badelems;
                 viewModel1.lowtxt = "Эти элементы не обработаны, проверьте их.";
-                var wpfview1 = new infowindowtextfield(viewModel1);
+                var wpfview1 = new InfoWindowTextField(viewModel1);
                 viewModel1.CloseRequest += (s, e) => wpfview1.Close();
                 bool? ok1 = wpfview1.ShowDialog();
             }

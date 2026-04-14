@@ -9,8 +9,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using TNov.main;
+using TNovCommon;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using TNovCommon;
 
 namespace TNov
 {
@@ -1131,6 +1132,8 @@ namespace TNov
                 else if (Name.Contains("Электр")) TNazn = "Техническое";
                 else if (Name.Contains("связи")) TNazn = "Техническое";
                 else if (Name.Contains("Технич")) TNazn = "Техническое";
+                else if (Name.Contains("Техпом")) TNazn = "Техническое";
+                else if (Name.Contains("кондиц")) TNazn = "Техническое";
                 else if (Name.Contains("ИТП")) TNazn = "Техническое";
                 else if (Name.Contains("Котельная")) TNazn = "Техническое";
                 else if (Name.Contains("Пульт")) TNazn = "Техническое";

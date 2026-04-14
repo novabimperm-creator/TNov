@@ -5,11 +5,13 @@ using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using TNov.main;
+using TNovCommon;
+using TNovCommon;
 
 namespace TNov
 {
@@ -59,95 +61,113 @@ namespace TNov
             {
                 foreach (ElementId id in ids)
                 {
-                    Element elem = doc.GetElement(id);
-                    int scenario = 0; // 1 - кладовые, 2 - квартиры, 3 - офисы
-                    if (elem.get_Parameter(BuiltInParameter.ROOM_NAME).AsString().Contains("Кладов")) scenario = 1;
-                    if (elem.get_Parameter(paramAGuid) != null)
+                    try 
                     {
-                        if (elem.get_Parameter(paramAGuid).AsInteger() == 1) scenario = 2;
-                    }
-                    if (elem.get_Parameter(paramOGuid) != null)
-                    {
-                        if (elem.get_Parameter(paramOGuid).AsString() != null && elem.get_Parameter(paramOGuid).AsString().Length > 0)
-                        {
-                            double num = 0;
-                            bool isOffice = Double.TryParse(elem.get_Parameter(paramOGuid).AsString(), out num);
-                            if (isOffice && num > 0) scenario = 3;
-                        }
-                    }
-                    if (scenario > 0)
-                    {
-                        string value = ""; string part1 = "";
-                        if (elem.get_Parameter(param1Guid) != null)
-                        { part1 = elem.get_Parameter(param1Guid).AsString(); if (part1 != null && part1.Length > 0) value += part1; }
-                        if (elem.get_Parameter(param2Guid) != null)
-                        {
-                            double part2 = Math.Round(elem.get_Parameter(param2Guid).AsDouble() / 10.76391);
-                            if (Math.Abs(part2) > 0)
-                            {
-                                string pt2 = part2.ToString();
+                        Element elem = doc.GetElement(id);
+                        if (elem == null) continue;
 
-                                if (Math.Abs(part2) < 10)
-                                {
-                                    if (pt2.StartsWith("-")) { pt2 = pt2.Replace("-", "-" + prefix); }
-                                    else pt2 = prefix + pt2;
-                                }
-                                value += "-" + pt2;
+                        int scenario = 0; // 1 - кладовые, 2 - квартиры, 3 - офисы
+
+                        Parameter roomNameParam = elem.get_Parameter(BuiltInParameter.ROOM_NAME);
+                        if (roomNameParam != null && roomNameParam.AsString()?.Contains("Кладов") == true) scenario = 1;
+                        else
+                        {
+                            if (Param.ParamExistByGuid(paramAGuid, elem))
+                            {
+                                if (elem.get_Parameter(paramAGuid).AsInteger() == 1) scenario = 2;
                             }
-                        }
-                        string part3 = ""; double part3double = 0;
-                        switch (scenario)
-                        {
-                            case 1:
-                                part3 = elem.get_Parameter(BuiltInParameter.ROOM_NUMBER).AsString();
-                                break;
-                            case 2:
-                                part3 = elem.get_Parameter(param3AGuid).AsValueString();
-                                break;
-                            case 3:
-                                part3 = elem.get_Parameter(paramOGuid).AsString();
-                                break;
-                        }
-
-                        if (part3 != null && part3.Length > 0)
-                        {
-                            double.TryParse(part3, out part3double);
-                            if (part3double > 0 && part3double < 10) part3 = prefix + part3;
-                            value += "-" + part3;
-                        }
-
-                        string comments = "";
-                        Parameter roomNazn = elem.get_Parameter(BuiltInParameter.ROOM_DEPARTMENT);
-                        if (scenario == 3 && roomNazn != null)
-                        {
-                            string nazn = "Офис";
-                            if (roomNazn.AsString() != null && roomNazn.AsString().Length > 0)
+                            if (Param.ParamExistByGuid(paramOGuid, elem))
                             {
-                                nazn = roomNazn.AsString();
-                            }
-                            comments = nazn + " (№" + value + ")";
-                        }
-                        if (comments.Length > 0)
-                            elem.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(comments);//назначаем также параметр Комментарии для спецификации офисов
-                        elem.get_Parameter(paramTGuid).Set(value); //назначение целевого параметра
-
-
-                        if (Param.ParamExistByGuid(NTParamsNotSetParamGuid, elem))
-                        {
-                            if (elem.get_Parameter(NTParamsNotSetParamGuid).AsDouble() != 1)
-                            {
-                                string value1 = GetTNazn(roomNazn.AsString(), elem.get_Parameter(BuiltInParameter.ROOM_NAME).AsString());
-                                if (Param.ParamExistByGuid(TPolozhParamGuid, elem))
+                                if (elem.get_Parameter(paramOGuid).AsString() != null && elem.get_Parameter(paramOGuid).AsString().Length > 0)
                                 {
-                                    elem.get_Parameter(TPolozhParamGuid).Set(value1);
-                                }
-                                if (Param.ParamExistByGuid(TNaznParamGuid, elem))
-                                {
-                                    elem.get_Parameter(TNaznParamGuid).Set(value1);
+                                    double num = 0;
+                                    bool isOffice = Double.TryParse(elem.get_Parameter(paramOGuid).AsString(), out num);
+                                    if (isOffice && num > 0) scenario = 3;
                                 }
                             }
                         }
+                        if (scenario > 0)
+                        {
+                            string value = ""; string part1 = "";
+                            if (Param.ParamExistByGuid(param1Guid, elem))
+                            {
+                                part1 = elem.get_Parameter(param1Guid).AsString();
+                                if (part1 != null && part1.Length > 0) value += part1;
+                            }
+                            if (Param.ParamExistByGuid(param2Guid, elem))
+                            {
+                                double part2 = Math.Round(elem.get_Parameter(param2Guid).AsDouble() / 10.76391);
+                                if (Math.Abs(part2) > 0)
+                                {
+                                    string pt2 = part2.ToString();
+
+                                    if (Math.Abs(part2) < 10)
+                                    {
+                                        if (pt2.StartsWith("-")) { pt2 = pt2.Replace("-", "-" + prefix); }
+                                        else pt2 = prefix + pt2;
+                                    }
+                                    value += "-" + pt2;
+                                }
+                            }
+                            string part3 = ""; double part3double = 0;
+                            switch (scenario)
+                            {
+                                case 1:
+                                    part3 = elem.get_Parameter(BuiltInParameter.ROOM_NUMBER).AsString();
+                                    break;
+                                case 2:
+                                    if (Param.ParamExistByGuid(param3AGuid, elem))
+                                        part3 = elem.get_Parameter(param3AGuid).AsValueString();
+                                    break;
+                                case 3:
+                                    if (Param.ParamExistByGuid(paramOGuid, elem))
+                                        part3 = elem.get_Parameter(paramOGuid).AsString();
+                                    break;
+                            }
+
+                            if (part3 != null && part3.Length > 0)
+                            {
+                                double.TryParse(part3, out part3double);
+                                if (part3double > 0 && part3double < 10) part3 = prefix + part3;
+                                value += "-" + part3;
+                            }
+
+                            string comments = "";
+                            Parameter roomNazn = elem.get_Parameter(BuiltInParameter.ROOM_DEPARTMENT);
+                            string roomNaznValue = "";
+                            if (roomNazn.HasValue) roomNaznValue = roomNazn.AsString();
+                            if (scenario == 3 && roomNaznValue.Length > 0)
+                            {
+                                comments = roomNaznValue + " (№" + value + ")";
+                            }
+                            if (comments.Length > 0)
+                                elem.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(comments);//назначаем также параметр Комментарии для спецификации офисов
+                            
+                            if(Param.ParamExistByGuid(paramTGuid, elem)) elem.get_Parameter(paramTGuid).Set(value); 
+
+
+                            if (Param.ParamExistByGuid(NTParamsNotSetParamGuid, elem))
+                            {
+                                if (elem.get_Parameter(NTParamsNotSetParamGuid).AsDouble() != 1)
+                                {
+                                    string value1 = GetTNazn(roomNazn.AsString(), elem.get_Parameter(BuiltInParameter.ROOM_NAME).AsString());
+                                    if (Param.ParamExistByGuid(TPolozhParamGuid, elem))
+                                    {
+                                        elem.get_Parameter(TPolozhParamGuid).Set(value1);
+                                    }
+                                    if (Param.ParamExistByGuid(TNaznParamGuid, elem))
+                                    {
+                                        elem.get_Parameter(TNaznParamGuid).Set(value1);
+                                    }
+                                }
+                            }
+                        }
                     }
+                    catch (Exception)
+                    {
+                        
+                    }
+                    
 
 
                 }
@@ -178,6 +198,8 @@ namespace TNov
                 else if (Name.Contains("Электр")) TNazn = "Техническое";
                 else if (Name.Contains("связи")) TNazn = "Техническое";
                 else if (Name.Contains("Технич")) TNazn = "Техническое";
+                else if (Name.Contains("Техпом")) TNazn = "Техническое";
+                else if (Name.Contains("кондиц")) TNazn = "Техническое";
                 else if (Name.Contains("ИТП")) TNazn = "Техническое";
                 else if (Name.Contains("Котельная")) TNazn = "Техническое";
                 else if (Name.Contains("Пульт")) TNazn = "Техническое";
