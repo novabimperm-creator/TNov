@@ -436,7 +436,7 @@ namespace TNov
             buttonDataN.SetContextualHelp(mainhelp);
 
             // кнопка "Настройки"
-
+            /*
             PushButtonData buttonDataTest = new PushButtonData(nameof(PluginSettingsCommand), "Настройки", typeof(PluginSettingsCommand).Assembly.Location, typeof(PluginSettingsCommand).FullName)
             {
                 //LargeImage = GetImageSource(imgN),
@@ -444,8 +444,8 @@ namespace TNov
                 ToolTip = "Глобальные настройки плагина и сведения о программе."
             };
             buttonDataTest.SetContextualHelp(mainhelp);
-
-            IList<RibbonItem> ribbonItemList0 = panel0.AddStackedItems(buttonDataN,(RibbonItemData)comboData, buttonDataTest);
+            */
+            IList<RibbonItem> ribbonItemList0 = panel0.AddStackedItems(buttonDataN, (RibbonItemData)comboData);//, buttonDataTest);
             _comboBox = ribbonItemList0[1] as ComboBox; 
             _comboBox.AddItem(new ComboBoxMemberData("Все", "Все"));
             _comboBox.AddItem(new ComboBoxMemberData("АР", "АР"));
@@ -455,7 +455,7 @@ namespace TNov
             _comboBox.CurrentChanged += OnComboBoxCurrentChanged; //подписка на событие изменения выбора
 
             // кнопка "Тестовая команда"
-
+            /*
             PushButtonData buttonDataTestSC = new PushButtonData(nameof(TestSimpleCommand), "Тест", typeof(TestSimpleCommand).Assembly.Location, typeof(TestSimpleCommand).FullName)
             {
                 LargeImage = GetImageSource(imgN),
@@ -464,7 +464,7 @@ namespace TNov
             };
             buttonDataTestSC.SetContextualHelp(mainhelp);
             panel0.AddItem(buttonDataTestSC);
-
+            */
             // Панель "Проект"
 
             RibbonPanel panelСommon = application.CreateRibbonPanel(tabName, "Общее");
