@@ -684,6 +684,6 @@
     <PostBuildEvent>start /d "Z:\DEV\TNovDebug\bin\Release\net9.0" TNovDebug.exe</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>powershell -ExecutionPolicy Bypass -File "$(ProjectDir)UpdateVersion.ps1" -Major 4 -Minor 4</PreBuildEvent>
+    <PreBuildEvent>powershell -ExecutionPolicy Bypass -File "$(ProjectDir)UpdateVersion.ps1" -Major 4 -Minor 5</PreBuildEvent>
   </PropertyGroup>
 </Project>

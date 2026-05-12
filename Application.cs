@@ -1,4 +1,5 @@
-﻿using Autodesk.Revit.Attributes;
+﻿#region Ссылки
+using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
@@ -17,6 +18,7 @@ using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using TNovBeams;
@@ -48,11 +50,14 @@ git add .
 git commit -m "4.0.1"
 git push origin main
  */
+#endregion
+
 namespace TNov
 {
     [Regeneration(RegenerationOption.Manual)]
     internal class Application : IExternalApplication
     {
+        #region Переменные класса
         static AddInId addinId = new AddInId(new Guid("83403DB6-EA74-4E10-85B3-508AE241A743"));
 
         private DateTime? _startTime = null;
@@ -67,11 +72,38 @@ namespace TNov
         private static List<RibbonPanel> _MEPRibbonItems = new List<RibbonPanel>();
         private static List<RibbonPanel> _BIMRibbonItems = new List<RibbonPanel>();
         private ComboBox _comboBox;
+        TNovConfig _config = new TNovConfig();
+
+        static string clientFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient");
+        static string serverPath = clientFolderPath; //"//fs-nova/Distr/0.For Admin/_TNov/"
+        #endregion
         public Result OnStartup(UIControlledApplication application)
         {
-            // Подписываемся на событие создания нового документа
-            application.ControlledApplication.DocumentCreated += OnDocumentCreated;
-
+            #region Конфигурация
+            //конфиг
+            _config = LoadConfig();
+            if (_config.LicenseType != null)
+            {
+                Debug.WriteLine($"Конфигурация загружена: LicenseType={_config.LicenseType}, CorpName={_config.CorpName}, ServerPath={_config.ServerPath}");
+                if(_config.LicenseType=="corp") serverPath = _config.ServerPath;
+            }
+            #endregion
+            #region События
+            //Регистрация событий
+            try
+            {
+                application.ControlledApplication.DocumentOpening += new EventHandler<DocumentOpeningEventArgs>(OnDocumentOpening);
+                application.ControlledApplication.DocumentOpened += new EventHandler<DocumentOpenedEventArgs>(OnDocumentOpened);
+                application.ControlledApplication.DocumentSynchronizingWithCentral += new EventHandler<DocumentSynchronizingWithCentralEventArgs>(OnSyncCentralStart);
+                application.ControlledApplication.DocumentSynchronizedWithCentral += new EventHandler<DocumentSynchronizedWithCentralEventArgs>(OnSyncCentralEnd);
+                application.ControlledApplication.DocumentClosed += new EventHandler<DocumentClosedEventArgs>(OnDocumentClosed);
+                application.Idling += OnIdling;
+                application.ControlledApplication.DocumentCreated += OnDocumentCreated;
+                application.DialogBoxShowing += new EventHandler<DialogBoxShowingEventArgs>(a_DialogBoxShowing);
+            }
+            catch (Exception) { }
+            #endregion
+            #region Раскраска вкладок
             //Подгрузка настроек времени раскраски вкладок
             var viewModel0 = new AppVersionViewModel();
             string jsonpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
@@ -101,7 +133,8 @@ namespace TNov
             {
                 time1 = 60000; time2 = 120000;
             }
-
+            #endregion
+            #region Revit.ini
             //Проверка ключей в файле revit.ini
             try
             {
@@ -201,24 +234,8 @@ namespace TNov
                 // Можно залогировать ошибку, но не прерываем запуск Revit
                 new InfoWindow280($"Ошибка при изменении файла revit.ini: {ex.Message}").Show();
             }
-
-
-            //Регистрация событий
-            try
-            {
-                application.ControlledApplication.DocumentOpening += new EventHandler<DocumentOpeningEventArgs>(OnDocumentOpening);
-                application.ControlledApplication.DocumentOpened += new EventHandler<DocumentOpenedEventArgs>(OnDocumentOpened);
-                application.ControlledApplication.DocumentSynchronizingWithCentral += new EventHandler<DocumentSynchronizingWithCentralEventArgs>(OnSyncCentralStart);
-                application.ControlledApplication.DocumentSynchronizedWithCentral += new EventHandler<DocumentSynchronizedWithCentralEventArgs>(OnSyncCentralEnd);
-                application.ControlledApplication.DocumentClosed += new EventHandler<DocumentClosedEventArgs>(OnDocumentClosed);
-                application.Idling += OnIdling;
-
-                application.DialogBoxShowing += new EventHandler<DialogBoxShowingEventArgs>(a_DialogBoxShowing);
-            }
-            catch (Exception) { }
-
-            //Апдейтеры
-
+            #endregion
+            #region Апдейтеры
             //фильтры для апдейтеров
 
             ElementCategoryFilter filterGM = new ElementCategoryFilter(BuiltInCategory.OST_GenericModel);
@@ -334,41 +351,8 @@ namespace TNov
             TNovParsOpredARUpdater parsOpredARUpdater = new TNovParsOpredARUpdater(application.ActiveAddInId); //Т Опред АР
             UpdaterRegistry.RegisterUpdater(parsOpredARUpdater, true);
             UpdaterRegistry.AddTrigger(parsOpredARUpdater.GetUpdaterId(), combinedFilterAR, Element.GetChangeTypeAny());
-
-            // Создание вкладок, панелей, кнопок
-
-            string assebblyLocation = Assembly.GetExecutingAssembly().Location, tabName = "TNov";
-
-            application.CreateRibbonTab(tabName);
-
-
-
-            ContextualHelp mainhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/");
-
-            // Панель "Настройки"
-
-            RibbonPanel panel0 = application.CreateRibbonPanel(tabName, "Настройки");
-
-            ComboBoxData comboData = new ComboBoxData("Режим");
-            
-            //проверка актуальности версии 
-#if config1 || config2
-            string TNovVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            string[] versionparts = TNovVersion.Split('.');
-            double versionMath = Convert.ToDouble(versionparts[0] + "000000") + Convert.ToDouble(versionparts[1] + "0000") +
-                Convert.ToDouble(versionparts[2] + "00") + Convert.ToDouble(versionparts[3]);
-            string verfilePath = nova.novaserver + "_TNov/actual/version.txt";
-            string actualVersion = TNovVersion;
-            try
-            {
-                actualVersion = File.ReadAllText(verfilePath);
-            }
-            catch (Exception) { }
-            string[] actualversionparts = actualVersion.Split('.');
-            double actualversionMath = Convert.ToDouble(actualversionparts[0] + "000000") + Convert.ToDouble(actualversionparts[1] + "0000") +
-                Convert.ToDouble(actualversionparts[2] + "00") + Convert.ToDouble(actualversionparts[3]);
-
+            #endregion
+            #region Клиент   
             // проверка актуальности клиента, переустановка и перезапуск клиента
 
             bool run = Process.GetProcessesByName("TNovClient").Any();
@@ -383,7 +367,7 @@ namespace TNov
             double versionMathC = Convert.ToDouble(versionpartsC[0] + "000000") + Convert.ToDouble(versionpartsC[1] + "0000") +
                 Convert.ToDouble(versionpartsC[2] + "00") + Convert.ToDouble(versionpartsC[3]);
  
-            string verfilePathC = nova.novaserver + "_TNov/actual/clientversion.txt";
+            string verfilePathC = serverPath + "actual/clientversion.txt";
             string actualVersionC = curClientVersion;
             try
             {
@@ -400,11 +384,13 @@ namespace TNov
                 {
                     if (run) { Process.GetProcessesByName("TNovClient").First().Kill(); }
                     Thread.Sleep(5000);
-                    File.Copy(nova.novafolder + "client/TNovClient.deps.json", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.deps.json"), true);
-                    File.Copy(nova.novafolder + "client/TNovClient.dll", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.dll"), true);
-                    File.Copy(nova.novafolder + "client/TNovClient.exe", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.exe"), true);
-                    File.Copy(nova.novafolder + "client/TNovClient.pdb", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.pdb"), true);
-                    File.Copy(nova.novafolder + "client/TNovClient.runtimeconfig.json", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.runtimeconfig.json"), true);
+                    string[] filesInFolder = Directory.GetFiles(serverPath + "actual/client")
+                              .ToArray();
+                    foreach (var file in filesInFolder)
+                    { 
+                        var fileName = Path.GetFileName(file);
+                        File.Copy(file, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $"TNovClient/{fileName}"), true);
+                    }
                 }
                 catch (Exception) { }
             }
@@ -417,17 +403,30 @@ namespace TNov
                 }
                 catch (Exception) { }
             }
-#endif
+#endregion
+            #region Кнопки
+            // Создание вкладок, панелей, кнопок
+
+            string assebblyLocation = Assembly.GetExecutingAssembly().Location, tabName = "TNov";
+
+            application.CreateRibbonTab(tabName);
+
+
+
+            ContextualHelp mainhelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/");
+
+            // Панель "Настройки"
+
+            RibbonPanel panel0 = application.CreateRibbonPanel(tabName, "Настройки");
+
+            ComboBoxData comboData = new ComboBoxData("Режим");
+
+
             // кнопка "Настройки"
 
             System.Drawing.Image imgN = Properties.Resources.logo;
-#if config1 || config2
-            if (actualversionMath > versionMath) { imgN = Properties.Resources.attention32; }
-#endif
             System.Drawing.Image imgNmin = Properties.Resources.logomin;
-#if config1 || config2
-            if (actualversionMath > versionMath) { imgNmin = Properties.Resources.attention16; }
-#endif
             PushButtonData buttonDataN = new PushButtonData(nameof(AppVersion), "Настройки", typeof(AppVersion).Assembly.Location, typeof(AppVersion).FullName)
             {
                 //LargeImage = GetImageSource(imgN),
@@ -436,7 +435,17 @@ namespace TNov
             };
             buttonDataN.SetContextualHelp(mainhelp);
 
-            IList<RibbonItem> ribbonItemList0 = panel0.AddStackedItems(buttonDataN,(RibbonItemData)comboData);
+            // кнопка "Настройки"
+            /*
+            PushButtonData buttonDataTest = new PushButtonData(nameof(PluginSettingsCommand), "Настройки", typeof(PluginSettingsCommand).Assembly.Location, typeof(PluginSettingsCommand).FullName)
+            {
+                //LargeImage = GetImageSource(imgN),
+                Image = GetImageSource(imgNmin),
+                ToolTip = "Глобальные настройки плагина и сведения о программе."
+            };
+            buttonDataTest.SetContextualHelp(mainhelp);
+            */
+            IList<RibbonItem> ribbonItemList0 = panel0.AddStackedItems(buttonDataN, (RibbonItemData)comboData);//, buttonDataTest);
             _comboBox = ribbonItemList0[1] as ComboBox; 
             _comboBox.AddItem(new ComboBoxMemberData("Все", "Все"));
             _comboBox.AddItem(new ComboBoxMemberData("АР", "АР"));
@@ -444,8 +453,18 @@ namespace TNov
             _comboBox.AddItem(new ComboBoxMemberData("Сети", "Сети"));
             _comboBox.AddItem(new ComboBoxMemberData("BIM", "BIM"));
             _comboBox.CurrentChanged += OnComboBoxCurrentChanged; //подписка на событие изменения выбора
-            
+            /*
+            // кнопка "Тестовая команда"
 
+            PushButtonData buttonDataTestSC = new PushButtonData(nameof(TestSimpleCommand), "Тест", typeof(TestSimpleCommand).Assembly.Location, typeof(TestSimpleCommand).FullName)
+            {
+                LargeImage = GetImageSource(imgN),
+                Image = GetImageSource(imgNmin),
+                ToolTip = "Глобальные настройки плагина и сведения о программе."
+            };
+            buttonDataTestSC.SetContextualHelp(mainhelp);
+            panel0.AddItem(buttonDataTestSC);
+            */
             // Панель "Проект"
 
             RibbonPanel panelСommon = application.CreateRibbonPanel(tabName, "Общее");
@@ -1322,13 +1341,27 @@ namespace TNov
             */
 
 
-            // Панель "Отверстия"
+            // Панель "Задания"
 
-            RibbonPanel panelTasks = application.CreateRibbonPanel(tabName, "Отверстия");
+            RibbonPanel panelTasks = application.CreateRibbonPanel(tabName, "Задания");
 
-            // кнопка с выпадающим списком "Задания от ИОС"
+            // кнопка "Выдать задание"
 
-            //подкнопка "Задания от ИОС"
+            System.Drawing.Image imgtasksend = Properties.Resources.tasksend32;
+            System.Drawing.Image imgtasksendmin = Properties.Resources.tasksend16;
+            PushButtonData buttonDatatasksend = new PushButtonData(nameof(TaskSend), "Отправить\nзадание", typeof(TaskSend).Assembly.Location, typeof(TaskSend).FullName)
+            {
+                LargeImage = GetImageSource(imgtasksend),
+                Image = GetImageSource(imgtasksendmin),
+                ToolTip = "Выдать/перевыдать задание в систему выдачи заданий."
+            };
+            ContextualHelp gettaskhelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/samostoyatelnoemodelirovanieotverstiy/");
+            buttonDatatasksend.SetContextualHelp(gettaskhelp);
+            panelTasks.AddItem(buttonDatatasksend);
+
+            // кнопка "Задания от ИОС"
+
             System.Drawing.Image imggettask = Properties.Resources.gettask32;
             System.Drawing.Image imggettaskmin = Properties.Resources.gettask16;
             PushButtonData buttonDatagettask = new PushButtonData(nameof(TasksMenu), "Задания\nот ИОС", typeof(TasksMenu).Assembly.Location, typeof(TasksMenu).FullName)
@@ -1337,41 +1370,49 @@ namespace TNov
                 Image = GetImageSource(imggettaskmin),
                 ToolTip = "Проверить статусы выданных заданий, внедрить/обновить задание."
             };
-            ContextualHelp gettaskhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/samostoyatelnoemodelirovanieotverstiy/");
             buttonDatagettask.SetContextualHelp(gettaskhelp);
+            panelTasks.AddItem(buttonDatagettask);
 
-            //подкнопка "Найти элементы"
+            // группа кнопок "Автонумерация", "Найти по номеру", "Проверка отверстий"
+
+            // сгруппированная кнопка "Автонумерация"
+
+            System.Drawing.Image imgtaskauto = Properties.Resources.taskautomark32;
+            System.Drawing.Image imgtaskautomin = Properties.Resources.taskautomark16;
+            PushButtonData buttonDatataskauto = new PushButtonData(nameof(TasksAutoMark), "Автонумерация", typeof(TasksAutoMark).Assembly.Location, typeof(TasksAutoMark).FullName)
+            {
+                Image = GetImageSource(imgtaskautomin),
+                ToolTip = "Пронумеровать элементы заданий в выбранной группе (в модели Заданий)."
+            };
+            ContextualHelp taskautohelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/MEPtasks/");
+            buttonDatataskauto.SetContextualHelp(taskautohelp);
+
+            // сгруппированная кнопка "Найти по номеру"
+
             System.Drawing.Image imggettaskelems = Properties.Resources.idselectionTasks32;
             System.Drawing.Image imggettaskelemsmin = Properties.Resources.idselectionTasks16;
             PushButtonData buttonDatagettaskelems = new PushButtonData(nameof(IdSelectionTasks), "Найти элементы", typeof(IdSelectionTasks).Assembly.Location, typeof(IdSelectionTasks).FullName)
             {
-                LargeImage = GetImageSource(imggettaskelems),
                 Image = GetImageSource(imggettaskelemsmin),
                 ToolTip = "Найти отверстия или другие компоненты заданий по Маркам (позициям)."
             };
-            buttonDatagettaskelems.SetContextualHelp(gettaskhelp);
+            buttonDatagettaskelems.SetContextualHelp(taskautohelp);
 
-            //подкнопка "Проверка отверстий"
+            // сгруппированная кнопка "Проверка отверстий"
 
             System.Drawing.Image imgholescheckdynamo = Properties.Resources.dynpl32;
             System.Drawing.Image imgholescheckdynamomin = Properties.Resources.dynpl16;
             PushButtonData buttonDataholescheckdynamo = new PushButtonData(nameof(HolesCheckDynamo), "Проверка\nотверстий", typeof(HolesCheckDynamo).Assembly.Location, typeof(HolesCheckDynamo).FullName)
             {
-                LargeImage = GetImageSource(imgholescheckdynamo),
                 Image = GetImageSource(imgholescheckdynamomin),
                 ToolTip = "Запустить скрипт Чек-лист.Отверстия (Dynamo)."
             };
-            ContextualHelp holescheckdynamohelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/samostoyatelnoemodelirovanieotverstiy/");
-            buttonDataholescheckdynamo.SetContextualHelp(holescheckdynamohelp);
+            buttonDataholescheckdynamo.SetContextualHelp(taskautohelp);
 
+            // группа
 
-            SplitButtonData buttonDatataskgroup = new SplitButtonData("Задания\nот ИОС", "Проверить статусы выданных заданий, внедрить/обновить задание.");
-            SplitButton grouptask = panelTasks.AddItem(buttonDatataskgroup) as SplitButton;
-            grouptask.AddPushButton(buttonDatagettask);
-            grouptask.AddPushButton(buttonDatagettaskelems);
-            grouptask.AddPushButton(buttonDataholescheckdynamo);
+            panelTasks.AddStackedItems(buttonDatataskauto, buttonDatagettaskelems, buttonDataholescheckdynamo);
 
             // кнопка "Отметки Вырезание"
 
@@ -1471,14 +1512,12 @@ namespace TNov
             }
             catch { }
 
-            // Результат создания кнопок и панелей
+            #endregion
             return Result.Succeeded;
-
         }
-
-        
         public Result OnShutdown(UIControlledApplication application)
         {
+            #region Апдейтеры отписка
             TNovHoleUpdater holeUpdater = new TNovHoleUpdater(application.ActiveAddInId);
             UpdaterRegistry.UnregisterUpdater(holeUpdater.GetUpdaterId());
 
@@ -1520,60 +1559,57 @@ namespace TNov
 
             TNovParsOpredARUpdater parsOpredARUpdater = new TNovParsOpredARUpdater(application.ActiveAddInId); 
             UpdaterRegistry.UnregisterUpdater(parsOpredARUpdater.GetUpdaterId());
-
+            #endregion
+            #region События отписка
             application.ControlledApplication.DocumentOpening -= OnDocumentOpening;
             application.ControlledApplication.DocumentOpened -= OnDocumentOpened;
             application.ControlledApplication.DocumentSynchronizingWithCentral -= OnSyncCentralStart;
             application.ControlledApplication.DocumentSynchronizedWithCentral -= OnSyncCentralEnd;
             application.ControlledApplication.DocumentClosed -= OnDocumentClosed;
             application.Idling -= OnIdling;
-
             application.DialogBoxShowing -= a_DialogBoxShowing;
-
+            #endregion
             return Result.Succeeded;
         }
-
-        //Обработчики событий
+        #region Обработчики событий
 
         private void OnDocumentCreated(object sender, Autodesk.Revit.DB.Events.DocumentCreatedEventArgs e)
         {
-#if config1
-            //имя пользователя
-            Application revitApp = sender as Application;
-            UIApplication uiApp = new UIApplication(e.Document.Application);
-            string userName = uiApp.Application.Username;
-            string[] rolesFile = File.ReadAllLines("//fs-nova/Distr/0.For Admin/_TNov/roles.txt");
-            bool correctUserName = false;
-            foreach (string role in rolesFile)
+            if(_config.LicenseType=="corp"&&_config.CorpName=="ООО ПМ Новация") //в перспективе - запускать для любой корп конфигурации (считывая с сайта)
             {
-                if (role.Contains(userName))
+                //Проверка имени пользователя
+                Application revitApp = sender as Application;
+                UIApplication uiApp = new UIApplication(e.Document.Application);
+                string userName = uiApp.Application.Username;
+                string[] rolesFile = File.ReadAllLines($"{serverPath}roles.txt");
+                bool correctUserName = false;
+                foreach (string role in rolesFile)
                 {
-                    correctUserName = true; break;
+                    if (role.Contains(userName))
+                    {
+                        correctUserName = true; break;
+                    }
+                }
+
+                if (!correctUserName)
+                {
+                    new InfoWindow280("Ваше имя пользователя в Revit: " + userName + "\n" +
+                    "Имя должно соответствовать вашему логину в компании (пример: kadysheva.n). Измените имя в настройках Revit.").ShowDialog();
+
+                    string link = "https://portal.talan.group/knowledge/proektirovanie/startraboty/";
+                    string commandText = @link;
+                    var proc = new System.Diagnostics.Process();
+                    proc.StartInfo.FileName = commandText;
+                    proc.StartInfo.UseShellExecute = true;
+                    proc.Start();
                 }
             }
-
-            if (!correctUserName)
-            {
-                new InfoWindow280("Ваше имя пользователя в Revit: " + userName + "\n" +
-                "Имя должно соответствовать вашему логину в компании (пример: kadysheva.n). Измените имя в настройках Revit.").ShowDialog();
-
-                string link = "https://portal.talan.group/knowledge/proektirovanie/startraboty/";
-                string commandText = @link;
-                var proc = new System.Diagnostics.Process();
-                proc.StartInfo.FileName = commandText;
-                proc.StartInfo.UseShellExecute = true;
-                proc.Start();
-            }
-#endif
         }
         private void OnDocumentOpening(object sender, DocumentOpeningEventArgs e)
         {
             //время открытия
             if (e.DocumentType == DocumentType.Project) _startTime = DateTime.Now;
-
-
         }
-
         void a_DialogBoxShowing(object sender, DialogBoxShowingEventArgs e)
         {
             TaskDialogShowingEventArgs e2
@@ -1585,69 +1621,68 @@ namespace TNov
             if (e2.DialogId== "TaskDialog_Missing_Third_Party_Updater") { e.OverrideResult(1); }
             if (e2.DialogId== "Dialog_Revit_DocWarnDialog") { e.OverrideResult(1); }
         }
-
         public void OnDocumentOpened(object sender, DocumentOpenedEventArgs e)
         {
             info = BasicFileInfo.Extract(e.Document.PathName);
-            string usagefilePath = nova.novaserver + "_TNov/usage.txt";
-            bool servercheck = File.Exists(usagefilePath);
 
-            //время открытия
-            if (servercheck&&_startTime.HasValue&& info.IsWorkshared)
+            if (_config.LicenseType == "corp") 
             {
-                double seconds = (DateTime.Now - _startTime.Value).TotalSeconds;
-                seconds = Math.Round(seconds);
-                string modelPath = e.Document.PathName;
-                string docName = Path.GetFileName(modelPath);
-                docName = docName.Replace(",", " ");
-                Autodesk.Revit.ApplicationServices.Application rvtApp = e.Document.Application;
-                string userName = rvtApp.Username; string docNameUserName = "_" + userName; docName = docName.Replace(docNameUserName, "");
-                docName = docName.Replace(".rvt", "");
-                string path = $"{nova.novaserver}_TNov/users/{userName},{docName}.txt";
-                // Получаем таблицу рабочих наборов
-                Document doc = e.Document;
-                WorksetTable worksetTable = doc.GetWorksetTable();
-                FilteredWorksetCollector collector = new FilteredWorksetCollector(doc);
-                collector.OfKind(WorksetKind.UserWorkset);
-                List<string> openWorksets = new List<string>();
-                List<string> closedWorksets = new List<string>();
-                foreach (Workset workset in collector)
+                string usagefilePath = serverPath + "usage.txt";
+                //время открытия
+                if (File.Exists(usagefilePath) && _startTime.HasValue && info.IsWorkshared)
                 {
-                    string wsName = workset.Name;
-                    wsName = wsName.Replace(",", " ");
-                    if (workset.IsOpen)
-                        openWorksets.Add(wsName);
-                    else
-                        closedWorksets.Add(wsName);
-                }
-                string opened = String.Join(" ", openWorksets);
-                string closed = String.Join(" ", closedWorksets);
-                DateTime dateTime = DateTime.Now;
-                string date = dateTime.ToString(); date = date.Replace(":", "-"); date = date.Replace("/", "-"); date = date.Replace(" 0-00-00", "");
-                string fullUserName = WindowsIdentity.GetCurrent().Name;
-                if (File.Exists(path)) date = "\n" + date;
-                string filePath = doc.PathName;
-                double fileSize = 0;
-                if (!string.IsNullOrEmpty(filePath))
-                {
-                    FileInfo fileInfo = new FileInfo(filePath);
-                    if (fileInfo.Exists)
+                    double seconds = (DateTime.Now - _startTime.Value).TotalSeconds;
+                    seconds = Math.Round(seconds);
+                    string modelPath = e.Document.PathName;
+                    string docName = Path.GetFileName(modelPath);
+                    docName = docName.Replace(",", " ");
+                    Autodesk.Revit.ApplicationServices.Application rvtApp = e.Document.Application;
+                    string userName = rvtApp.Username; string docNameUserName = "_" + userName; docName = docName.Replace(docNameUserName, "");
+                    docName = docName.Replace(".rvt", "");
+                    string path = $"{serverPath}users/{userName},{docName}.txt";
+                    // Получаем таблицу рабочих наборов
+                    Document doc = e.Document;
+                    WorksetTable worksetTable = doc.GetWorksetTable();
+                    FilteredWorksetCollector collector = new FilteredWorksetCollector(doc);
+                    collector.OfKind(WorksetKind.UserWorkset);
+                    List<string> openWorksets = new List<string>();
+                    List<string> closedWorksets = new List<string>();
+                    foreach (Workset workset in collector)
                     {
-                        fileSize = fileInfo.Length / 1048576.0;
-                        fileSize = Math.Round(fileSize);
+                        string wsName = workset.Name;
+                        wsName = wsName.Replace(",", " ");
+                        if (workset.IsOpen)
+                            openWorksets.Add(wsName);
+                        else
+                            closedWorksets.Add(wsName);
                     }
+                    string opened = String.Join(" ", openWorksets);
+                    string closed = String.Join(" ", closedWorksets);
+                    DateTime dateTime = DateTime.Now;
+                    string date = dateTime.ToString(); date = date.Replace(":", "-"); date = date.Replace("/", "-"); date = date.Replace(" 0-00-00", "");
+                    string fullUserName = WindowsIdentity.GetCurrent().Name;
+                    if (File.Exists(path)) date = "\n" + date;
+                    string filePath = doc.PathName;
+                    double fileSize = 0;
+                    if (!string.IsNullOrEmpty(filePath))
+                    {
+                        FileInfo fileInfo = new FileInfo(filePath);
+                        if (fileInfo.Exists)
+                        {
+                            fileSize = fileInfo.Length / 1048576.0;
+                            fileSize = Math.Round(fileSize);
+                        }
+                    }
+                    File.AppendAllText(path, $"{date},{seconds},pc: {fullUserName},opened: {opened},closed: {closed},{fileSize}");
                 }
-                File.AppendAllText(path, $"{date},{seconds},pc: {fullUserName},opened: {opened},closed: {closed},{fileSize}"); 
+
             }
 
             //раскраска
             if (info.IsWorkshared)
             {
-                
                 stopwatch = new Stopwatch();
                 stopwatch.Start();
-                
-                
             }
             else stopwatch.Reset();
         }
@@ -1656,59 +1691,44 @@ namespace TNov
             //подсветка
             if (syncOption != "Без подсветки панелей (не рекомендуется)") stopwatch.Reset();
 
-            //задания
-            Document doc = e.Document;
-            Autodesk.Revit.ApplicationServices.Application app = doc.Application;
-
-            ElementId familyNameParamId = new ElementId(-7002); //id параметра Имя семейства
-
-            string docName = doc.Title.ToString();
-            bool taskModel = false; if (docName.Contains("Задани") || docName.Contains("задани") || docName.Contains("-ЗД") || docName.Contains("_ЗД") || docName.Contains("ЗАДАНИЕ")) taskModel = true;
-
-            if (taskModel)
+            if (_config.LicenseType == "corp") //подразумевается, что Корпоративная подписка содержит весь функционал
             {
-                //проверка подключения к серверу
-                string usagefilePath = nova.novaserver + "_TNov/usage.txt";
-                bool servercheck = File.Exists(usagefilePath);
+                //задания
+                Document doc = e.Document;
+                Autodesk.Revit.ApplicationServices.Application app = doc.Application;
 
-                if (servercheck)
+                string docName = doc.Title.ToString();
+                bool taskModel = false; if (docName.Contains("Задани") || docName.Contains("задани") || docName.Contains("-ЗД") || docName.Contains("_ЗД") || docName.Contains("ЗАДАНИЕ")) taskModel = true;
+
+                if (taskModel)
                 {
-                    List<string> groupTxtList = TaskTools.GetGroupsInfo(doc);
-                    
-                    DateTime dateTime = DateTime.Now; string TNovVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                    string date = dateTime.ToString();
-
-                    date = dateTime.ToString().Replace(":", "-");
-                    string tasksPath = nova.novaserver + "_TNov/tasks/" + date + "_" + docName + ".txt";
-
-                    foreach (string s in groupTxtList)
+                    string usagefilePath = serverPath + "usage.txt";
+                    if (File.Exists(usagefilePath))
                     {
-                        try
-                        {
-                            File.AppendAllText(tasksPath, "\n" + s);
-                        }
-                        catch (Exception) { }
+                        //сохранение заданий в базу
+                        info = BasicFileInfo.Extract(e.Document.PathName);
+                        string userName = info.Username;
+                        TaskTools.SaveGroupsData(doc, userName);
                     }
-
-                    
                 }
             }
-
         }
 
         public void OnSyncCentralEnd(object sender, DocumentSynchronizedWithCentralEventArgs e)
         {
-            //журнал
-            info = BasicFileInfo.Extract(e.Document.PathName);
-            string docName = e.Document.Title;
-            string userName = info.Username;
-            string docNameUserName = "_" + userName; docName = docName.Replace(docNameUserName, "");
-            docName = docName.Replace(",", "");
-            DateTime dateTime = DateTime.Now; string TNovVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            string date = dateTime.ToString(); date = date.Replace(",", "");
-            string usagefilePath = nova.novaserver + $"_TNov/projects/{docName},synchronizes.txt";
-            System.IO.File.AppendAllText(usagefilePath, "\n" + date + "," + userName + "," + docName);
-
+            if (_config.LicenseType == "corp")
+            {
+                //журнал
+                info = BasicFileInfo.Extract(e.Document.PathName);
+                string docName = e.Document.Title;
+                string userName = info.Username;
+                string docNameUserName = "_" + userName; docName = docName.Replace(docNameUserName, "");
+                docName = docName.Replace(",", "");
+                DateTime dateTime = DateTime.Now; string TNovVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                string date = dateTime.ToString(); date = date.Replace(",", "");
+                string usagefilePath = $"{serverPath}projects/{docName},synchronizes.txt";
+                System.IO.File.AppendAllText(usagefilePath, "\n" + date + "," + userName + "," + docName);
+            }
             
             //подсветка
             stopwatch.Start();
@@ -1790,7 +1810,9 @@ namespace TNov
         {
             ComboBoxChangeSelection();
         }
-
+        #endregion
+        #region Прочее
+        //Обработчик изменения группы кнопок
         private void ComboBoxChangeSelection()
         {
             if (_comboBox.Current != null)
@@ -1881,6 +1903,52 @@ namespace TNov
                 return Encoding.Default;
             }
         }
+
+        public static TNovConfig LoadConfig() //временный класс
+        {
+            string configPath = Path.Combine(clientFolderPath, "TNovConfig.json");
+
+            if (!File.Exists(configPath))
+            {
+                Debug.WriteLine($"Ошибка: файл конфигурации не найден по пути {configPath}");
+                TNovConfig config = new TNovConfig()
+                {
+#if config1
+                    LicenseType = "corp",
+                    CorpName = "ООО ПМ Новация",
+                    ServerPath = "//fs-nova/Distr/0.For Admin/_TNov/"
+#elif config2
+                    LicenseType = "corp",
+                    CorpName = "ООО Новация Восток",
+                    ServerPath = "//fs27/NOVA-VOSTOK/NovaService/"
+#endif
+                };
+                Debug.WriteLine($"Конфигурация создана: LicenseType={config.LicenseType}, CorpName={config.CorpName}, ServerPath={config.ServerPath}");
+                string configJson = JsonConvert.SerializeObject(config, Formatting.Indented);
+                try
+                {
+                    File.WriteAllText(configPath, configJson);
+                }
+                catch (Exception e) { Debug.WriteLine($"Ошибка записи: {e.Message}"); }
+            }
+
+            try
+            {
+                string jsonContent = File.ReadAllText(configPath);
+                TNovConfig config = JsonConvert.DeserializeObject<TNovConfig>(jsonContent);
+                return config;
+            }
+            catch (JsonException ex)
+            {
+                Debug.WriteLine($"Ошибка при десериализации JSON: {ex.Message}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Неожиданная ошибка: {ex.Message}");
+                return null;
+            }
+        }
+        #endregion
     }
 }
-

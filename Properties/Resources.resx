@@ -655,4 +655,22 @@
   <data name="elsync64" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\elsync64.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="taskautomark64" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\taskautomark64.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="taskautomark32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\taskautomark32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="taskautomark16" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\taskautomark16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="tasksend16" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\tasksend16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="tasksend32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\tasksend32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="tasksend64" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\tasksend64.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>
