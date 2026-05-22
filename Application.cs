@@ -86,6 +86,9 @@ namespace TNov
             {
                 Debug.WriteLine($"Конфигурация загружена: LicenseType={_config.LicenseType}, CorpName={_config.CorpName}, ServerPath={_config.ServerPath}");
                 if(_config.LicenseType=="corp") serverPath = _config.ServerPath;
+                serverPath = serverPath.Replace('/', '\\');
+                if (!serverPath.StartsWith(@"\\"))
+                    serverPath = @"\\" + serverPath.TrimStart('/');
             }
             #endregion
             #region События
