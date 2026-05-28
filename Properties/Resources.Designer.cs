@@ -543,6 +543,36 @@ namespace TNov.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap exportsheets16 {
+            get {
+                object obj = ResourceManager.GetObject("exportsheets16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap exportsheets32 {
+            get {
+                object obj = ResourceManager.GetObject("exportsheets32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap exportsheets64 {
+            get {
+                object obj = ResourceManager.GetObject("exportsheets64", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap failedrooms16 {
             get {
                 object obj = ResourceManager.GetObject("failedrooms16", resourceCulture);
@@ -566,6 +596,36 @@ namespace TNov.Properties {
         public static System.Drawing.Bitmap failedrooms64 {
             get {
                 object obj = ResourceManager.GetObject("failedrooms64", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap families16 {
+            get {
+                object obj = ResourceManager.GetObject("families16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap families32 {
+            get {
+                object obj = ResourceManager.GetObject("families32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap families64 {
+            get {
+                object obj = ResourceManager.GetObject("families64", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

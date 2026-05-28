@@ -673,4 +673,22 @@
   <data name="tasksend64" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\tasksend64.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="families16" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\families16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="families32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\families32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="families64" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\families64.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="exportsheets16" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\exportsheets16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="exportsheets32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\exportsheets32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="exportsheets64" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\exportsheets64.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

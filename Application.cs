@@ -79,7 +79,7 @@ namespace TNov
         #endregion
         public Result OnStartup(UIControlledApplication application)
         {
-            #region Конфигурация
+            #region Конфигурация и настройки программы
             //конфиг
             _config = LoadConfig();
             if (_config.LicenseType != null)
@@ -89,6 +89,33 @@ namespace TNov
                 serverPath = serverPath.Replace('/', '\\');
                 if (!serverPath.StartsWith(@"\\"))
                     serverPath = @"\\" + serverPath.TrimStart('/');
+            }
+            //настройки программы
+            var viewModel0 = new AppVersionViewModel();
+            string jsonpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
+            try
+            {
+                viewModel0 = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath));
+            }
+            catch (Exception) { }
+            #endregion
+            #region Запретные кнопки
+
+            if (!viewModel0.canPurge)
+            {
+                // 1. Запрещаем "Удалить неиспользуемые"
+                RevitCommandId purgeCmdId = RevitCommandId.LookupCommandId("ID_PURGE_UNUSED");
+                var purgeBinding = application.CreateAddInCommandBinding(purgeCmdId);
+                purgeBinding.CanExecute += (s, e) => e.CanExecute = false;
+                purgeBinding.Executed += OnPurgeExecuted;
+            }
+            if (!viewModel0.canCreateParts)
+            {
+                // 2. Запрещаем "Создать части"
+                var partsCmdId = RevitCommandId.LookupPostableCommandId(PostableCommand.CreateParts);
+                var partsBinding = application.CreateAddInCommandBinding(partsCmdId);
+                partsBinding.CanExecute += (s, e) => e.CanExecute = false;
+                partsBinding.Executed += OnPurgeExecuted;
             }
             #endregion
             #region События
@@ -108,13 +135,6 @@ namespace TNov
             #endregion
             #region Раскраска вкладок
             //Подгрузка настроек времени раскраски вкладок
-            var viewModel0 = new AppVersionViewModel();
-            string jsonpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
-            try
-            {
-                viewModel0 = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath));
-            }
-            catch (Exception) { }
             syncOption = viewModel0.sync1;
             if (syncOption == "Подсветка 20/30 минут")
             {
@@ -407,17 +427,17 @@ namespace TNov
                 catch (Exception) { }
             }
 #endregion
-            #region Кнопки
+            
             // Создание вкладок, панелей, кнопок
 
             string assebblyLocation = Assembly.GetExecutingAssembly().Location, tabName = "TNov";
 
             application.CreateRibbonTab(tabName);
 
-
-
             ContextualHelp mainhelp = new ContextualHelp(ContextualHelpType.Url,
                 "https://portal.talan.group/knowledge/proektirovanie/");
+
+            #region Панель "Настройки"
 
             // Панель "Настройки"
 
@@ -468,6 +488,10 @@ namespace TNov
             buttonDataTestSC.SetContextualHelp(mainhelp);
             panel0.AddItem(buttonDataTestSC);
             */
+            #endregion
+
+            #region Панель "Проект"
+
             // Панель "Проект"
 
             RibbonPanel panelСommon = application.CreateRibbonPanel(tabName, "Общее");
@@ -526,6 +550,10 @@ namespace TNov
             // группа кнопок "Таблица параметров", "База знаний", "Учебный портал"
 
             panelСommon.AddStackedItems(buttonDataParamTable, buttonDatawiki, buttonDataedu);
+
+            #endregion
+
+            #region Панель "Виды и листы"
 
             // Панель "Виды и листы"
 
@@ -589,6 +617,26 @@ namespace TNov
             SplitButton splitButtonExcel = ribbonItemList[1] as SplitButton;
             ((PulldownButton)splitButtonExcel).AddPushButton(buttonDataexcel);
             ((PulldownButton)splitButtonExcel).AddPushButton(buttonDataexcelSettings);
+
+            // кнопка "Экспорт листов"
+
+            System.Drawing.Image imgexport = Properties.Resources.exportsheets32;
+            System.Drawing.Image imgexportmin = Properties.Resources.exportsheets16;
+            PushButtonData buttonDataexport = new PushButtonData(nameof(ExportSheetsCommand), "Экспорт\nлистов", typeof(ExportSheetsCommand).Assembly.Location, typeof(ExportSheetsCommand).FullName)
+            {
+                LargeImage = GetImageSource(imgexport),
+                Image = GetImageSource(imgexportmin),
+                ToolTip = "Пакетный экспорт в DWG (единый файл) и PDF."
+            };
+            ContextualHelp exporthelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/eksportpdfidwgizrevit/");
+            buttonDataexport.SetContextualHelp(sheetshelp);
+            panelViewsSheets.AddItem(buttonDataexport);
+
+
+            #endregion
+
+            #region Панель "Утилиты"
 
             // Панель "Утилиты"
 
@@ -770,6 +818,25 @@ namespace TNov
             grouppaint.AddPushButton(buttonDatarevitpaintdel);
             grouppaint.SetContextualHelp(painthelp);
 
+            // кнопка "Семейства"
+
+            System.Drawing.Image imgfamilies = Properties.Resources.families32;
+            System.Drawing.Image imgfamiliesmin = Properties.Resources.families16;
+            PushButtonData buttonDatafamilies = new PushButtonData(nameof(LoadFamiliesFromServer), "Семейный", typeof(LoadFamiliesFromServer).Assembly.Location, typeof(LoadFamiliesFromServer).FullName)
+            {
+                LargeImage = GetImageSource(imgfamilies),
+                Image = GetImageSource(imgfamiliesmin),
+                ToolTip = "Пакетная вставка связей с помещением их в рабочие наборы."
+            };
+            ContextualHelp familieshelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/zayavkinasemeystva/");
+            buttonDatafamilies.SetContextualHelp(familieshelp);
+            panelUtils.AddItem(buttonDatafamilies);
+
+            #endregion
+
+            #region Панель "Помещения"
+
             // Панель "Помещения"
 
             RibbonPanel panelRooms = application.CreateRibbonPanel(tabName, "Помещения");
@@ -908,6 +975,10 @@ namespace TNov
             groupaparts.AddPushButton(buttonDataroomsbackup);
             groupaparts.AddPushButton(buttonDataroomsTNumber);
 
+            #endregion
+
+            #region Панель "Отделка"
+
             // Панель "Отделка"
 
             RibbonPanel panelFinishing = application.CreateRibbonPanel(tabName, "Отделка");
@@ -955,6 +1026,10 @@ namespace TNov
             // группа кнопок "Ведомость полов", "Ведомость отделки"
 
             panelFinishing.AddStackedItems(buttonDatafloorspec, buttonDatafinishing);
+
+            #endregion
+
+            #region Панель "Утилиты АР"
 
             // Панель "Утилиты АР"
 
@@ -1005,6 +1080,10 @@ namespace TNov
 
             panelUtilsAR.AddStackedItems(buttonDatalevelnumber, buttonDatamirror, buttonDataCopyWindows);
 
+            #endregion
+
+            #region Панель "Парковки"
+
             // Панель "Парковки"
 
             RibbonPanel panelParking = application.CreateRibbonPanel(tabName, "Парковки");
@@ -1045,6 +1124,10 @@ namespace TNov
             buttonDatabeamscut.SetContextualHelp(beamshelp);
             panelBeams.AddItem(buttonDatabeamscut);
 
+            #endregion
+
+            #region Панель "Сваи"
+
             // Панель "Сваи"
 
             RibbonPanel panelPiles = application.CreateRibbonPanel(tabName, "Сваи");
@@ -1064,6 +1147,10 @@ namespace TNov
                 "https://portal.talan.group/knowledge/proektirovanie/svai_xmqe/");
             buttonDatapiles.SetContextualHelp(pileshelp);
             panelPiles.AddItem(buttonDatapiles);
+
+            #endregion
+
+            #region Панель "Утилиты КЖ"
 
             // Панель "Утилиты КЖ"
 
@@ -1128,6 +1215,10 @@ namespace TNov
 
             panelUtilsST.AddStackedItems(buttonDatarebarimages, buttonDatasteelschedule, buttonDataschemespec);
 
+            #endregion
+
+            #region Панель "СО"
+
             // Панель "СО"
 
             RibbonPanel panelMEPSpec = application.CreateRibbonPanel(tabName, "СО");
@@ -1147,6 +1238,10 @@ namespace TNov
                 "https://portal.talan.group/knowledge/proektirovanie/MEPspec/");
             buttonDataadskg.SetContextualHelp(adskghelp);
             panelMEPSpec.AddItem(buttonDataadskg);
+
+            #endregion
+
+            #region Панель "Вентиляция"
 
             // Панель "Вентиляция"
 
@@ -1183,6 +1278,10 @@ namespace TNov
             // группа кнопок "Стенки Классы", "Схемы ОВ2"
 
             panelVent.AddStackedItems(buttonDataadskstenki, buttonDataduct3d);
+
+            #endregion
+
+            #region Панель "Электрика"
 
             // Панель "Электрика"
 
@@ -1289,6 +1388,10 @@ namespace TNov
             ((PulldownButton)splitButtonEFL).AddPushButton(buttonDataefl);
             ((PulldownButton)splitButtonEFL).AddPushButton(buttonDataeflsettings);
 
+            #endregion
+
+            #region Панель "Слаботочка"
+
             // Панель "Слаботочка"
 
             RibbonPanel panelSS = application.CreateRibbonPanel(tabName, "Слаботочка");
@@ -1342,7 +1445,9 @@ namespace TNov
             buttonDataIntersectionCheck.SetContextualHelp(buttonDataIntersectionCheckhelp);
             panel9p.AddItem(buttonDataIntersectionCheck);
             */
+            #endregion
 
+            #region Панель "Задания"
 
             // Панель "Задания"
 
@@ -1413,8 +1518,6 @@ namespace TNov
             };
             buttonDataholescheckdynamo.SetContextualHelp(taskautohelp);
 
-            // группа
-
             panelTasks.AddStackedItems(buttonDatataskauto, buttonDatagettaskelems, buttonDataholescheckdynamo);
 
             // кнопка "Отметки Вырезание"
@@ -1432,6 +1535,9 @@ namespace TNov
             buttonDataholes.SetContextualHelp(holeshelp);
             panelTasks.AddItem(buttonDataholes);
 
+            #endregion
+
+            #region Панели "BIM"
 
             // Панель "BIM Общие"
 
@@ -1501,6 +1607,8 @@ namespace TNov
 
             panel13.AddStackedItems(buttonDataInsulationHosts, buttonDataTParsOVVK);
 
+            #endregion
+
             //после создания панелей скрываем лишние
             string appComboBoxJson = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/appComboBox.json");
             try
@@ -1515,7 +1623,7 @@ namespace TNov
             }
             catch { }
 
-            #endregion
+            
             return Result.Succeeded;
         }
         public Result OnShutdown(UIControlledApplication application)
@@ -1623,6 +1731,11 @@ namespace TNov
             if (e2.Message == "При импорте не обнаружено подходящих элементов в пространстве Бумага. Импортировать их из пространства модели?") { e.OverrideResult(1); }
             if (e2.DialogId== "TaskDialog_Missing_Third_Party_Updater") { e.OverrideResult(1); }
             if (e2.DialogId== "Dialog_Revit_DocWarnDialog") { e.OverrideResult(1); }
+            /*if (e.DialogId == "Dialog_Revit_PurgeUnusedTree")
+            {
+                e.OverrideResult(1); // 1 = Cancel
+                new InfoWindow280("Немедленно прекратите! Запрещено!").ShowDialog();
+            }*/
         }
         public void OnDocumentOpened(object sender, DocumentOpenedEventArgs e)
         {
@@ -1809,6 +1922,17 @@ namespace TNov
                 }
             }
         }
+        private void OnCanExecutePurge(object sender, CanExecuteEventArgs e)
+        {
+            // Запрещаем выполнение команды. Кнопка в интерфейсе станет неактивной (серой).
+            e.CanExecute = false;
+        }
+        private void OnPurgeExecuted(object sender, ExecutedEventArgs e)
+        {
+            // Это событие полностью ЗАМЕНЯЕТ стандартное поведение команды.
+            // Revit не выполнит очистку, а просто выведет наше сообщение.
+            new InfoWindow280("Эта команда отключена.").ShowDialog();
+        }
         private void OnComboBoxCurrentChanged(object sender, EventArgs e)
         {
             ComboBoxChangeSelection();
@@ -1907,33 +2031,9 @@ namespace TNov
             }
         }
 
-        public static TNovConfig LoadConfig() //временный класс
+        public static TNovConfig LoadConfig() 
         {
             string configPath = Path.Combine(clientFolderPath, "TNovConfig.json");
-
-            if (!File.Exists(configPath))
-            {
-                Debug.WriteLine($"Ошибка: файл конфигурации не найден по пути {configPath}");
-                TNovConfig config = new TNovConfig()
-                {
-#if config1
-                    LicenseType = "corp",
-                    CorpName = "ООО ПМ Новация",
-                    ServerPath = "//fs-nova/Distr/0.For Admin/_TNov/"
-#elif config2
-                    LicenseType = "corp",
-                    CorpName = "ООО Новация Восток",
-                    ServerPath = "//fs27/NOVA-VOSTOK/NovaService/"
-#endif
-                };
-                Debug.WriteLine($"Конфигурация создана: LicenseType={config.LicenseType}, CorpName={config.CorpName}, ServerPath={config.ServerPath}");
-                string configJson = JsonConvert.SerializeObject(config, Formatting.Indented);
-                try
-                {
-                    File.WriteAllText(configPath, configJson);
-                }
-                catch (Exception e) { Debug.WriteLine($"Ошибка записи: {e.Message}"); }
-            }
 
             try
             {
