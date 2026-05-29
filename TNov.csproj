@@ -14,20 +14,12 @@
     <Deterministic>false</Deterministic>
     <TargetFrameworkProfile />
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'config1|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'R2022|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>\\fs-nova\Distr\0.For Admin\_TNov\build\config1\</OutputPath>
-    <DefineConstants>TRACE;config1</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'config2|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>\\fs-nova\Distr\0.For Admin\_TNov\build\config2\</OutputPath>
-    <DefineConstants>TRACE;config2</DefineConstants>
+    <OutputPath>\\fs-nova\Distr\0.For Admin\_TNov\build\2022\</OutputPath>
+    <DefineConstants>TRACE;R2022</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -680,7 +672,7 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>start /d "Z:\DEV\TNovDebug\bin\Release\net9.0" TNovDebug.exe</PostBuildEvent>
+    <PostBuildEvent>start /d "Z:\DEV\TNovDebug\bin\R2022\net9.0" TNovDebug.exe</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>powershell -ExecutionPolicy Bypass -File "$(ProjectDir)UpdateVersion.ps1" -Major 4 -Minor 6</PreBuildEvent>

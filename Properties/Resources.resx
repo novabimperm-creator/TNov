@@ -691,4 +691,13 @@
   <data name="exportsheets64" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\exportsheets64.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="rebarnomark64" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\rebarnomark64.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="rebarnomark32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\rebarnomark32.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="rebarnomark16" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\rebarnomark16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

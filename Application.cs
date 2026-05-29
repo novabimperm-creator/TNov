@@ -1161,7 +1161,7 @@ namespace TNov
 
             System.Drawing.Image imgfixstructurefile = Properties.Resources.fixstructurefile32;
             System.Drawing.Image imgfixstructurefilemin = Properties.Resources.fixstructurefile16;
-            PushButtonData buttonDatafixstructurefile = new PushButtonData(nameof(Fixstructurefile), "Ускорить файл", typeof(Fixstructurefile).Assembly.Location, typeof(Fixstructurefile).FullName)
+            PushButtonData buttonDatafixstructurefile = new PushButtonData(nameof(Fixstructurefile), "Ускорить\nфайл", typeof(Fixstructurefile).Assembly.Location, typeof(Fixstructurefile).FullName)
             {
                 LargeImage = GetImageSource(imgfixstructurefile),
                 Image = GetImageSource(imgfixstructurefilemin),
@@ -1214,6 +1214,22 @@ namespace TNov
             // группа кнопок "Эскизы деталей", "ВРС подчистить", "Группировка"
 
             panelUtilsST.AddStackedItems(buttonDatarebarimages, buttonDatasteelschedule, buttonDataschemespec);
+
+            //RebarNoMark
+            // кнопка "Арматура без марки"
+
+            System.Drawing.Image imgRebarNoMark = Properties.Resources.rebarnomark32;
+            System.Drawing.Image imgRebarNoMarkmin = Properties.Resources.rebarnomark16;
+            PushButtonData buttonDataRebarNoMark = new PushButtonData(nameof(RebarNoMark), "Арматура\nбез марки", typeof(RebarNoMark).Assembly.Location, typeof(RebarNoMark).FullName)
+            {
+                LargeImage = GetImageSource(imgRebarNoMark),
+                Image = GetImageSource(imgRebarNoMarkmin),
+                ToolTip = "Изолирует на открытом 3D-виде несущую арматуру с незаполненным параметром A_Марка конструкции."
+            };
+            ContextualHelp RebarNoMarkhelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/plaginyiskriptynovatsiya/");
+            buttonDataRebarNoMark.SetContextualHelp(RebarNoMarkhelp);
+            panelUtilsST.AddItem(buttonDataRebarNoMark);
 
             #endregion
 
