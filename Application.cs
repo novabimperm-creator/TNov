@@ -67,6 +67,7 @@ namespace TNov
         private string syncOption = "Подсветка 20/30 минут";
         private int time1 = 0;
         private int time2 = 0;
+        private static List<RibbonPanel> _CommonRibbonItems = new List<RibbonPanel>();
         private static List<RibbonPanel> _ARRibbonItems = new List<RibbonPanel>();
         private static List<RibbonPanel> _STRibbonItems = new List<RibbonPanel>();
         private static List<RibbonPanel> _MEPRibbonItems = new List<RibbonPanel>();
@@ -471,6 +472,7 @@ namespace TNov
             IList<RibbonItem> ribbonItemList0 = panel0.AddStackedItems(buttonDataN, (RibbonItemData)comboData);//, buttonDataTest);
             _comboBox = ribbonItemList0[1] as ComboBox; 
             _comboBox.AddItem(new ComboBoxMemberData("Все", "Все"));
+            _comboBox.AddItem(new ComboBoxMemberData("Общие", "Общие"));
             _comboBox.AddItem(new ComboBoxMemberData("АР", "АР"));
             _comboBox.AddItem(new ComboBoxMemberData("КЖ", "КЖ"));
             _comboBox.AddItem(new ComboBoxMemberData("Сети", "Сети"));
@@ -479,14 +481,14 @@ namespace TNov
 
             // кнопка "Тестовая команда"
             /*
-            PushButtonData buttonDataTestSC = new PushButtonData(nameof(TestSimpleCommand), "Тест", typeof(TestSimpleCommand).Assembly.Location, typeof(TestSimpleCommand).FullName)
+            PushButtonData buttonDataMindmap = new PushButtonData(nameof(Mindmap), "Mindmap", typeof(Mindmap).Assembly.Location, typeof(Mindmap).FullName)
             {
                 LargeImage = GetImageSource(imgN),
                 Image = GetImageSource(imgNmin),
-                ToolTip = "Глобальные настройки плагина и сведения о программе."
+                ToolTip = "Mindmap."
             };
-            buttonDataTestSC.SetContextualHelp(mainhelp);
-            panel0.AddItem(buttonDataTestSC);
+            buttonDataMindmap.SetContextualHelp(mainhelp);
+            panel0.AddItem(buttonDataMindmap);
             */
             #endregion
 
@@ -495,6 +497,7 @@ namespace TNov
             // Панель "Проект"
 
             RibbonPanel panelСommon = application.CreateRibbonPanel(tabName, "Общее");
+            _CommonRibbonItems.Add(panelСommon);
 
             // кнопка "Журнал проекта"
 
@@ -558,6 +561,7 @@ namespace TNov
             // Панель "Виды и листы"
 
             RibbonPanel panelViewsSheets = application.CreateRibbonPanel(tabName, "Виды и листы");
+            _CommonRibbonItems.Add(panelViewsSheets);
 
             // кнопка "Менеджер листов"
 
@@ -641,6 +645,7 @@ namespace TNov
             // Панель "Утилиты"
 
             RibbonPanel panelUtils = application.CreateRibbonPanel(tabName, "Утилиты");
+            _CommonRibbonItems.Add(panelUtils);
 
             // кнопка "Связной"
 
@@ -1079,6 +1084,22 @@ namespace TNov
             // группа кнопок 
 
             panelUtilsAR.AddStackedItems(buttonDatalevelnumber, buttonDatamirror, buttonDataCopyWindows);
+
+            // кнопка "АМ ПСО"
+
+            System.Drawing.Image imgAM = Properties.Resources.AM32;
+            System.Drawing.Image imgAMmin = Properties.Resources.AM16;
+            PushButtonData buttonDataAM = new PushButtonData(nameof(CreateApartmentViewsCommand), "АМ\nПСО", typeof(CreateApartmentViewsCommand).Assembly.Location, typeof(CreateApartmentViewsCommand).FullName)
+            {
+                LargeImage = GetImageSource(imgAM),
+                Image = GetImageSource(imgAMmin),
+                ToolTip = "Сформировать виды квартир для АМ ПСО."
+            };
+            ContextualHelp AMhelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/");
+            buttonDataAM.SetContextualHelp(AMhelp);
+
+            panelUtilsAR.AddItem(buttonDataAM);
 
             #endregion
 
@@ -1964,6 +1985,12 @@ namespace TNov
 
                 // Обработка выбора
 
+                foreach (var ribbonItem in _CommonRibbonItems)
+                {
+                    if (selectedMode == "Все" || selectedMode == "Общие")
+                        ribbonItem.Visible = true;
+                    else ribbonItem.Visible = false;
+                }
                 foreach (var ribbonItem in _BIMRibbonItems)
                 {
                     if (selectedMode == "Все" || selectedMode == "BIM")
