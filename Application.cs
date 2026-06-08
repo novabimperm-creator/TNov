@@ -1557,6 +1557,21 @@ namespace TNov
 
             panelTasks.AddStackedItems(buttonDatataskauto, buttonDatagettaskelems, buttonDataholescheckdynamo);
 
+            // кнопка "Копировать отверстия"
+
+            System.Drawing.Image imgcopyholes = Properties.Resources.copyholes32;
+            System.Drawing.Image imgcopyholesmin = Properties.Resources.copyholes16;
+            PushButtonData buttonDatacopyholes = new PushButtonData(nameof(CopyHolesCommand), "Копировать\nотверстия", typeof(CopyHolesCommand).Assembly.Location, typeof(CopyHolesCommand).FullName)
+            {
+                LargeImage = GetImageSource(imgcopyholes),
+                Image = GetImageSource(imgcopyholesmin),
+                ToolTip = "Скопировать отверстия выбранной группы по нужным уровням либо обновить их на уровнях."
+            };
+            ContextualHelp holeshelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/samostoyatelnoemodelirovanieotverstiy/");
+            buttonDatacopyholes.SetContextualHelp(holeshelp);
+            panelTasks.AddItem(buttonDatacopyholes);
+
             // кнопка "Отметки Вырезание"
 
             System.Drawing.Image imgholes = Properties.Resources.holes32;
@@ -1567,11 +1582,10 @@ namespace TNov
                 Image = GetImageSource(imgholesmin),
                 ToolTip = "Вырезать отверстия из стен и плит, заполнить отметки отверстий."
             };
-            ContextualHelp holeshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/samostoyatelnoemodelirovanieotverstiy/");
             buttonDataholes.SetContextualHelp(holeshelp);
             panelTasks.AddItem(buttonDataholes);
 
+            
             #endregion
 
             #region Панели "BIM"
