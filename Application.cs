@@ -61,20 +61,36 @@ namespace TNov
         static AddInId addinId = new AddInId(new Guid("83403DB6-EA74-4E10-85B3-508AE241A743"));
 
         private DateTime? _startTime = null;
-
+        public static Application ThisApp { get; private set; }
         private BasicFileInfo info;
-        private Stopwatch stopwatch;
+        //параметры запретных команд
+        private bool _canPurge;
+        private bool _canCreateParts;
+        private AddInCommandBinding _purgeBinding;
+        private AddInCommandBinding _partsBinding;
+        private bool _purgeExecutedSubscribed = false;
+        private bool _partsExecutedSubscribed = false;
+        //параметры раскраски вкладок
         private string syncOption = "Подсветка 20/30 минут";
         private int time1 = 0;
         private int time2 = 0;
+        private readonly Dictionary<Document, Stopwatch> _docStopwatches = new Dictionary<Document, Stopwatch>();
+        private Document _activeDocument;
+        private enum PanelColorState { None, Gold, IndianRed }
+        private PanelColorState _currentColor = PanelColorState.None;
+        private static readonly SolidColorBrush BrushGold = new SolidColorBrush(Colors.Gold);
+        private static readonly SolidColorBrush BrushIndianRed = new SolidColorBrush(Colors.IndianRed);
+        private static readonly SolidColorBrush BrushDefault =
+            (SolidColorBrush)new BrushConverter().ConvertFromString("#F6F6F6");
+        //параметры переключения ленты
         private static List<RibbonPanel> _CommonRibbonItems = new List<RibbonPanel>();
         private static List<RibbonPanel> _ARRibbonItems = new List<RibbonPanel>();
         private static List<RibbonPanel> _STRibbonItems = new List<RibbonPanel>();
         private static List<RibbonPanel> _MEPRibbonItems = new List<RibbonPanel>();
         private static List<RibbonPanel> _BIMRibbonItems = new List<RibbonPanel>();
         private ComboBox _comboBox;
-        TNovConfig _config = new TNovConfig();
 
+        TNovConfig _config = new TNovConfig();
         static string clientFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient");
         static string serverPath = clientFolderPath; //"//fs-nova/Distr/0.For Admin/_TNov/"
         #endregion
@@ -101,7 +117,25 @@ namespace TNov
             catch (Exception) { }
             #endregion
             #region Запретные кнопки
-
+            _canPurge = viewModel0.canPurge;
+            _canCreateParts = viewModel0.canCreateParts;
+            RevitCommandId purgeCmdId = RevitCommandId.LookupCommandId("ID_PURGE_UNUSED");
+            _purgeBinding = application.CreateAddInCommandBinding(purgeCmdId);
+            _purgeBinding.CanExecute += (s, e) => e.CanExecute = _canPurge;   // всегда проверяет актуальный флаг
+            if (!_canPurge)
+            {
+                _purgeBinding.Executed += OnPurgeExecuted;
+                _purgeExecutedSubscribed = true;
+            }
+            var partsCmdId = RevitCommandId.LookupPostableCommandId(PostableCommand.CreateParts);
+            _partsBinding = application.CreateAddInCommandBinding(partsCmdId);
+            _partsBinding.CanExecute += (s, e) => e.CanExecute = _canCreateParts;
+            if (!_canCreateParts)
+            {
+                _partsBinding.Executed += OnPurgeExecuted;
+                _partsExecutedSubscribed = true;
+            }
+            /*
             if (!viewModel0.canPurge)
             {
                 // 1. Запрещаем "Удалить неиспользуемые"
@@ -117,7 +151,7 @@ namespace TNov
                 var partsBinding = application.CreateAddInCommandBinding(partsCmdId);
                 partsBinding.CanExecute += (s, e) => e.CanExecute = false;
                 partsBinding.Executed += OnPurgeExecuted;
-            }
+            }*/
             #endregion
             #region События
             //Регистрация событий
@@ -127,8 +161,9 @@ namespace TNov
                 application.ControlledApplication.DocumentOpened += new EventHandler<DocumentOpenedEventArgs>(OnDocumentOpened);
                 application.ControlledApplication.DocumentSynchronizingWithCentral += new EventHandler<DocumentSynchronizingWithCentralEventArgs>(OnSyncCentralStart);
                 application.ControlledApplication.DocumentSynchronizedWithCentral += new EventHandler<DocumentSynchronizedWithCentralEventArgs>(OnSyncCentralEnd);
-                application.ControlledApplication.DocumentClosed += new EventHandler<DocumentClosedEventArgs>(OnDocumentClosed);
+                application.ControlledApplication.DocumentClosing += new EventHandler<DocumentClosingEventArgs>(OnDocumentClosing);
                 application.Idling += OnIdling;
+                application.ViewActivated += OnViewActivated;
                 application.ControlledApplication.DocumentCreated += OnDocumentCreated;
                 application.DialogBoxShowing += new EventHandler<DialogBoxShowingEventArgs>(a_DialogBoxShowing);
             }
@@ -136,27 +171,8 @@ namespace TNov
             #endregion
             #region Раскраска вкладок
             //Подгрузка настроек времени раскраски вкладок
-            syncOption = viewModel0.sync1;
-            if (syncOption == "Подсветка 20/30 минут")
-            {
-                time1 = 1200000; time2 = 1800000;
-            }
-            else if(syncOption == "Подсветка 30/60 минут")
-            {
-                time1 = 1800000; time2 = 3600000;
-            }
-            else if (syncOption == "Подсветка 40/60 минут")
-            {
-                time1 = 2400000; time2 = 3600000;
-            }
-            else if (syncOption == "Подсветка 60/90 минут")
-            {
-                time1 = 3600000; time2 = 4800000;
-            }
-            else if(syncOption.Contains( "Подсветка 1/2 минуты"))
-            {
-                time1 = 60000; time2 = 120000;
-            }
+            ThisApp = this;
+            LoadSettings();
             #endregion
             #region Revit.ini
             //Проверка ключей в файле revit.ini
@@ -290,7 +306,7 @@ namespace TNov
             ElementFilter combinedFilterAR = CombinedElementFilter.CombinedFilterAR();
 
             //объявление апдейтеров
-
+            
             TNovHoleUpdater holeUpdater = new TNovHoleUpdater(application.ActiveAddInId); //отверстия
             UpdaterRegistry.RegisterUpdater(holeUpdater, true);
             UpdaterRegistry.AddTrigger(holeUpdater.GetUpdaterId(), filterGM, Element.GetChangeTypeAny());
@@ -318,11 +334,11 @@ namespace TNov
             UpdaterRegistry.AddTrigger(worksetUpdater.GetUpdaterId(), filterElEq, Element.GetChangeTypeAny());
             UpdaterRegistry.AddTrigger(worksetUpdater.GetUpdaterId(), filterLinks, Element.GetChangeTypeAny());
             UpdaterRegistry.AddTrigger(worksetUpdater.GetUpdaterId(), filterFound, Element.GetChangeTypeAny());
-
+            
             TNovPinUpdater pinUpdater = new TNovPinUpdater(application.ActiveAddInId); //закрепление связей
             UpdaterRegistry.RegisterUpdater(pinUpdater, true);
             UpdaterRegistry.AddTrigger(pinUpdater.GetUpdaterId(), filterLinks, Element.GetChangeTypeElementAddition());
-
+            
             TNovPileUpdater pileUpdater = new TNovPileUpdater(application.ActiveAddInId); //отметки свай
             UpdaterRegistry.RegisterUpdater(pileUpdater,true);
             UpdaterRegistry.AddTrigger(pileUpdater.GetUpdaterId(), filterFound, Element.GetChangeTypeAny());
@@ -340,14 +356,14 @@ namespace TNov
             UpdaterRegistry.RegisterUpdater(roomUpdater, true);
             UpdaterRegistry.AddTrigger(roomUpdater.GetUpdaterId(), filterRooms, Element.GetChangeTypeElementAddition());
             UpdaterRegistry.AddTrigger(roomUpdater.GetUpdaterId(), filterRooms, Element.GetChangeTypeAny());
-
+            
             TNovFloorCeilingUpdater floorCeilingUpdater = new TNovFloorCeilingUpdater(application.ActiveAddInId); //отделка полов потолков
             UpdaterRegistry.RegisterUpdater(floorCeilingUpdater, true);
             UpdaterRegistry.AddTrigger(floorCeilingUpdater.GetUpdaterId(), filterFloors, Element.GetChangeTypeElementAddition());
             UpdaterRegistry.AddTrigger(floorCeilingUpdater.GetUpdaterId(), filterFloors, Element.GetChangeTypeAny());
             UpdaterRegistry.AddTrigger(floorCeilingUpdater.GetUpdaterId(), filterCeilings, Element.GetChangeTypeElementAddition());
             UpdaterRegistry.AddTrigger(floorCeilingUpdater.GetUpdaterId(), filterCeilings, Element.GetChangeTypeAny());
-
+            
             TNovInsulationUpdater insulationUpdater = new TNovInsulationUpdater(application.ActiveAddInId); //изоляция
             UpdaterRegistry.RegisterUpdater(insulationUpdater, true);
             UpdaterRegistry.AddTrigger(insulationUpdater.GetUpdaterId(), filterPipeInsulations, Element.GetChangeTypeElementAddition());
@@ -1727,8 +1743,9 @@ namespace TNov
             application.ControlledApplication.DocumentOpened -= OnDocumentOpened;
             application.ControlledApplication.DocumentSynchronizingWithCentral -= OnSyncCentralStart;
             application.ControlledApplication.DocumentSynchronizedWithCentral -= OnSyncCentralEnd;
-            application.ControlledApplication.DocumentClosed -= OnDocumentClosed;
+            application.ControlledApplication.DocumentClosing -= OnDocumentClosing;
             application.Idling -= OnIdling;
+            application.ViewActivated -= OnViewActivated;
             application.DialogBoxShowing -= a_DialogBoxShowing;
             #endregion
             return Result.Succeeded;
@@ -1737,6 +1754,7 @@ namespace TNov
 
         private void OnDocumentCreated(object sender, Autodesk.Revit.DB.Events.DocumentCreatedEventArgs e)
         {
+            LoadSettings();
             if(_config.LicenseType=="corp"&&_config.CorpName=="ООО ПМ Новация") //в перспективе - запускать для любой корп конфигурации (считывая с сайта)
             {
                 //Проверка имени пользователя
@@ -1771,6 +1789,8 @@ namespace TNov
         {
             //время открытия
             if (e.DocumentType == DocumentType.Project) _startTime = DateTime.Now;
+
+            LoadSettings();
         }
         void a_DialogBoxShowing(object sender, DialogBoxShowingEventArgs e)
         {
@@ -1790,7 +1810,10 @@ namespace TNov
         }
         public void OnDocumentOpened(object sender, DocumentOpenedEventArgs e)
         {
+            LoadSettings();
+
             info = BasicFileInfo.Extract(e.Document.PathName);
+            Document doc = e.Document;
 
             if (_config.LicenseType == "corp") 
             {
@@ -1808,7 +1831,6 @@ namespace TNov
                     docName = docName.Replace(".rvt", "");
                     string path = $"{serverPath}users/{userName},{docName}.txt";
                     // Получаем таблицу рабочих наборов
-                    Document doc = e.Document;
                     WorksetTable worksetTable = doc.GetWorksetTable();
                     FilteredWorksetCollector collector = new FilteredWorksetCollector(doc);
                     collector.OfKind(WorksetKind.UserWorkset);
@@ -1846,22 +1868,57 @@ namespace TNov
             }
 
             //раскраска
-            if (info.IsWorkshared)
+            if (doc != null && doc.IsWorkshared)
+            {
+                if (!_docStopwatches.ContainsKey(doc))
+                {
+                    var sw = new Stopwatch();
+                    sw.Start();
+                    _docStopwatches[doc] = sw;
+                }
+            }
+            /*if (info.IsWorkshared)
             {
                 stopwatch = new Stopwatch();
                 stopwatch.Start();
             }
-            else stopwatch.Reset();
+            else stopwatch.Reset();*/
+        }
+        private void OnViewActivated(object sender, ViewActivatedEventArgs e)
+        {
+            LoadSettings();
+
+            Document doc = e.Document;
+            if (doc == null || !doc.IsWorkshared)
+            {
+                // Активный документ не поддерживает совместную работу – сбрасываем цвет
+                _activeDocument = null;
+                SetPanelColor(PanelColorState.None);
+            }
+            else
+            {
+                // Переключаемся на workshared-документ
+                _activeDocument = doc;
+                // Если по какой-то причине для него нет Stopwatch – создаём
+                if (!_docStopwatches.ContainsKey(doc))
+                {
+                    var sw = new Stopwatch();
+                    sw.Start();
+                    _docStopwatches[doc] = sw;
+                }
+                // Принудительно обновим цвет в следующем Idling (там будет использован Stopwatch этого документа)
+                _currentColor = PanelColorState.None; // чтобы гарантированно перерисовалось
+            }
         }
         public void OnSyncCentralStart(object sender, DocumentSynchronizingWithCentralEventArgs e)
         {
-            //подсветка
-            if (syncOption != "Без подсветки панелей (не рекомендуется)") stopwatch.Reset();
+            LoadSettings();
 
+            Document doc = e.Document;
             if (_config.LicenseType == "corp") //подразумевается, что Корпоративная подписка содержит весь функционал
             {
                 //задания
-                Document doc = e.Document;
+                
                 Autodesk.Revit.ApplicationServices.Application app = doc.Application;
 
                 string docName = doc.Title.ToString();
@@ -1877,6 +1934,18 @@ namespace TNov
                         string userName = info.Username;
                         TaskTools.SaveGroupsData(doc, userName);
                     }
+                }
+            }
+            //подсветка
+            if (syncOption != "Без подсветки панелей (не рекомендуется)") return;//stopwatch.Reset();
+
+            if (doc != null && _docStopwatches.TryGetValue(doc, out Stopwatch sw))
+            {
+                sw.Reset(); // обнуляем таймер (остановлен)
+                            // Если синхронизируется активный документ – сразу убираем подсветку
+                if (doc.Equals(_activeDocument))
+                {
+                    SetPanelColor(PanelColorState.None);
                 }
             }
         }
@@ -1896,8 +1965,14 @@ namespace TNov
                 string usagefilePath = $"{serverPath}projects/{docName},synchronizes.txt";
                 System.IO.File.AppendAllText(usagefilePath, "\n" + date + "," + userName + "," + docName);
             }
-            
+
             //подсветка
+            Document doc = e.Document;
+            if (doc != null && _docStopwatches.TryGetValue(doc, out Stopwatch sw))
+            {
+                sw.Restart(); // запускаем отсчёт заново
+                              // Если это активный документ – цвет обновится при следующем Idling
+            }/*
             stopwatch.Start();
             adWin.RibbonControl ribbon = adWin.ComponentManager.Ribbon;
 
@@ -1908,12 +1983,23 @@ namespace TNov
                     panel.CustomPanelBackground = (SolidColorBrush)new BrushConverter().ConvertFromString("#F6F6F6");
                     panel.CustomPanelTitleBarBackground = (SolidColorBrush)new BrushConverter().ConvertFromString("#F6F6F6");
                 }
-            }
+            }*/
         }
 
-        public void OnDocumentClosed(object sender, DocumentClosedEventArgs e)
+        public void OnDocumentClosing(object sender, DocumentClosingEventArgs e)
         {
-            
+            LoadSettings();
+
+            Document doc = e.Document;
+            if (doc != null && _docStopwatches.ContainsKey(doc))
+            {
+                _docStopwatches.Remove(doc);
+                if (doc.Equals(_activeDocument))
+                {
+                    _activeDocument = null;
+                    SetPanelColor(PanelColorState.None);
+                }
+            }/*
             if (info.IsWorkshared)
             {
                 stopwatch.Stop();
@@ -1927,17 +2013,57 @@ namespace TNov
 
                     }
                 }
-            }
+            }*/
         }
 
         public void OnIdling(object sender, IdlingEventArgs e)
         {
+            // 1. Если нет активного workshared-документа или таймера – сбрасываем цвет
+            if (_activeDocument == null ||
+                !_docStopwatches.TryGetValue(_activeDocument, out Stopwatch sw) ||
+                !sw.IsRunning)
+            {
+                SetPanelColor(PanelColorState.None);
+                return;
+            }
+
+            // 2. Если подсветка отключена – сбрасываем
+            if (time1 <= 0)
+            {
+                SetPanelColor(PanelColorState.None);
+                return;
+            }
+
+            // 3. Вычисляем желаемое состояние
+            long ms = sw.ElapsedMilliseconds;
+            PanelColorState desired;
+            if (ms > time2)
+                desired = PanelColorState.IndianRed;
+            else if (ms > time1)
+                desired = PanelColorState.Gold;
+            else
+                desired = PanelColorState.None;
+
+            // 4. Всегда перекрашиваем, если желаемое состояние не None,
+            //    чтобы преодолеть возможный сброс цвета Revit'ом.
+            //    Если желаемое None, красим только при реальной смене состояния.
+            if (desired != PanelColorState.None)
+            {
+                SetPanelColor(desired);
+            }
+            else
+            {
+                if (_currentColor != PanelColorState.None)
+                    SetPanelColor(PanelColorState.None);
+            }
+
+            /*
             if (info.IsWorkshared&&time1>0)
             {
                 adWin.RibbonControl ribbon = adWin.ComponentManager.Ribbon;
                 //цвета
                 SolidColorBrush brush1 = new SolidColorBrush(Colors.Gold);
-                SolidColorBrush brush2 = new SolidColorBrush(Colors.Firebrick);
+                SolidColorBrush brush2 = new SolidColorBrush(Colors.IndianRed);
 
                 if (stopwatch.ElapsedMilliseconds > time1 && stopwatch.ElapsedMilliseconds < time2) 
                 {
@@ -1971,7 +2097,7 @@ namespace TNov
                     
 
                 }
-            }
+            }*/
         }
         private void OnCanExecutePurge(object sender, CanExecuteEventArgs e)
         {
@@ -2048,6 +2174,108 @@ namespace TNov
                 catch { }
 
             }
+        }
+
+        // раскраска
+        private void SetPanelColor(PanelColorState state)
+        {
+            adWin.RibbonControl ribbon = adWin.ComponentManager.Ribbon;
+            if (ribbon == null) return;
+
+            SolidColorBrush backgroundBrush, titleBrush;
+            switch (state)
+            {
+                case PanelColorState.Gold:
+                    backgroundBrush = BrushGold;
+                    titleBrush = BrushGold;
+                    break;
+                case PanelColorState.IndianRed:
+                    backgroundBrush = BrushIndianRed;
+                    titleBrush = BrushIndianRed;
+                    break;
+                default:
+                    backgroundBrush = BrushDefault;
+                    titleBrush = BrushDefault;
+                    break;
+            }
+
+            foreach (adWin.RibbonTab tab in ribbon.Tabs)
+            {
+                foreach (adWin.RibbonPanel panel in tab.Panels)
+                {
+                    panel.CustomPanelBackground = backgroundBrush;
+                    panel.CustomPanelTitleBarBackground = titleBrush;
+                }
+            }
+            _currentColor = state;
+        }
+        private void LoadSettings()
+        {
+            string jsonpath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                "TNovClient/TNovSettings.json");
+
+            if (!File.Exists(jsonpath)) return;
+
+            try
+            {
+                var viewModel = JsonConvert.DeserializeObject<AppVersionViewModel>(File.ReadAllText(jsonpath));
+                syncOption = viewModel.sync1;
+
+                // Определяем временные интервалы
+                if (syncOption == "Подсветка 20/30 минут")
+                {
+                    time1 = 1200000; time2 = 1800000;
+                }
+                else if (syncOption == "Подсветка 30/60 минут")
+                {
+                    time1 = 1800000; time2 = 3600000;
+                }
+                else if (syncOption == "Подсветка 40/60 минут")
+                {
+                    time1 = 2400000; time2 = 3600000;
+                }
+                else if (syncOption == "Подсветка 60/90 минут")
+                {
+                    time1 = 3600000; time2 = 4800000;
+                }
+                else if (syncOption.Contains("Подсветка 1/2 минуты"))
+                {
+                    time1 = 60000; time2 = 120000;
+                }
+
+                bool newCanPurge = viewModel.canPurge;
+                bool newCanCreateParts = viewModel.canCreateParts;
+                _canPurge = newCanPurge;
+                if (_canPurge && _purgeExecutedSubscribed)
+                {
+                    _purgeBinding.Executed -= OnPurgeExecuted;
+                    _purgeExecutedSubscribed = false;
+                }
+                else if (!_canPurge && !_purgeExecutedSubscribed)
+                {
+                    _purgeBinding.Executed += OnPurgeExecuted;
+                    _purgeExecutedSubscribed = true;
+                }
+                _canCreateParts = newCanCreateParts;
+                if (_canCreateParts && _partsExecutedSubscribed)
+                {
+                    _partsBinding.Executed -= OnPurgeExecuted;
+                    _partsExecutedSubscribed = false;
+                }
+                else if (!_canCreateParts && !_partsExecutedSubscribed)
+                {
+                    _partsBinding.Executed += OnPurgeExecuted;
+                    _partsExecutedSubscribed = true;
+                }
+            }
+            catch {}
+        }
+        public void ReloadSettings()
+        {
+            LoadSettings();
+            // Если сейчас активен workshared-документ, принудительно обновим цвет
+            _currentColor = PanelColorState.None;
         }
 
         // Конвертер изображения
