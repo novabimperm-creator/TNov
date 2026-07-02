@@ -4,7 +4,6 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
-using Autodesk.Windows;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -12,13 +11,10 @@ using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
-using System.Windows.Controls;
-using System.Windows.Forms;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using TNovBeams;
@@ -37,7 +33,6 @@ using TNovUtilsAR;
 using TNovUtilsST;
 using TNovVent;
 using TNovViewsSheets;
-using static System.Windows.Forms.LinkLabel;
 using adWin = Autodesk.Windows;
 using ComboBox = Autodesk.Revit.UI.ComboBox;
 using RibbonItem = Autodesk.Revit.UI.RibbonItem;
@@ -57,6 +52,22 @@ namespace TNov
     [Regeneration(RegenerationOption.Manual)]
     internal class Application : IExternalApplication
     {
+        static Application()
+        {
+            // Preserialized .resx ссылаются на System.Resources.Extensions 4.0.0.0,
+            // а NuGet-пакет может иметь другую AssemblyVersion. Revit не применяет binding redirect.
+            AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
+            {
+                if (new AssemblyName(args.Name).Name != "System.Resources.Extensions")
+                    return null;
+
+                string path = Path.Combine(
+                    Path.GetDirectoryName(typeof(Application).Assembly.Location) ?? string.Empty,
+                    "System.Resources.Extensions.dll");
+                return File.Exists(path) ? Assembly.LoadFrom(path) : null;
+            };
+        }
+
         #region Переменные класса
         static AddInId addinId = new AddInId(new Guid("83403DB6-EA74-4E10-85B3-508AE241A743"));
 
