@@ -8,8 +8,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Windows.Media;
-using adWin = Autodesk.Windows;
 using File = System.IO.File;
 using TNovCommon;
 
@@ -91,19 +89,8 @@ namespace TNov
             }
             catch (Exception) { }
 
-            if(viewModel.sync1== "Без подсветки панелей (не рекомендуется)")
-            {
-                adWin.RibbonControl ribbon = adWin.ComponentManager.Ribbon;
-                foreach (adWin.RibbonTab tab in ribbon.Tabs)
-                {
-                    foreach (adWin.RibbonPanel panel in tab.Panels)
-                    {
-                        panel.CustomPanelBackground = (SolidColorBrush)new BrushConverter().ConvertFromString("#F6F6F6");
-                        panel.CustomPanelTitleBarBackground = (SolidColorBrush)new BrushConverter().ConvertFromString("#F6F6F6");
-
-                    }
-                }
-            }
+            if (viewModel.sync1 == "Без подсветки панелей (не рекомендуется)")
+                Application.ThisApp?.ResetPanelColors();
 
             return Result.Succeeded;
         }

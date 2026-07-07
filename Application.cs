@@ -29,6 +29,7 @@ using TNovRooms;
 using TNovSS;
 using TNovTasks;
 using TNovUtils;
+using TNovUtils.Issues.Commands;
 using TNovUtilsAR;
 using TNovUtilsST;
 using TNovVent;
@@ -91,14 +92,13 @@ namespace TNov
         private PanelColorState _currentColor = PanelColorState.None;
         private static readonly SolidColorBrush BrushGold = new SolidColorBrush(Colors.Gold);
         private static readonly SolidColorBrush BrushIndianRed = new SolidColorBrush(Colors.IndianRed);
-        private static readonly SolidColorBrush BrushDefault =
-            (SolidColorBrush)new BrushConverter().ConvertFromString("#F6F6F6");
         //параметры переключения ленты
         private static List<RibbonPanel> _CommonRibbonItems = new List<RibbonPanel>();
         private static List<RibbonPanel> _ARRibbonItems = new List<RibbonPanel>();
         private static List<RibbonPanel> _STRibbonItems = new List<RibbonPanel>();
         private static List<RibbonPanel> _MEPRibbonItems = new List<RibbonPanel>();
         private static List<RibbonPanel> _BIMRibbonItems = new List<RibbonPanel>();
+        private static List<RibbonPanel> _TestRibbonItems = new List<RibbonPanel>();
         private ComboBox _comboBox;
 
         TNovConfig _config = new TNovConfig();
@@ -504,6 +504,7 @@ namespace TNov
             _comboBox.AddItem(new ComboBoxMemberData("КЖ", "КЖ"));
             _comboBox.AddItem(new ComboBoxMemberData("Сети", "Сети"));
             _comboBox.AddItem(new ComboBoxMemberData("BIM", "BIM"));
+            _comboBox.AddItem(new ComboBoxMemberData("Тесты", "Тесты"));
             _comboBox.CurrentChanged += OnComboBoxCurrentChanged; //подписка на событие изменения выбора
 
             // кнопка "Тестовая команда"
@@ -525,6 +526,21 @@ namespace TNov
 
             RibbonPanel panelСommon = application.CreateRibbonPanel(tabName, "Общее");
             _CommonRibbonItems.Add(panelСommon);
+
+            // кнопка "TNovPRO Вопросы"
+
+            System.Drawing.Image imgProQ = Properties.Resources.tnovproq32;
+            System.Drawing.Image imgProQmin = Properties.Resources.tnovproq16;
+            PushButtonData buttonDataProQ = new PushButtonData(nameof(ShowIssuesCommand), "TNovPRO\nВопросы", typeof(ShowIssuesCommand).Assembly.Location, typeof(ShowIssuesCommand).FullName)
+            {
+                LargeImage = GetImageSource(imgProQ),
+                Image = GetImageSource(imgProQmin),
+                ToolTip = "Модуль Вопросы в TNovPRO.",
+                LongDescription = "Просмотр замечаний и коллизий, поиск в модели, работа со статусами."
+            };
+            buttonDataProQ.SetContextualHelp(mainhelp);
+            panelСommon.AddItem(buttonDataProQ);
+
 
             // кнопка "Журнал проекта"
 
@@ -1687,6 +1703,33 @@ namespace TNov
 
             #endregion
 
+            #region Панель "Тесты"
+
+            // Панель "Тесты"
+
+            RibbonPanel panelTests = application.CreateRibbonPanel(tabName, "Тесты");
+            _TestRibbonItems.Add(panelTests);
+
+            // кнопка "Авторазмеры"
+
+            PushButtonData buttonDataAutoDim = new PushButtonData(nameof(AutoDim), "Авторазмеры", typeof(AutoDim).Assembly.Location, typeof(AutoDim).FullName)
+            {
+                ToolTip = "Автоматическая простановка размеров на планах."
+            };
+            buttonDataAutoDim.SetContextualHelp(mainhelp);
+            panelTests.AddItem(buttonDataAutoDim);
+
+            // кнопка "Метки помещений"
+
+            PushButtonData buttonDataAutoRoomTags = new PushButtonData(nameof(AutoRoomTags), "Метки помещений", typeof(AutoRoomTags).Assembly.Location, typeof(AutoRoomTags).FullName)
+            {
+                ToolTip = "Автоматическая простановка меток помещений."
+            };
+            buttonDataAutoRoomTags.SetContextualHelp(mainhelp);
+            panelTests.AddItem(buttonDataAutoRoomTags);
+                        
+            #endregion
+
             //после создания панелей скрываем лишние
             string appComboBoxJson = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/appComboBox.json");
             try
@@ -2166,6 +2209,12 @@ namespace TNov
                         ribbonItem.Visible = true;
                     else ribbonItem.Visible = false;
                 }
+                foreach (var ribbonItem in _TestRibbonItems)
+                {
+                    if (selectedMode == "Все" || selectedMode == "Тесты")
+                        ribbonItem.Visible = true;
+                    else ribbonItem.Visible = false;
+                }
 
                 //Сериализация
                 string appComboBoxJson = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/appComboBox.json");
@@ -2188,12 +2237,14 @@ namespace TNov
         }
 
         // раскраска
+        internal void ResetPanelColors() => SetPanelColor(PanelColorState.None);
+
         private void SetPanelColor(PanelColorState state)
         {
             adWin.RibbonControl ribbon = adWin.ComponentManager.Ribbon;
             if (ribbon == null) return;
 
-            SolidColorBrush backgroundBrush, titleBrush;
+            Brush backgroundBrush, titleBrush;
             switch (state)
             {
                 case PanelColorState.Gold:
@@ -2205,8 +2256,8 @@ namespace TNov
                     titleBrush = BrushIndianRed;
                     break;
                 default:
-                    backgroundBrush = BrushDefault;
-                    titleBrush = BrushDefault;
+                    backgroundBrush = null;
+                    titleBrush = null;
                     break;
             }
 
