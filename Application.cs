@@ -1710,24 +1710,15 @@ namespace TNov
             RibbonPanel panelTests = application.CreateRibbonPanel(tabName, "Тесты");
             _TestRibbonItems.Add(panelTests);
 
-            // кнопка "Авторазмеры"
+            // кнопка "Оформлятор АР"
 
-            PushButtonData buttonDataAutoDim = new PushButtonData(nameof(AutoDim), "Авторазмеры", typeof(AutoDim).Assembly.Location, typeof(AutoDim).FullName)
+            PushButtonData buttonDataAutoDim = new PushButtonData(nameof(PluginPanelCommand), "Оформлятор\nАР", typeof(PluginPanelCommand).Assembly.Location, typeof(PluginPanelCommand).FullName)
             {
-                ToolTip = "Автоматическая простановка размеров на планах."
+                ToolTip = "Автоматическая простановка всего на планах."
             };
             buttonDataAutoDim.SetContextualHelp(mainhelp);
             panelTests.AddItem(buttonDataAutoDim);
 
-            // кнопка "Метки помещений"
-
-            PushButtonData buttonDataAutoRoomTags = new PushButtonData(nameof(AutoRoomTags), "Метки помещений", typeof(AutoRoomTags).Assembly.Location, typeof(AutoRoomTags).FullName)
-            {
-                ToolTip = "Автоматическая простановка меток помещений."
-            };
-            buttonDataAutoRoomTags.SetContextualHelp(mainhelp);
-            panelTests.AddItem(buttonDataAutoRoomTags);
-                        
             #endregion
 
             //после создания панелей скрываем лишние
