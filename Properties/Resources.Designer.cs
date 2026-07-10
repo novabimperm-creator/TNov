@@ -929,7 +929,32 @@ namespace TNov.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
+        public static System.Drawing.Bitmap autodim16
+        {
+            get
+            {
+                object obj = ResourceManager.GetObject("autodim16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        public static System.Drawing.Bitmap autodim32
+        {
+            get
+            {
+                object obj = ResourceManager.GetObject("autodim32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        public static System.Drawing.Bitmap autodim64
+        {
+            get
+            {
+                object obj = ResourceManager.GetObject("autodim64", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>

@@ -41,11 +41,6 @@ using RibbonPanel = Autodesk.Revit.UI.RibbonPanel;
 using SplitButton = Autodesk.Revit.UI.SplitButton;
 using TypeFilter = TNovUtils.TypeFilter;
 
-/*
-git add .
-git commit -m "4.0.1"
-git push origin main
- */
 #endregion
 
 namespace TNov
@@ -1084,6 +1079,19 @@ namespace TNov
             RibbonPanel panelUtilsAR = application.CreateRibbonPanel(tabName, "Утилиты АР");
             _ARRibbonItems.Add(panelUtilsAR);
 
+            // кнопка "Оформлятор АР"
+
+            System.Drawing.Image imgautodim = Properties.Resources.autodim32;
+            System.Drawing.Image imgautodimmin = Properties.Resources.autodim16;
+            PushButtonData buttonDataAutoDim = new PushButtonData(nameof(PluginPanelCommand), "Оформлятор\nАР", typeof(PluginPanelCommand).Assembly.Location, typeof(PluginPanelCommand).FullName)
+            {
+                LargeImage = GetImageSource(imgautodim),
+                Image = GetImageSource(imgautodimmin),
+                ToolTip = "Автоматическая простановка размеров, марок помещений, окон, дверей."
+            };
+            buttonDataAutoDim.SetContextualHelp(mainhelp);
+            panelUtilsAR.AddItem(buttonDataAutoDim);
+
             // сгруппированная кнопка "Антизеркало"
             System.Drawing.Image imgmirror = Properties.Resources.mirror32;
             System.Drawing.Image imgmirrormin = Properties.Resources.mirror16;
@@ -1710,14 +1718,7 @@ namespace TNov
             RibbonPanel panelTests = application.CreateRibbonPanel(tabName, "Тесты");
             _TestRibbonItems.Add(panelTests);
 
-            // кнопка "Оформлятор АР"
-
-            PushButtonData buttonDataAutoDim = new PushButtonData(nameof(PluginPanelCommand), "Оформлятор\nАР", typeof(PluginPanelCommand).Assembly.Location, typeof(PluginPanelCommand).FullName)
-            {
-                ToolTip = "Автоматическая простановка всего на планах."
-            };
-            buttonDataAutoDim.SetContextualHelp(mainhelp);
-            panelTests.AddItem(buttonDataAutoDim);
+            
 
             #endregion
 

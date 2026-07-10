@@ -38,7 +38,7 @@
 
   <!-- ===== Версионирование ===== -->
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="powershell -ExecutionPolicy Bypass -File &quot;$(ProjectDir)UpdateVersion.ps1&quot; -Major 5 -Minor 3" />
+    <Exec Command="powershell -ExecutionPolicy Bypass -File &quot;$(ProjectDir)UpdateVersion.ps1&quot; -Major 5 -Minor 4" />
   </Target>
 
   <!-- ===== Автодеплой на текущую машину (один раз, после сборки всего решения) =====
