@@ -1,29 +1,38 @@
 param(
-    [int]$Major = 1,
-    [int]$Minor = 0
+    [int]$Major = 0
 )
 
 # Папка, где лежит скрипт (корень проекта)
 $ProjectDir = $PSScriptRoot
+$versionFilePath = Join-Path -Path $ProjectDir -ChildPath "Properties\VersionInfo.cs"
 
 Write-Host "=== UpdateVersion.ps1 ==="
 Write-Host "ProjectDir (from PSScriptRoot): $ProjectDir"
-Write-Host "Major: $Major"
-Write-Host "Minor: $Minor"
 
-# Текущая дата
+if ($Major -eq 0) {
+    if (-not (Test-Path -Path $versionFilePath)) {
+        throw "VersionInfo.cs not found at $versionFilePath"
+    }
+
+    $existingContent = Get-Content -Path $versionFilePath -Raw
+    if ($existingContent -match 'AssemblyVersion\("(\d+)\.') {
+        $Major = [int]$Matches[1]
+        Write-Host "Major (from VersionInfo.cs): $Major"
+    } else {
+        throw "Could not read major version from $versionFilePath"
+    }
+} else {
+    Write-Host "Major (from parameter): $Major"
+}
+
+# Текущая дата и время
 $date = Get-Date
-$year  = $date.ToString("yy")      # 26 для 2026
-$month = $date.ToString("MM")      # 02
-$day   = $date.ToString("dd")      # 25
-$build    = $year
-$revision = $month + $day           # "0225"
+$year = $date.ToString("yy")              # 26 для 2026
+$monthDay = $date.ToString("MMdd")        # 0710
+$minutesFromMidnight = $date.Hour * 60 + $date.Minute
 
-$version = "$Major.$Minor.$build.$revision"
+$version = "$Major.$year.$monthDay.$minutesFromMidnight"
 Write-Host "Generated version: $version"
-
-# Путь к файлу VersionInfo.cs
-$versionFilePath = Join-Path -Path $ProjectDir -ChildPath "Properties\VersionInfo.cs"
 Write-Host "Target file: $versionFilePath"
 
 # Создаём папку Properties, если её нет

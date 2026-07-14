@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Windows.Interop;
 using File = System.IO.File;
 using TNovCommon;
 
@@ -78,6 +79,7 @@ namespace TNov
             viewModel.url = "https://portal.talan.group/knowledge/proektirovanie/plaginyiskriptynovatsiya/";
             viewModel.userName = userName; viewModel.userDep = userDepartment; viewModel.userDepRole = userDepRole;
             var wpfview = new AppVersionWPF(viewModel);
+            new WindowInteropHelper(wpfview) { Owner = uiApp.MainWindowHandle };
             viewModel.CloseRequest += (s, e) => wpfview.Close();
             bool? ok = wpfview.ShowDialog();
             if (ok != null && ok == true) { } else { return Result.Cancelled; }

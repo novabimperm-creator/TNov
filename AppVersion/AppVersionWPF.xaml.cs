@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Navigation;
-using Autodesk.Revit.UI;
-using Newtonsoft.Json;
-using System.IO;
 using TNovCommon;
 
 namespace TNov
@@ -14,39 +12,65 @@ namespace TNov
     /// </summary>
     public partial class AppVersionWPF : Window
     {
+        private bool _releasesLoaded;
+
         public AppVersionWPF(AppVersionViewModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;
-            this.SizeToContent = SizeToContent.Height;
         }
+
+        private AppVersionViewModel ViewModel => (AppVersionViewModel)DataContext;
+
         private void acceptButton_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = true;
-            this.Close(); // закрытие окна
+            Close();
         }
-        
-        
+
+        private void escButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
+        }
+
+        private void JournalButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_releasesLoaded)
+            {
+                ViewModel.LoadReleases();
+                _releasesLoaded = true;
+            }
+
+            SettingsPanel.Visibility = Visibility.Collapsed;
+            JournalPanel.Visibility = Visibility.Visible;
+        }
+
+        private void BackButton_Click(object sender, RoutedEventArgs e)
+        {
+            JournalPanel.Visibility = Visibility.Collapsed;
+            SettingsPanel.Visibility = Visibility.Visible;
+        }
 
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
-            
-            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
+            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
             e.Handled = true;
-        }
-
-        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-
         }
 
         private void HelpButton_Click(object sender, RoutedEventArgs e)
         {
-            string commandText = @"https://portal.talan.group/knowledge/proektirovanie/plaginyiskriptynovatsiya/";
+            string commandText = HelpLinks.GetHelpLink("-");
             var proc = new System.Diagnostics.Process();
             proc.StartInfo.FileName = commandText;
             proc.StartInfo.UseShellExecute = true;
             proc.Start();
+        }
+
+        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+                DragMove();
         }
     }
 }
