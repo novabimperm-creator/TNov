@@ -782,9 +782,23 @@ namespace TNov
                 "https://portal.talan.group/knowledge/proektirovanie/tipofiltr/");
             buttonDatafilter.SetContextualHelp(filterhelp);
 
-            // группа кнопок "Типофильтр", "Выбор по ID"
+            // кнопка "Семейный"
 
-            panelUtils.AddStackedItems(buttonDatafilter, buttonDataidselection);
+            System.Drawing.Image imgfamilies = Properties.Resources.families32;
+            System.Drawing.Image imgfamiliesmin = Properties.Resources.families16;
+            PushButtonData buttonDatafamilies = new PushButtonData(nameof(LoadFamiliesFromServer), "Семейный", typeof(LoadFamiliesFromServer).Assembly.Location, typeof(LoadFamiliesFromServer).FullName)
+            {
+                //LargeImage = GetImageSource(imgfamilies),
+                Image = GetImageSource(imgfamiliesmin),
+                ToolTip = "Пакетная вставка связей с помещением их в рабочие наборы."
+            };
+            ContextualHelp familieshelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/zayavkinasemeystva/");
+            buttonDatafamilies.SetContextualHelp(familieshelp);
+
+            // группа кнопок "Типофильтр", "Выбор по ID", "Семейный"
+
+            panelUtils.AddStackedItems(buttonDatafilter, buttonDataidselection, buttonDatafamilies);
 
             // кнопка с выпадающим списком "Краска+"
 
@@ -861,20 +875,7 @@ namespace TNov
             grouppaint.AddPushButton(buttonDatarevitpaintdel);
             grouppaint.SetContextualHelp(painthelp);
 
-            // кнопка "Семейства"
-
-            System.Drawing.Image imgfamilies = Properties.Resources.families32;
-            System.Drawing.Image imgfamiliesmin = Properties.Resources.families16;
-            PushButtonData buttonDatafamilies = new PushButtonData(nameof(LoadFamiliesFromServer), "Семейный", typeof(LoadFamiliesFromServer).Assembly.Location, typeof(LoadFamiliesFromServer).FullName)
-            {
-                LargeImage = GetImageSource(imgfamilies),
-                Image = GetImageSource(imgfamiliesmin),
-                ToolTip = "Пакетная вставка связей с помещением их в рабочие наборы."
-            };
-            ContextualHelp familieshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/zayavkinasemeystva/");
-            buttonDatafamilies.SetContextualHelp(familieshelp);
-            panelUtils.AddItem(buttonDatafamilies);
+            
 
             #endregion
 
