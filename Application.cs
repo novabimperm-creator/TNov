@@ -1019,6 +1019,17 @@ namespace TNov
             groupaparts.AddPushButton(buttonDataroomsbackup);
             groupaparts.AddPushButton(buttonDataroomsTNumber);
 
+            // кнопка "Менеджер помещений"
+
+            PushButtonData buttonDataroomsManager = new PushButtonData(nameof(RoomsManager), "Менеджер\nпомещений", typeof(RoomsManager).Assembly.Location, typeof(RoomsManager).FullName)
+            {
+                LargeImage = GetImageSource(imgroom),
+                Image = GetImageSource(imgroommin),
+                ToolTip = "Общий интерфейс функций по помещениям: обязательные проверки параметров, Округлятор, сверка с резервными копиями площадей."
+            };
+            buttonDataroomsManager.SetContextualHelp(apartsgrouphelp);
+            panelRooms.AddItem(buttonDataroomsManager);
+
             #endregion
 
             #region Панель "Отделка"
