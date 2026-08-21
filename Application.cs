@@ -15,6 +15,8 @@ using System.Reflection;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using TNovBeams;
@@ -95,6 +97,9 @@ namespace TNov
         private static List<RibbonPanel> _BIMRibbonItems = new List<RibbonPanel>();
         private static List<RibbonPanel> _TestRibbonItems = new List<RibbonPanel>();
         private ComboBox _comboBox;
+        private bool _ribbonTabIconApplied;
+        private BitmapSource _ribbonTabIconSource;
+        private const string RibbonTabName = "TNov";
 
         TNovConfig _config = new TNovConfig();
         static string clientFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient");
@@ -453,9 +458,10 @@ namespace TNov
             
             // Создание вкладок, панелей, кнопок
 
-            string assebblyLocation = Assembly.GetExecutingAssembly().Location, tabName = "TNov";
+            string assebblyLocation = Assembly.GetExecutingAssembly().Location, tabName = RibbonTabName;
 
             application.CreateRibbonTab(tabName);
+            // Иконка вкладки применяется в OnIdling (visual tree ленты готов не сразу).
 
             ContextualHelp mainhelp = new ContextualHelp(ContextualHelpType.Url,
                 "https://portal.talan.group/knowledge/proektirovanie/");
@@ -1341,12 +1347,27 @@ namespace TNov
 
             #endregion
 
-            #region Панель "Вентиляция"
+            #region Панель "ОВ"
 
-            // Панель "Вентиляция"
+            // Панель "ОВ"
 
-            RibbonPanel panelVent = application.CreateRibbonPanel(tabName, "Вентиляция");
+            RibbonPanel panelVent = application.CreateRibbonPanel(tabName, "ОВ");
             _MEPRibbonItems.Add(panelVent);
+
+            // кнопка "Теплопотери Qoveter"
+
+            System.Drawing.Image imgQoveter = Properties.Resources.Qoveter32;
+            System.Drawing.Image imgQovetermin = Properties.Resources.Qoveter16;
+            PushButtonData buttonDataQoveter = new PushButtonData(nameof(CommandInDev), "Теплопотери\nQoveter", typeof(CommandInDev).Assembly.Location, typeof(CommandInDev).FullName)
+            {
+                LargeImage = GetImageSource(imgQoveter),
+                Image = GetImageSource(imgQovetermin),
+                ToolTip = "Выполнить расчет теплопотерь."
+            };
+            ContextualHelp Qoveterhelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/");
+            buttonDataQoveter.SetContextualHelp(Qoveterhelp);
+            panelVent.AddItem(buttonDataQoveter);
 
             // сгруппированная кнопка "Стенки Классы"
 
@@ -2076,6 +2097,9 @@ namespace TNov
 
         public void OnIdling(object sender, IdlingEventArgs e)
         {
+            if (!_ribbonTabIconApplied)
+                _ribbonTabIconApplied = TryApplyRibbonTabIcon();
+
             // 1. Если нет активного workshared-документа или таймера – сбрасываем цвет
             if (_activeDocument == null ||
                 !_docStopwatches.TryGetValue(_activeDocument, out Stopwatch sw) ||
@@ -2362,6 +2386,123 @@ namespace TNov
                 bmp.EndInit();
             }
             return bmp;
+        }
+
+        /// <summary>
+        /// Добавляет иконку в заголовок вкладки ленты через AdWindows/WPF (официального API нет).
+        /// Вызывается из OnIdling, пока visual tree не готов.
+        /// </summary>
+        private bool TryApplyRibbonTabIcon()
+        {
+            try
+            {
+                adWin.RibbonControl ribbon = adWin.ComponentManager.Ribbon;
+                if (ribbon == null || !ribbon.IsLoaded)
+                    return false;
+
+                if (_ribbonTabIconSource == null)
+                {
+                    _ribbonTabIconSource = GetImageSource(Properties.Resources.logomin);
+                    if (_ribbonTabIconSource.CanFreeze)
+                        _ribbonTabIconSource.Freeze();
+                }
+
+                foreach (TextBlock textBlock in FindVisualChildren<TextBlock>(ribbon))
+                {
+                    if (!string.Equals(textBlock.Text, RibbonTabName, StringComparison.Ordinal))
+                        continue;
+
+                    // Уже применено ранее
+                    if (VisualTreeHelper.GetParent(textBlock) is StackPanel existingStack
+                        && existingStack.Children.OfType<Image>().Any())
+                        return true;
+
+                    var image = new Image
+                    {
+                        Source = _ribbonTabIconSource,
+                        Width = 16,
+                        Height = 16,
+                        Margin = new Thickness(0, 0, 4, 0),
+                        VerticalAlignment = VerticalAlignment.Center,
+                        SnapsToDevicePixels = true
+                    };
+
+                    // Поднимаемся по дереву: ContentPresenter / Decorator / Panel
+                    for (DependencyObject current = textBlock; current != null; current = VisualTreeHelper.GetParent(current))
+                    {
+                        DependencyObject parent = VisualTreeHelper.GetParent(current);
+
+                        if (parent is ContentPresenter presenter
+                            && (ReferenceEquals(presenter.Content, current)
+                                || (presenter.Content is string title
+                                    && string.Equals(title, RibbonTabName, StringComparison.Ordinal))))
+                        {
+                            var stack = new StackPanel
+                            {
+                                Orientation = Orientation.Horizontal,
+                                VerticalAlignment = VerticalAlignment.Center
+                            };
+                            stack.Children.Add(image);
+                            stack.Children.Add(new TextBlock
+                            {
+                                Text = RibbonTabName,
+                                VerticalAlignment = VerticalAlignment.Center
+                            });
+                            presenter.Content = stack;
+                            return true;
+                        }
+
+                        if (parent is Decorator decorator && ReferenceEquals(decorator.Child, current)
+                            && current is UIElement uiChild)
+                        {
+                            decorator.Child = null;
+                            var stack = new StackPanel
+                            {
+                                Orientation = Orientation.Horizontal,
+                                VerticalAlignment = VerticalAlignment.Center
+                            };
+                            stack.Children.Add(image);
+                            stack.Children.Add(uiChild);
+                            decorator.Child = stack;
+                            return true;
+                        }
+
+                        if (parent is System.Windows.Controls.Panel panel
+                            && current is UIElement panelChild)
+                        {
+                            int index = panel.Children.IndexOf(panelChild);
+                            if (index >= 0)
+                            {
+                                panel.Children.Insert(index, image);
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // AdWindows — unsupported API.
+            }
+
+            return false;
+        }
+
+        private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent) where T : DependencyObject
+        {
+            if (parent == null)
+                yield break;
+
+            int count = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < count; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T match)
+                    yield return match;
+
+                foreach (T descendant in FindVisualChildren<T>(child))
+                    yield return descendant;
+            }
         }
 
         private Encoding DetectEncoding(string filePath)

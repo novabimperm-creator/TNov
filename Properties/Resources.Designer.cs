@@ -1518,6 +1518,36 @@ namespace TNov.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap Qoveter16 {
+            get {
+                object obj = ResourceManager.GetObject("Qoveter16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Qoveter32 {
+            get {
+                object obj = ResourceManager.GetObject("Qoveter32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Qoveter64 {
+            get {
+                object obj = ResourceManager.GetObject("Qoveter64", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap rebarimages16 {
             get {
                 object obj = ResourceManager.GetObject("rebarimages16", resourceCulture);
