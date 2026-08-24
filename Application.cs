@@ -5,6 +5,7 @@ using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using Newtonsoft.Json;
+using QOVETER.Commands;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -1358,7 +1359,7 @@ namespace TNov
 
             System.Drawing.Image imgQoveter = Properties.Resources.Qoveter32;
             System.Drawing.Image imgQovetermin = Properties.Resources.Qoveter16;
-            PushButtonData buttonDataQoveter = new PushButtonData(nameof(CommandInDev), "Теплопотери\nQoveter", typeof(CommandInDev).Assembly.Location, typeof(CommandInDev).FullName)
+            PushButtonData buttonDataQoveter = new PushButtonData(nameof(CalculateHeatLossCommand), "Теплопотери\nQoveter", typeof(CalculateHeatLossCommand).Assembly.Location, typeof(CalculateHeatLossCommand).FullName)
             {
                 LargeImage = GetImageSource(imgQoveter),
                 Image = GetImageSource(imgQovetermin),
