@@ -105,6 +105,11 @@ namespace TNov
         TNovConfig _config = new TNovConfig();
         static string clientFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient");
         static string serverPath = clientFolderPath; //"//fs-nova/Distr/0.For Admin/_TNov/"
+        /// <summary>
+        /// Клиент с этой версии обновляет себя сам. Должно совпадать с ClientSelfUpdate.SelfUpdateSince.
+        /// Пока локальный клиент старше — TNov по-прежнему делает Kill + copy.
+        /// </summary>
+        static readonly Version MinSelfUpdatingClientVersion = new Version(2, 1, 7, 0);
         #endregion
         public Result OnStartup(UIControlledApplication application)
         {
@@ -404,58 +409,12 @@ namespace TNov
             UpdaterRegistry.RegisterUpdater(parsOpredARUpdater, true);
             UpdaterRegistry.AddTrigger(parsOpredARUpdater.GetUpdaterId(), combinedFilterAR, Element.GetChangeTypeAny());
             #endregion
-            #region Клиент   
-            // проверка актуальности клиента, переустановка и перезапуск клиента
-
-            bool run = Process.GetProcessesByName("TNovClient").Any();
-            //C:\Users\%username%\TNovClient
-            string curClientVersion = "1.0.0.0";
-            try
-            {
-                curClientVersion = FileVersionInfo.GetVersionInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovClient.dll")).FileVersion;
-            }
-            catch (Exception) { }
-            string[] versionpartsC = curClientVersion.Split('.');
-            double versionMathC = Convert.ToDouble(versionpartsC[0] + "000000") + Convert.ToDouble(versionpartsC[1] + "0000") +
-                Convert.ToDouble(versionpartsC[2] + "00") + Convert.ToDouble(versionpartsC[3]);
- 
-            string verfilePathC = serverPath + "actual/clientversion.txt";
-            string actualVersionC = curClientVersion;
-            try
-            {
-                actualVersionC = File.ReadAllText(verfilePathC);
-            }
-            catch (Exception) { }
-            string[] actversionpartsC = actualVersionC.Split('.');
-            double actversionMathC = Convert.ToDouble(actversionpartsC[0] + "000000") + Convert.ToDouble(actversionpartsC[1] + "0000") +
-                Convert.ToDouble(actversionpartsC[2] + "00") + Convert.ToDouble(actversionpartsC[3]);
-
-            if (actversionMathC > versionMathC)
-            {
-                try
-                {
-                    if (run) { Process.GetProcessesByName("TNovClient").First().Kill(); }
-                    Thread.Sleep(5000);
-                    string[] filesInFolder = Directory.GetFiles(serverPath + "actual/client")
-                              .ToArray();
-                    foreach (var file in filesInFolder)
-                    { 
-                        var fileName = Path.GetFileName(file);
-                        File.Copy(file, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $"TNovClient/{fileName}"), true);
-                    }
-                }
-                catch (Exception) { }
-            }
-            bool run1 = Process.GetProcessesByName("TNovClient").Any();
-            if (!run1)
-            {
-                try
-                {
-                    Process.Start(@"C://Users/" + Environment.UserName + "/TNovClient/TNovClient.exe");
-                }
-                catch (Exception) { }
-            }
-#endregion
+            #region Клиент
+            // Старые клиенты (< 2.1.7) обновляет этот блок (Kill + copy).
+            // 2.1.4–2.1.6 на шаре могли быть без самообновления — порог 2.1.7.
+            // Начиная с 2.1.7 клиент обновляет себя сам; здесь только запуск, если процесса нет.
+            EnsureTNovClient();
+            #endregion
             
             // Создание вкладок, панелей, кнопок
 
@@ -2522,6 +2481,111 @@ namespace TNov
                 // Не является валидным UTF-8 – используем системную кодировку (ANSI)
                 return Encoding.Default;
             }
+        }
+
+        private void EnsureTNovClient()
+        {
+            string localFolder = clientFolderPath;
+            string localExe = Path.Combine(localFolder, "TNovClient.exe");
+            string localDll = Path.Combine(localFolder, "TNovClient.dll");
+            string serverClientFolder = Path.Combine(serverPath, "actual", "client");
+            string serverVersionFile = Path.Combine(serverPath, "actual", "clientversion.txt");
+
+            Version localVersion = TryReadClientFileVersion(localDll) ?? new Version(1, 0, 0, 0);
+            Version actualVersion = TryReadClientTextVersion(serverVersionFile)
+                ?? TryReadClientFileVersion(Path.Combine(serverClientFolder, "TNovClient.dll"))
+                ?? localVersion;
+
+            bool selfUpdating = localVersion >= MinSelfUpdatingClientVersion;
+            bool needsUpdate = actualVersion > localVersion;
+
+            if (needsUpdate && !selfUpdating)
+            {
+                try
+                {
+                    foreach (Process process in Process.GetProcessesByName("TNovClient"))
+                    {
+                        try { process.Kill(); }
+                        catch (Exception) { }
+                    }
+
+                    Thread.Sleep(5000);
+                    Directory.CreateDirectory(localFolder);
+                    if (Directory.Exists(serverClientFolder))
+                    {
+                        foreach (string file in Directory.GetFiles(serverClientFolder))
+                            File.Copy(file, Path.Combine(localFolder, Path.GetFileName(file)), true);
+                    }
+                }
+                catch (Exception) { }
+            }
+
+            if (!Process.GetProcessesByName("TNovClient").Any() && File.Exists(localExe))
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = localExe,
+                        UseShellExecute = true
+                    });
+                }
+                catch (Exception) { }
+            }
+        }
+
+        private static Version TryReadClientFileVersion(string path)
+        {
+            try
+            {
+                if (!File.Exists(path))
+                    return null;
+                return TryParseClientVersion(FileVersionInfo.GetVersionInfo(path).FileVersion)
+                    ?? TryParseClientVersion(FileVersionInfo.GetVersionInfo(path).ProductVersion);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        private static Version TryReadClientTextVersion(string path)
+        {
+            try
+            {
+                if (!File.Exists(path))
+                    return null;
+                return TryParseClientVersion(File.ReadAllText(path));
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        private static Version TryParseClientVersion(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            string cleaned = value.Trim();
+            int cut = cleaned.IndexOfAny(new[] { '+', '-', ' ', '\t' });
+            if (cut >= 0)
+                cleaned = cleaned.Substring(0, cut);
+
+            string[] parts = cleaned.Split('.');
+            if (parts.Length == 0)
+                return null;
+
+            int count = Math.Min(parts.Length, 4);
+            int[] nums = new int[4];
+            for (int i = 0; i < count; i++)
+            {
+                if (!int.TryParse(parts[i], out nums[i]) || nums[i] < 0)
+                    return null;
+            }
+
+            return new Version(nums[0], nums[1], nums[2], nums[3]);
         }
 
         public static TNovConfig LoadConfig() 
