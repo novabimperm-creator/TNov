@@ -32,6 +32,7 @@ using TNovRooms;
 using TNovSS;
 using TNovTasks;
 using TNovUtils;
+using TNovUtils.Checklist.Commands;
 using TNovUtils.Issues.Commands;
 using TNovUtilsAR;
 using TNovUtilsST;
@@ -98,9 +99,11 @@ namespace TNov
         private static List<RibbonPanel> _BIMRibbonItems = new List<RibbonPanel>();
         private static List<RibbonPanel> _TestRibbonItems = new List<RibbonPanel>();
         private ComboBox _comboBox;
-        private bool _ribbonTabIconApplied;
         private BitmapSource _ribbonTabIconSource;
+        private readonly Stopwatch _ribbonTabIconWatch = new Stopwatch();
         private const string RibbonTabName = "TNov";
+        private const string RibbonTabIconName = "TNovRibbonTabIcon";
+        private const int RibbonTabIconCheckMs = 500;
 
         TNovConfig _config = new TNovConfig();
         static string clientFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient");
@@ -109,7 +112,7 @@ namespace TNov
         /// Клиент с этой версии обновляет себя сам. Должно совпадать с ClientSelfUpdate.SelfUpdateSince.
         /// Пока локальный клиент старше — TNov по-прежнему делает Kill + copy.
         /// </summary>
-        static readonly Version MinSelfUpdatingClientVersion = new Version(2, 1, 7, 0);
+        static readonly Version MinSelfUpdatingClientVersion = new Version(2, 5, 0, 0);
         #endregion
         public Result OnStartup(UIControlledApplication application)
         {
@@ -481,12 +484,11 @@ namespace TNov
             */
             #endregion
 
-            #region Панель "Проект"
+            #region Панель "Общее"
 
-            // Панель "Проект"
+            // Панель "Общее"
 
             RibbonPanel panelСommon = application.CreateRibbonPanel(tabName, "Общее");
-            _CommonRibbonItems.Add(panelСommon);
 
             // кнопка "TNovPRO Вопросы"
 
@@ -502,23 +504,43 @@ namespace TNov
             buttonDataProQ.SetContextualHelp(mainhelp);
             panelСommon.AddItem(buttonDataProQ);
 
+            // кнопка "Чек-лист" (TNovUtils)
 
-            // кнопка "Журнал проекта"
-
-            System.Drawing.Image imgCDE = Properties.Resources.CDE32;
-            System.Drawing.Image imgCDEmin = Properties.Resources.CDE16;
-            PushButtonData buttonDataCDE = new PushButtonData(nameof(Journal), "Журнал\nпроекта", typeof(Journal).Assembly.Location, typeof(Journal).FullName)
+            System.Drawing.Image imgChecklist = Properties.Resources.checklist32;
+            System.Drawing.Image imgChecklistmin = Properties.Resources.checklist16;
+            PushButtonData buttonDataChecklist = new PushButtonData(nameof(ShowChecklistCommand), "Чек-лист", typeof(ShowChecklistCommand).Assembly.Location, typeof(ShowChecklistCommand).FullName)
             {
-                LargeImage = GetImageSource(imgCDE),
-                Image = GetImageSource(imgCDEmin),
-                ToolTip = "Открыть Журнал проекта - чек-лист задач по модели, журнал синхронизаций."
+                LargeImage = GetImageSource(imgChecklist),
+                Image = GetImageSource(imgChecklistmin),
+                ToolTip = "Чек-лист проверок модели и задач проектировщика."
+            };
+            buttonDataProQ.SetContextualHelp(mainhelp);
+            panelСommon.AddItem(buttonDataChecklist);
+
+            // сгруппированная кнопка "Журнал синхронизаций"
+
+            System.Drawing.Image imgJournalmin = Properties.Resources.journal16;
+            PushButtonData buttonDataSyncJournal = new PushButtonData(nameof(SyncJournal), "Журнал\nсинхронизаций", typeof(SyncJournal).Assembly.Location, typeof(SyncJournal).FullName)
+            {
+                Image = GetImageSource(imgJournalmin),
+                ToolTip = "Журнал синхронизаций текущей модели."
             };
             ContextualHelp CDEhelp = new ContextualHelp(ContextualHelpType.Url,
                 "https://portal.talan.group/knowledge/proektirovanie/");
-            buttonDataCDE.SetContextualHelp(CDEhelp);
-                        
-            panelСommon.AddItem(buttonDataCDE);
+            buttonDataSyncJournal.SetContextualHelp(CDEhelp);
 
+            // сгруппированная кнопка "Журнал заданий"
+
+            System.Drawing.Image imgJournalTasksmin = Properties.Resources.gettask16;
+            PushButtonData buttonDataTasksJournal = new PushButtonData(nameof(TasksJournal), "Журнал\nзаданий", typeof(TasksJournal).Assembly.Location, typeof(TasksJournal).FullName)
+            {
+                Image = GetImageSource(imgJournalTasksmin),
+                ToolTip = "Журнал выдачи заданий по проектам."
+            };
+            ContextualHelp tasksJournalHelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/MEPtasks/");
+            buttonDataTasksJournal.SetContextualHelp(tasksJournalHelp);
+            
             // сгруппированная кнопка "Таблица параметров"
 
             System.Drawing.Image imgParamTable = Properties.Resources.ParamTable32;
@@ -530,33 +552,9 @@ namespace TNov
             };
             buttonDataParamTable.SetContextualHelp(CDEhelp);
 
-            // сгруппированная кнопка "База знаний"
+            // группа кнопок "Журнал синхронизаций", "Журнал заданий", "Таблица параметров"
 
-            System.Drawing.Image imgwiki = Properties.Resources.wiki32;
-            System.Drawing.Image imgwikimin = Properties.Resources.wiki16;
-            PushButtonData buttonDatawiki = new PushButtonData(nameof(WorkOrg), "База знаний", typeof(WorkOrg).Assembly.Location, typeof(WorkOrg).FullName)
-            {
-                Image = GetImageSource(imgwikimin),
-                ToolTip = "Wiki по работе в Revit и не только."
-            };
-            buttonDatawiki.SetContextualHelp(mainhelp);
-
-            // сгруппированная кнопка "Учебный портал"
-
-            System.Drawing.Image imgedu = Properties.Resources.edu32;
-            System.Drawing.Image imgedumin = Properties.Resources.edu16;
-            PushButtonData buttonDataedu = new PushButtonData(nameof(EduPortal), "Учебный портал", typeof(EduPortal).Assembly.Location, typeof(EduPortal).FullName)
-            {
-                Image = GetImageSource(imgedumin),
-                ToolTip = "Перейти на учебный портал (moodle.talan.group)."
-            };
-            ContextualHelp eduhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://moodle.talan.group");
-            buttonDataedu.SetContextualHelp(eduhelp);
-
-            // группа кнопок "Таблица параметров", "База знаний", "Учебный портал"
-
-            panelСommon.AddStackedItems(buttonDataParamTable, buttonDatawiki, buttonDataedu);
+            panelСommon.AddStackedItems(buttonDataSyncJournal, buttonDataTasksJournal, buttonDataParamTable);
 
             #endregion
 
@@ -756,7 +754,7 @@ namespace TNov
             {
                 //LargeImage = GetImageSource(imgfamilies),
                 Image = GetImageSource(imgfamiliesmin),
-                ToolTip = "Пакетная вставка связей с помещением их в рабочие наборы."
+                ToolTip = "Библиотека семейств и заявки на семейства."
             };
             ContextualHelp familieshelp = new ContextualHelp(ContextualHelpType.Url,
                 "https://portal.talan.group/knowledge/proektirovanie/zayavkinasemeystva/");
@@ -2057,8 +2055,8 @@ namespace TNov
 
         public void OnIdling(object sender, IdlingEventArgs e)
         {
-            if (!_ribbonTabIconApplied)
-                _ribbonTabIconApplied = TryApplyRibbonTabIcon();
+            // Revit периодически пересоздаёт visual tree заголовков — восстанавливаем иконку при пропаже.
+            EnsureRibbonTabIcon();
 
             // 1. Если нет активного workshared-документа или таймера – сбрасываем цвет
             if (_activeDocument == null ||
@@ -2349,16 +2347,22 @@ namespace TNov
         }
 
         /// <summary>
-        /// Добавляет иконку в заголовок вкладки ленты через AdWindows/WPF (официального API нет).
-        /// Вызывается из OnIdling, пока visual tree не готов.
+        /// Держит иконку на заголовке вкладки (AdWindows/WPF). Revit может сбросить visual tree —
+        /// поэтому вызывается из OnIdling и восстанавливает иконку, если её уже нет.
         /// </summary>
-        private bool TryApplyRibbonTabIcon()
+        private void EnsureRibbonTabIcon()
         {
+            if (_ribbonTabIconWatch.IsRunning
+                && _ribbonTabIconWatch.ElapsedMilliseconds < RibbonTabIconCheckMs)
+                return;
+
+            _ribbonTabIconWatch.Restart();
+
             try
             {
                 adWin.RibbonControl ribbon = adWin.ComponentManager.Ribbon;
                 if (ribbon == null || !ribbon.IsLoaded)
-                    return false;
+                    return;
 
                 if (_ribbonTabIconSource == null)
                 {
@@ -2367,30 +2371,55 @@ namespace TNov
                         _ribbonTabIconSource.Freeze();
                 }
 
+                // Уже на месте — ничего не трогаем (избегаем мерцания).
+                foreach (Image existing in FindVisualChildren<Image>(ribbon))
+                {
+                    if (existing.Name == RibbonTabIconName)
+                        return;
+                }
+
                 foreach (TextBlock textBlock in FindVisualChildren<TextBlock>(ribbon))
                 {
                     if (!string.Equals(textBlock.Text, RibbonTabName, StringComparison.Ordinal))
                         continue;
 
-                    // Уже применено ранее
-                    if (VisualTreeHelper.GetParent(textBlock) is StackPanel existingStack
-                        && existingStack.Children.OfType<Image>().Any())
-                        return true;
+                    if (VisualTreeHelper.GetParent(textBlock) is System.Windows.Controls.Panel siblingPanel
+                        && siblingPanel.Children.OfType<Image>().Any(img => img.Name == RibbonTabIconName))
+                        return;
 
-                    var image = new Image
+                    Image image = CreateRibbonTabIcon();
+
+                    // Предпочтительно вставить Image рядом с существующим TextBlock
+                    // (не ломаем binding Title у ContentPresenter).
+                    if (VisualTreeHelper.GetParent(textBlock) is System.Windows.Controls.Panel panel)
                     {
-                        Source = _ribbonTabIconSource,
-                        Width = 16,
-                        Height = 16,
-                        Margin = new Thickness(0, 0, 4, 0),
-                        VerticalAlignment = VerticalAlignment.Center,
-                        SnapsToDevicePixels = true
-                    };
+                        int index = panel.Children.IndexOf(textBlock);
+                        if (index >= 0)
+                        {
+                            panel.Children.Insert(index, image);
+                            return;
+                        }
+                    }
 
-                    // Поднимаемся по дереву: ContentPresenter / Decorator / Panel
                     for (DependencyObject current = textBlock; current != null; current = VisualTreeHelper.GetParent(current))
                     {
                         DependencyObject parent = VisualTreeHelper.GetParent(current);
+
+                        if (parent is Decorator decorator
+                            && ReferenceEquals(decorator.Child, current)
+                            && current is UIElement uiChild)
+                        {
+                            decorator.Child = null;
+                            var stack = new StackPanel
+                            {
+                                Orientation = Orientation.Horizontal,
+                                VerticalAlignment = VerticalAlignment.Center
+                            };
+                            stack.Children.Add(image);
+                            stack.Children.Add(uiChild);
+                            decorator.Child = stack;
+                            return;
+                        }
 
                         if (parent is ContentPresenter presenter
                             && (ReferenceEquals(presenter.Content, current)
@@ -2403,39 +2432,16 @@ namespace TNov
                                 VerticalAlignment = VerticalAlignment.Center
                             };
                             stack.Children.Add(image);
-                            stack.Children.Add(new TextBlock
-                            {
-                                Text = RibbonTabName,
-                                VerticalAlignment = VerticalAlignment.Center
-                            });
+                            if (current is UIElement keep)
+                                stack.Children.Add(keep);
+                            else
+                                stack.Children.Add(new TextBlock
+                                {
+                                    Text = RibbonTabName,
+                                    VerticalAlignment = VerticalAlignment.Center
+                                });
                             presenter.Content = stack;
-                            return true;
-                        }
-
-                        if (parent is Decorator decorator && ReferenceEquals(decorator.Child, current)
-                            && current is UIElement uiChild)
-                        {
-                            decorator.Child = null;
-                            var stack = new StackPanel
-                            {
-                                Orientation = Orientation.Horizontal,
-                                VerticalAlignment = VerticalAlignment.Center
-                            };
-                            stack.Children.Add(image);
-                            stack.Children.Add(uiChild);
-                            decorator.Child = stack;
-                            return true;
-                        }
-
-                        if (parent is System.Windows.Controls.Panel panel
-                            && current is UIElement panelChild)
-                        {
-                            int index = panel.Children.IndexOf(panelChild);
-                            if (index >= 0)
-                            {
-                                panel.Children.Insert(index, image);
-                                return true;
-                            }
+                            return;
                         }
                     }
                 }
@@ -2444,8 +2450,20 @@ namespace TNov
             {
                 // AdWindows — unsupported API.
             }
+        }
 
-            return false;
+        private Image CreateRibbonTabIcon()
+        {
+            return new Image
+            {
+                Name = RibbonTabIconName,
+                Source = _ribbonTabIconSource,
+                Width = 16,
+                Height = 16,
+                Margin = new Thickness(0, 0, 4, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+                SnapsToDevicePixels = true
+            };
         }
 
         private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent) where T : DependencyObject
