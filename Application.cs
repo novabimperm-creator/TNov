@@ -4,6 +4,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
+using CleanLinks.Commands;
 using Newtonsoft.Json;
 using QOVETER.Commands;
 using System;
@@ -663,7 +664,18 @@ namespace TNov
                 "https://portal.talan.group/knowledge/proektirovanie/plaginyiskriptynovatsiya/");
             buttonDatalinks.SetContextualHelp(linkshelp);
             panelUtils.AddItem(buttonDatalinks);
-           
+
+            // кнопка "Связи проекта"
+
+            System.Drawing.Image imgManageLinks = Properties.Resources.worksets32;
+            System.Drawing.Image imgManageLinksmin = Properties.Resources.worksets16;
+            PushButtonData buttonDataManageLinks = new PushButtonData(nameof(ManageLinksCommand), "Связи\nпроекта", typeof(ManageLinksCommand).Assembly.Location, typeof(ManageLinksCommand).FullName)
+            {
+                LargeImage = GetImageSource(imgManageLinks),
+                Image = GetImageSource(imgManageLinksmin),
+                ToolTip = "Таблица всех RVT-связей: оси и рабочие наборы, выгрузка и загрузка, графика в текущем виде."
+            };
+            panelUtils.AddItem(buttonDataManageLinks);
 
             // кнопка с выпадающим списком "Закреплятор Уровни Наборы"
 
