@@ -1308,6 +1308,36 @@ namespace TNov.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap otkryvashka16 {
+            get {
+                object obj = ResourceManager.GetObject("otkryvashka16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap otkryvashka32 {
+            get {
+                object obj = ResourceManager.GetObject("otkryvashka32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap otkryvashka64 {
+            get {
+                object obj = ResourceManager.GetObject("otkryvashka64", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap paint16 {
             get {
                 object obj = ResourceManager.GetObject("paint16", resourceCulture);
@@ -2171,6 +2201,36 @@ namespace TNov.Properties {
         public static System.Drawing.Bitmap worksets64 {
             get {
                 object obj = ResourceManager.GetObject("worksets64", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap zakryvashka16 {
+            get {
+                object obj = ResourceManager.GetObject("zakryvashka16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap zakryvashka32 {
+            get {
+                object obj = ResourceManager.GetObject("zakryvashka32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap zakryvashka64 {
+            get {
+                object obj = ResourceManager.GetObject("zakryvashka64", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

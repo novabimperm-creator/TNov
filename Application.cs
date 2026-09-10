@@ -1691,6 +1691,30 @@ namespace TNov
             buttonDatabim.SetContextualHelp(bimhelp);
             panel10.AddItem(buttonDatabim);
 
+            // кнопка "Открывашка"
+
+            System.Drawing.Image imgOtkryvashka = Properties.Resources.otkryvashka32;
+            System.Drawing.Image imgOtkryvashkamin = Properties.Resources.otkryvashka16;
+            PushButtonData buttonDataOtkryvashka = new PushButtonData(nameof(Otkryvashka), "Открывашка", typeof(Otkryvashka).Assembly.Location, typeof(Otkryvashka).FullName)
+            {
+                LargeImage = GetImageSource(imgOtkryvashka),
+                Image = GetImageSource(imgOtkryvashkamin),
+                ToolTip = "Пакетное открытие моделей с Revit Server (создать новый локальный)."
+            };
+
+            // кнопка "Закрывашка"
+
+            System.Drawing.Image imgZakryvashka = Properties.Resources.zakryvashka32;
+            System.Drawing.Image imgZakryvashkamin = Properties.Resources.zakryvashka16;
+            PushButtonData buttonDataZakryvashka = new PushButtonData(nameof(Zakryvashka), "Закрывашка", typeof(Zakryvashka).Assembly.Location, typeof(Zakryvashka).FullName)
+            {
+                LargeImage = GetImageSource(imgZakryvashka),
+                Image = GetImageSource(imgZakryvashkamin),
+                ToolTip = "Пакетная синхронизация локальных моделей с Revit Server и сохранение обычных файлов."
+            };
+
+            panel10.AddStackedItems(buttonDataOtkryvashka, buttonDataZakryvashka);
+
             // Панель "BIM АР"
 
             RibbonPanel panel11 = application.CreateRibbonPanel(tabName, "BIM АР");
