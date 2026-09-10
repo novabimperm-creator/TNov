@@ -5,6 +5,7 @@ using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using CleanLinks.Commands;
+using LevelMover.Commands;
 using Newtonsoft.Json;
 using QOVETER.Commands;
 using System;
@@ -35,6 +36,7 @@ using TNovTasks;
 using TNovUtils;
 using TNovUtils.Checklist.Commands;
 using TNovUtils.Issues.Commands;
+using TNovUtils.LinkWorksets;
 using TNovUtilsAR;
 using TNovUtilsST;
 using TNovVent;
@@ -676,6 +678,31 @@ namespace TNov
                 ToolTip = "Таблица всех RVT-связей: оси и рабочие наборы, выгрузка и загрузка, графика в текущем виде."
             };
             panelUtils.AddItem(buttonDataManageLinks);
+
+            // стопка мини-кнопок: «Оси и уровни», «Арматура», «Перенести»
+
+            System.Drawing.Image imgGridsInLinksmin = Properties.Resources.levels16;
+            PushButtonData buttonDataGridsInLinks = new PushButtonData(nameof(DisableGridsInLinksCommand), "Оси и уровни", typeof(DisableGridsInLinksCommand).Assembly.Location, typeof(DisableGridsInLinksCommand).FullName)
+            {
+                Image = GetImageSource(imgGridsInLinksmin),
+                ToolTip = "Гасит оси и уровни во всех RVT-связях — закрывает их рабочие наборы. Действует на весь проект, включая 3D и разрезы."
+            };
+
+            System.Drawing.Image imgRebarInLinksmin = Properties.Resources.rebarnomark16;
+            PushButtonData buttonDataRebarInLinks = new PushButtonData(nameof(DisableRebarInLinksCommand), "Арматура", typeof(DisableRebarInLinksCommand).Assembly.Location, typeof(DisableRebarInLinksCommand).FullName)
+            {
+                Image = GetImageSource(imgRebarInLinksmin),
+                ToolTip = "Гасит арматуру во всех RVT-связях — закрывает арматурные рабочие наборы."
+            };
+
+            System.Drawing.Image imgMoveToLevelmin = Properties.Resources.levelnumber16;
+            PushButtonData buttonDataMoveToLevel = new PushButtonData(nameof(MoveToLevelCommand), "Перенести", typeof(MoveToLevelCommand).Assembly.Location, typeof(MoveToLevelCommand).FullName)
+            {
+                Image = GetImageSource(imgMoveToLevelmin),
+                ToolTip = "Меняет уровень выделенных элементов, не сдвигая их с места."
+            };
+
+            panelUtils.AddStackedItems(buttonDataGridsInLinks, buttonDataRebarInLinks, buttonDataMoveToLevel);
 
             // кнопка с выпадающим списком "Закреплятор Уровни Наборы"
 
