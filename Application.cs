@@ -32,6 +32,7 @@ using TNovParking;
 using TNovPiles;
 using TNovRooms;
 using TNovSS;
+using SchemeBuilder.Commands;
 using TNovTasks;
 using TNovUtils;
 using TNovUtils.Checklist.Commands;
@@ -1547,6 +1548,64 @@ namespace TNov
 
             panelSS.AddStackedItems(buttonDatass, buttonDataFamilyAToFamilyB);
 
+            // стопка SchemeBuilder: конструктор, УГО, анализ
+
+            System.Drawing.Image imgSchemeLegend = LoadTNovSSImage("legend32.png");
+            System.Drawing.Image imgSchemeLegendMin = LoadTNovSSImage("legend16.png");
+            PushButtonData buttonDataSchemeWizard = new PushButtonData(nameof(OpenWizardCommand), "Конструктор", typeof(OpenWizardCommand).Assembly.Location, typeof(OpenWizardCommand).FullName)
+            {
+                LargeImage = GetImageSource(imgSchemeLegend),
+                Image = GetImageSource(imgSchemeLegendMin),
+                ToolTip = "Пошаговый сбор раздела СС: оборудование, коды, зоны, легенда, схема.",
+                LongDescription =
+                    "Шесть шагов в том порядке, в котором решения всё равно приходится принимать:\n\n" +
+                    "1. Оборудование — какие категории считать своими.\n" +
+                    "2. Коды и наименования — код из префикса марки, наименование из ADSK_Наименование, " +
+                    "и то и другое правится.\n" +
+                    "3. Зоны — чем считать ячейку схемы; помещения ищутся и в связях.\n" +
+                    "4. Оформление — легенда, размеры колонок, проверка компонента-образца.\n" +
+                    "5. Схема — матрица целиком, как она встанет на лист.\n" +
+                    "6. Построение — что именно будет нарисовано.\n\n" +
+                    "Каждый шаг показывает результат предыдущего, поэтому ошибка видна сразу, а не на " +
+                    "готовом листе. Настройки и правки хранятся в модели."
+            };
+            ContextualHelp schemeWizardHelp = new ContextualHelp(ContextualHelpType.Url,
+                "https://portal.talan.group/knowledge/proektirovanie/");
+            buttonDataSchemeWizard.SetContextualHelp(schemeWizardHelp);
+
+            PushButtonData buttonDataSchemeUgo = new PushButtonData(nameof(MapUgoCommand), "УГО", typeof(MapUgoCommand).Assembly.Location, typeof(MapUgoCommand).FullName)
+            {
+                LargeImage = GetImageSource(imgSchemeLegend),
+                Image = GetImageSource(imgSchemeLegendMin),
+                ToolTip = "Находит УГО внутри семейств приборов и запоминает, какое из них ставить в схему.",
+                LongDescription =
+                    "Плоское УГО прибора лежит вложенным семейством внутри его собственного: типовой " +
+                    "аннотацией либо элементом узла. Плагин открывает каждое семейство, показывает найденное " +
+                    "и даёт выбрать нужное, если УГО несколько.\n\n" +
+                    "Выбранное загружается в проект и ставится в блоки схемы; то, что в проекте уже есть, " +
+                    "не перезаписывается. Обход долгий — семейства открываются по одному, зато делается он " +
+                    "один раз: выбор хранится в модели."
+            };
+            buttonDataSchemeUgo.SetContextualHelp(schemeWizardHelp);
+
+            System.Drawing.Image imgSchemeScope = LoadTNovSSImage("scope32.png");
+            System.Drawing.Image imgSchemeScopeMin = LoadTNovSSImage("scope16.png");
+            PushButtonData buttonDataSchemeAnalyze = new PushButtonData(nameof(AnalyzeModelCommand), "Анализ", typeof(AnalyzeModelCommand).Assembly.Location, typeof(AnalyzeModelCommand).FullName)
+            {
+                LargeImage = GetImageSource(imgSchemeScope),
+                Image = GetImageSource(imgSchemeScopeMin),
+                ToolTip = "Выгружает устройство модели в текстовый файл — для настройки плагина под проект.",
+                LongDescription =
+                    "В отчёт попадает: заполненность категорий, типы оборудования с примерами марок, полный " +
+                    "список параметров образца каждой категории, наличие помещений в модели и в связях, " +
+                    "содержимое легенд, типы текста и уровни.\n\n" +
+                    "Модель не изменяется — команда только читает. Файл кладётся в папку профиля, путь " +
+                    "показывается после выгрузки."
+            };
+            buttonDataSchemeAnalyze.SetContextualHelp(schemeWizardHelp);
+
+            panelSS.AddStackedItems(buttonDataSchemeWizard, buttonDataSchemeUgo, buttonDataSchemeAnalyze);
+
             /*
             // кнопка "IntersectionCheck"
             System.Drawing.Image imgIntersectionCheck = Properties.Resources.pikachu2_32;
@@ -2387,6 +2446,23 @@ namespace TNov
             LoadSettings();
             // Если сейчас активен workshared-документ, принудительно обновим цвет
             _currentColor = PanelColorState.None;
+        }
+
+        /// <summary>
+        /// Иконки SchemeBuilder вшиты в TNovSS, а не в TNov.Properties.Resources.
+        /// </summary>
+        private static System.Drawing.Image LoadTNovSSImage(string fileName)
+        {
+            string resourceName = "SchemeBuilder.Resources." + fileName;
+            using (Stream stream = typeof(OpenWizardCommand).Assembly.GetManifestResourceStream(resourceName))
+            {
+                if (stream == null) return Properties.Resources.ssNumberer16;
+
+                using (var bitmap = new System.Drawing.Bitmap(stream))
+                {
+                    return new System.Drawing.Bitmap(bitmap);
+                }
+            }
         }
 
         // Конвертер изображения
