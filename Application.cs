@@ -592,7 +592,7 @@ namespace TNov
             PushButtonData buttonDatachanges = new PushButtonData(nameof(Changes), "Изменения", typeof(Changes).Assembly.Location, typeof(Changes).FullName)
             {
                 Image = GetImageSource(imgchangesmin),
-                ToolTip = "Автонумерация облаков и заполнение параметров листов."
+                ToolTip = "Менеджер изменений: ревизии проекта, штамп по комплектам, ведомость изменений."
             };
             ContextualHelp changeshelp = new ContextualHelp(ContextualHelpType.Url,
                 "https://portal.talan.group/knowledge/proektirovanie/oformlenie/");
@@ -1817,10 +1817,16 @@ namespace TNov
             
             // кнопка "Т Параметры ОВ ВК"
             PushButtonData buttonDataTParsOVVK = new PushButtonData(nameof(TParsSpecOVVK), "Т Параметры", typeof(TParsSpecOVVK).Assembly.Location, typeof(TParsSpecOVVK).FullName);
+
+            // кнопка "Исключения Т_Диаметр"
+            PushButtonData buttonDataTDiamExceptions = new PushButtonData(nameof(TDiamExceptionsCommand), "Исключения", typeof(TDiamExceptionsCommand).Assembly.Location, typeof(TDiamExceptionsCommand).FullName)
+            {
+                ToolTip = "Исключения заполнения Т_Диаметр (общий файл на сервере)."
+            };
             
             //группа
 
-            panel13.AddStackedItems(buttonDataInsulationHosts, buttonDataTParsOVVK);
+            panel13.AddStackedItems(buttonDataInsulationHosts, buttonDataTParsOVVK, buttonDataTDiamExceptions);
 
             #endregion
 
