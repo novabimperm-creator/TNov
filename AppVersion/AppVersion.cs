@@ -76,7 +76,7 @@ namespace TNov
             if (companyName.Length > 0) companyName = $"Компания: {companyName}";
 
             viewModel.headtxt = $"Лицензия: {licenseType} {companyName}";
-            viewModel.url = "https://portal.talan.group/knowledge/proektirovanie/plaginyiskriptynovatsiya/";
+            viewModel.url = HelpLinks.GetHelpLink("Настройки");
             viewModel.userName = userName; viewModel.userDep = userDepartment; viewModel.userDepRole = userDepRole;
             var wpfview = new AppVersionWPF(viewModel);
             new WindowInteropHelper(wpfview) { Owner = uiApp.MainWindowHandle };

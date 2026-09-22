@@ -24,6 +24,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using TNovBeams;
 using TNovBIMUtils;
+using TNovCommon.Help;
 using TNovCommon;
 using TNovElectrical;
 using TNovFinishing;
@@ -190,6 +191,20 @@ namespace TNov
                 application.ViewActivated += OnViewActivated;
                 application.ControlledApplication.DocumentCreated += OnDocumentCreated;
                 application.DialogBoxShowing += new EventHandler<DialogBoxShowingEventArgs>(a_DialogBoxShowing);
+            }
+            catch (Exception) { }
+            #endregion
+            #region Панель справки
+            // Регистрируем до построения ленты: Revit восстанавливает раскладку докинга
+            // на старте, поэтому поздняя регистрация оставит панель вне раскладки сессии.
+            // Исключение наружу выпускать нельзя — оно оборвёт построение всей ленты.
+            try
+            {
+                // OnStartup идёт на UI-потоке Revit — именно этот диспетчер нужен автоконтексту.
+                HelpPaneHost.Initialize(System.Windows.Threading.Dispatcher.CurrentDispatcher);
+
+                if (!DockablePane.PaneIsRegistered(HelpPaneIds.Help))
+                    application.RegisterDockablePane(HelpPaneIds.Help, HelpPaneIds.Title, new HelpPaneProvider());
             }
             catch (Exception) { }
             #endregion
@@ -431,7 +446,7 @@ namespace TNov
             // Иконка вкладки применяется в OnIdling (visual tree ленты готов не сразу).
 
             ContextualHelp mainhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/");
+                HelpLinks.GetHelpLink("-"));
 
             #region Панель "Настройки"
 
@@ -452,20 +467,23 @@ namespace TNov
                 Image = GetImageSource(imgNmin),
                 ToolTip = "Глобальные настройки плагина и сведения о программе."
             };
-            buttonDataN.SetContextualHelp(mainhelp);
 
-            // кнопка "Настройки"
-            /*
-            PushButtonData buttonDataTest = new PushButtonData(nameof(PluginSettingsCommand), "Настройки", typeof(PluginSettingsCommand).Assembly.Location, typeof(PluginSettingsCommand).FullName)
+            ContextualHelp settingshelp = new ContextualHelp(ContextualHelpType.Url,
+                HelpLinks.GetHelpLink("Настройки"));
+            buttonDataN.SetContextualHelp(settingshelp);
+                        
+            
+            // кнопка "Справка"
+
+            PushButtonData buttonDataHelp = new PushButtonData(nameof(ShowHelpPaneCommand), "Справка", typeof(ShowHelpPaneCommand).Assembly.Location, typeof(ShowHelpPaneCommand).FullName)
             {
-                //LargeImage = GetImageSource(imgN),
-                Image = GetImageSource(imgNmin),
-                ToolTip = "Глобальные настройки плагина и сведения о программе."
+                ToolTip = "Панель справки по функциям плагина.",
+                LongDescription = "Открывает панель со статьями из базы знаний. Панель сама переключается на раздел запущенной функции."
             };
-            buttonDataTest.SetContextualHelp(mainhelp);
-            */
-            IList<RibbonItem> ribbonItemList0 = panel0.AddStackedItems(buttonDataN, (RibbonItemData)comboData);//, buttonDataTest);
-            _comboBox = ribbonItemList0[1] as ComboBox; 
+            buttonDataHelp.SetContextualHelp(mainhelp);
+
+            IList<RibbonItem> ribbonItemList0 = panel0.AddStackedItems(buttonDataN, (RibbonItemData)comboData, buttonDataHelp);
+            _comboBox = ribbonItemList0[1] as ComboBox;
             _comboBox.AddItem(new ComboBoxMemberData("Все", "Все"));
             _comboBox.AddItem(new ComboBoxMemberData("Общие", "Общие"));
             _comboBox.AddItem(new ComboBoxMemberData("АР", "АР"));
@@ -475,17 +493,7 @@ namespace TNov
             _comboBox.AddItem(new ComboBoxMemberData("Тесты", "Тесты"));
             _comboBox.CurrentChanged += OnComboBoxCurrentChanged; //подписка на событие изменения выбора
 
-            // кнопка "Тестовая команда"
-            /*
-            PushButtonData buttonDataMindmap = new PushButtonData(nameof(Mindmap), "Mindmap", typeof(Mindmap).Assembly.Location, typeof(Mindmap).FullName)
-            {
-                LargeImage = GetImageSource(imgN),
-                Image = GetImageSource(imgNmin),
-                ToolTip = "Mindmap."
-            };
-            buttonDataMindmap.SetContextualHelp(mainhelp);
-            panel0.AddItem(buttonDataMindmap);
-            */
+
             #endregion
 
             #region Панель "Общее"
@@ -505,7 +513,9 @@ namespace TNov
                 ToolTip = "Модуль Вопросы в TNovPRO.",
                 LongDescription = "Просмотр замечаний и коллизий, поиск в модели, работа со статусами."
             };
-            buttonDataProQ.SetContextualHelp(mainhelp);
+            ContextualHelp issuesHelp = new ContextualHelp(ContextualHelpType.Url,
+                HelpLinks.GetHelpLink("Вопросы"));
+            buttonDataProQ.SetContextualHelp(issuesHelp);
             panelСommon.AddItem(buttonDataProQ);
 
             // кнопка "Чек-лист" (TNovUtils)
@@ -518,7 +528,9 @@ namespace TNov
                 Image = GetImageSource(imgChecklistmin),
                 ToolTip = "Чек-лист проверок модели и задач проектировщика."
             };
-            buttonDataProQ.SetContextualHelp(mainhelp);
+            ContextualHelp checklistHelp = new ContextualHelp(ContextualHelpType.Url,
+                HelpLinks.GetHelpLink("Чек-лист"));
+            buttonDataChecklist.SetContextualHelp(checklistHelp);
             panelСommon.AddItem(buttonDataChecklist);
 
             // сгруппированная кнопка "Журнал синхронизаций"
@@ -529,9 +541,9 @@ namespace TNov
                 Image = GetImageSource(imgJournalmin),
                 ToolTip = "Журнал синхронизаций текущей модели."
             };
-            ContextualHelp CDEhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/");
-            buttonDataSyncJournal.SetContextualHelp(CDEhelp);
+            ContextualHelp syncJournalHelp = new ContextualHelp(ContextualHelpType.Url,
+                HelpLinks.GetHelpLink("Журнал синхронизаций"));
+            buttonDataSyncJournal.SetContextualHelp(syncJournalHelp);
 
             // сгруппированная кнопка "Журнал заданий"
 
@@ -542,7 +554,7 @@ namespace TNov
                 ToolTip = "Журнал выдачи заданий по проектам."
             };
             ContextualHelp tasksJournalHelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/MEPtasks/");
+                HelpLinks.GetHelpLink("Журнал заданий"));
             buttonDataTasksJournal.SetContextualHelp(tasksJournalHelp);
             
             // сгруппированная кнопка "Таблица параметров"
@@ -554,7 +566,7 @@ namespace TNov
                 Image = GetImageSource(imgParamTablemin),
                 ToolTip = "Открыть таблицу требований к модели."
             };
-            buttonDataParamTable.SetContextualHelp(CDEhelp);
+            buttonDataParamTable.SetContextualHelp(mainhelp);
 
             // группа кнопок "Журнал синхронизаций", "Журнал заданий", "Таблица параметров"
 
@@ -580,7 +592,7 @@ namespace TNov
                 ToolTip = "Перенумерация листов, формирование комплектов на печать."
             };
             ContextualHelp sheetshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/listynumeratsiyaikomplektynaeksport/");
+                HelpLinks.GetHelpLink("Менеджер листов"));
             buttonDatasheets.SetContextualHelp(sheetshelp);
             panelViewsSheets.AddItem(buttonDatasheets);
             
@@ -595,7 +607,7 @@ namespace TNov
                 ToolTip = "Менеджер изменений: ревизии проекта, штамп по комплектам, ведомость изменений."
             };
             ContextualHelp changeshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/oformlenie/");
+                HelpLinks.GetHelpLink("Изменения"));
             buttonDatachanges.SetContextualHelp(changeshelp);
 
             // подкнопка "Excel"
@@ -608,7 +620,7 @@ namespace TNov
                 ToolTip = "Экспорт спецификации в Excel."
             };
             ContextualHelp excelhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/plaginyiskriptynovatsiya/");
+                HelpLinks.GetHelpLink("Excel"));
             buttonDataexcel.SetContextualHelp(excelhelp);
 
             // подкнопка "Excel.Настройки"
@@ -639,8 +651,8 @@ namespace TNov
                 ToolTip = "Пакетный экспорт в DWG (единый файл) и PDF."
             };
             ContextualHelp exporthelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/eksportpdfidwgizrevit/");
-            buttonDataexport.SetContextualHelp(sheetshelp);
+                HelpLinks.GetHelpLink("Экспорт листов"));
+            buttonDataexport.SetContextualHelp(exporthelp);
             panelViewsSheets.AddItem(buttonDataexport);
 
 
@@ -664,7 +676,7 @@ namespace TNov
                 ToolTip = "Пакетная вставка связей с помещением их в рабочие наборы."
             };
             ContextualHelp linkshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/plaginyiskriptynovatsiya/");
+                HelpLinks.GetHelpLink("Связной"));
             buttonDatalinks.SetContextualHelp(linkshelp);
             panelUtils.AddItem(buttonDatalinks);
 
@@ -678,6 +690,9 @@ namespace TNov
                 Image = GetImageSource(imgManageLinksmin),
                 ToolTip = "Таблица всех RVT-связей: оси и рабочие наборы, выгрузка и загрузка, графика в текущем виде."
             };
+            ContextualHelp manageLinksHelp = new ContextualHelp(ContextualHelpType.Url,
+                HelpLinks.GetHelpLink("Связи проекта"));
+            buttonDataManageLinks.SetContextualHelp(manageLinksHelp);
             panelUtils.AddItem(buttonDataManageLinks);
 
             // стопка мини-кнопок: «Оси и уровни», «Арматура», «Перенести»
@@ -703,6 +718,14 @@ namespace TNov
                 ToolTip = "Меняет уровень выделенных элементов, не сдвигая их с места."
             };
 
+            // «Оси и уровни» и «Арматура» — частные случаи работы со связями,
+            // справка у них общая со «Связями проекта».
+            buttonDataGridsInLinks.SetContextualHelp(manageLinksHelp);
+            buttonDataRebarInLinks.SetContextualHelp(manageLinksHelp);
+
+            ContextualHelp moveToLevelHelp = new ContextualHelp(ContextualHelpType.Url,
+                HelpLinks.GetHelpLink("Перенести"));
+            buttonDataMoveToLevel.SetContextualHelp(moveToLevelHelp);
             panelUtils.AddStackedItems(buttonDataGridsInLinks, buttonDataRebarInLinks, buttonDataMoveToLevel);
 
             // кнопка с выпадающим списком "Закреплятор Уровни Наборы"
@@ -718,7 +741,7 @@ namespace TNov
                 ToolTip = "Закрепить оси, уровни и rvt-связи, переименовать отметки в уровнях, назначить рабочие наборы для связей, осей и уровней."
             };
             ContextualHelp plwhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/zakreplyatorurovninabory/");
+                HelpLinks.GetHelpLink("Закреплятор"));
             buttonDataplw.SetContextualHelp(plwhelp);
 
             
@@ -770,7 +793,7 @@ namespace TNov
                 ToolTip = "Выбрать и изолировать элементы по ID."
             };
             ContextualHelp idselectionhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/rabotaskolliziyami/");
+                HelpLinks.GetHelpLink("Выбор по ID"));
             buttonDataidselection.SetContextualHelp(idselectionhelp);
 
             // сгруппированная кнопка "Типофильтр"
@@ -783,7 +806,7 @@ namespace TNov
                 ToolTip = "Фильтрация на виде по типам элементов, создание фильтров в проекте."
             };
             ContextualHelp filterhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/tipofiltr/");
+                HelpLinks.GetHelpLink("Типофильтр"));
             buttonDatafilter.SetContextualHelp(filterhelp);
 
             // кнопка "Семейный"
@@ -797,7 +820,7 @@ namespace TNov
                 ToolTip = "Библиотека семейств и заявки на семейства."
             };
             ContextualHelp familieshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/zayavkinasemeystva/");
+                HelpLinks.GetHelpLink("Семейный"));
             buttonDatafamilies.SetContextualHelp(familieshelp);
 
             // группа кнопок "Типофильтр", "Выбор по ID", "Семейный"
@@ -816,9 +839,7 @@ namespace TNov
                 Image = GetImageSource(imgpaintmin),
                 ToolTip = "Копирование краски."
             };
-            ContextualHelp painthelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/kraska/");
-            buttonDatapaint.SetContextualHelp(painthelp);
+            buttonDatapaint.SetContextualHelp(mainhelp);
 
             // подкнопка "Краска"
 
@@ -830,7 +851,7 @@ namespace TNov
                 Image = GetImageSource(imgrevitpaintmin),
                 ToolTip = "Применение материала к грани элемента."
             };
-            buttonDatarevitpaint.SetContextualHelp(painthelp);
+            buttonDatarevitpaint.SetContextualHelp(mainhelp);
 
             // подкнопка "Разделение грани"
 
@@ -842,7 +863,7 @@ namespace TNov
                 Image = GetImageSource(imgrevitsplitfacemin),
                 ToolTip = "Разделение грани элемента."
             };
-            buttonDatarevitsplitface.SetContextualHelp(painthelp);
+            buttonDatarevitsplitface.SetContextualHelp(mainhelp);
 
             // подкнопка "Материал?"
 
@@ -854,7 +875,7 @@ namespace TNov
                 Image = GetImageSource(imgpaint2min),
                 ToolTip = "Получить имя материала выбранной грани."
             };
-            buttonDatapaint2.SetContextualHelp(painthelp);
+            buttonDatapaint2.SetContextualHelp(mainhelp);
 
             // подкнопка "Удалить краску"
 
@@ -866,7 +887,7 @@ namespace TNov
                 Image = GetImageSource(imgrevitpaintdelmin),
                 ToolTip = "Удалить краску с грани элемента."
             };
-            buttonDatarevitpaintdel.SetContextualHelp(painthelp);
+            buttonDatarevitpaintdel.SetContextualHelp(mainhelp);
 
             // - основная кнопка
 
@@ -877,7 +898,7 @@ namespace TNov
             grouppaint.AddPushButton(buttonDatarevitsplitface);
             grouppaint.AddPushButton(buttonDatapaint2);
             grouppaint.AddPushButton(buttonDatarevitpaintdel);
-            grouppaint.SetContextualHelp(painthelp);
+            grouppaint.SetContextualHelp(mainhelp);
 
             
 
@@ -903,7 +924,7 @@ namespace TNov
                 ToolTip = "Пронумеровать помещения c последовательным выбором элементов."
             };
             ContextualHelp roomshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/kladovye/");
+                HelpLinks.GetHelpLink("Номера помещений"));
             buttonDatarooms.SetContextualHelp(roomshelp);
 
             // подкнопка "Округлятор"
@@ -917,7 +938,7 @@ namespace TNov
                 ToolTip = "Округлить площади помещений."
             };
             ContextualHelp roomsroundhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/pomeshcheniya/");
+                HelpLinks.GetHelpLink("Округлятор"));
             buttonDataroomsround.SetContextualHelp(roomsroundhelp);
 
             // подкнопка "Нумератор квартир"
@@ -931,7 +952,7 @@ namespace TNov
                 ToolTip = "Пронумеровать квартиры (номер на этаже - в ручном режиме, сквозные номера - автоматически)."
             };
             ContextualHelp apartsnumhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/kvartirografiya/");
+                HelpLinks.GetHelpLink("Нумератор квартир"));
             buttonDataapartsnum.SetContextualHelp(apartsnumhelp);
 
             // подкнопка "Квартирография"
@@ -945,7 +966,7 @@ namespace TNov
                 ToolTip = "Выполнить расчет квартирографии (с перерасчетом площадей или без него)."
             };
             ContextualHelp apartshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/kvartirografiya/");
+                HelpLinks.GetHelpLink("Квартирография"));
             buttonDataaparts.SetContextualHelp(apartshelp);
 
             // подкнопка "Офисография"
@@ -959,7 +980,7 @@ namespace TNov
                 ToolTip = "Выполнить расчет офисографии (с перерасчетом площадей или без него)."
             };
             ContextualHelp officeshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/ofisografiya/");
+                HelpLinks.GetHelpLink("Офисография"));
             buttonDataoffices.SetContextualHelp(officeshelp);
 
             // подкнопка "Удалить лишние"
@@ -973,7 +994,7 @@ namespace TNov
                 ToolTip = "Удалить лишние помещения (неразмещенные и избыточные)."
             };
             ContextualHelp failedroomshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/pomeshcheniya/");
+                HelpLinks.GetHelpLink("Удалить лишние"));
             buttonDatafailedrooms.SetContextualHelp(failedroomshelp);
 
             // подкнопка "Резервные копии"
@@ -987,7 +1008,7 @@ namespace TNov
                 ToolTip = "Резервное копирование и восстановление значений площадей помещений."
             };
             ContextualHelp roomsbackuphelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/pomeshcheniyarezervnoekopirovanieivosstanovlenie/");
+                HelpLinks.GetHelpLink("Помещения Резервные копии"));
             buttonDataroomsbackup.SetContextualHelp(roomsbackuphelp);
 
             // подкнопка "Номера по ТЗ"
@@ -1011,7 +1032,7 @@ namespace TNov
                 ToolTip = "Пакет функций для работы с помещениями."
             };
             ContextualHelp apartsgrouphelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/pomeshcheniya/");
+                HelpLinks.GetHelpLink("Номера по ТЗ"));
             buttonDataapartsgroup.SetContextualHelp(apartsgrouphelp);
             PulldownButton groupaparts = panelRooms.AddItem(buttonDataapartsgroup) as PulldownButton;
             groupaparts.AddPushButton(buttonDatarooms);
@@ -1054,7 +1075,7 @@ namespace TNov
                 ToolTip = "Создать полы в помещениях."
             };
             ContextualHelp floorshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/poly/");
+                HelpLinks.GetHelpLink("Генератор полов"));
             buttonDatafloors.SetContextualHelp(floorshelp);
             panelFinishing.AddItem(buttonDatafloors);
 
@@ -1079,7 +1100,7 @@ namespace TNov
                 ToolTip = "Заполнение параметров для ведомости отделки у стен, полов, потолков."
             };
             ContextualHelp finishinghelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/vedomostotdelkipomeshcheniy/");
+                HelpLinks.GetHelpLink("Ведомость отделки"));
             buttonDatafinishing.SetContextualHelp(finishinghelp);
 
             // группа кнопок "Ведомость полов", "Ведомость отделки"
@@ -1118,7 +1139,7 @@ namespace TNov
                 ToolTip = "Выделить отзеркаленные окна и двери, пометить такие элементы через параметр Марка."
             };
             ContextualHelp mirrorhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/okna/");
+                HelpLinks.GetHelpLink("Антизеркало"));
             buttonDatamirror.SetContextualHelp(mirrorhelp);
 
             // сгруппированная кнопка "Проемщик"
@@ -1132,7 +1153,7 @@ namespace TNov
                 LongDescription = "Находит в связанных моделях с _АР все окна и двери, позволяет выбрать нужные и копирует их как семейства pmN.Отверстие Стена.ПОФ с параметрами."
             };
             ContextualHelp CopyWindowsHelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/");
+                HelpLinks.GetHelpLink("Проемщик"));
             buttonDataCopyWindows.SetContextualHelp(CopyWindowsHelp);
 
             // сгруппированная кнопка "Эт.Номер"
@@ -1145,7 +1166,7 @@ namespace TNov
                 ToolTip = "Заполнить Эт.Номер у элементов модели (с выбором категорий)."
             };
             ContextualHelp levelnumberhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/specificationsbylevel/");
+                HelpLinks.GetHelpLink("Эт.Номер"));
             buttonDatalevelnumber.SetContextualHelp(levelnumberhelp);
 
             // группа кнопок 
@@ -1163,7 +1184,7 @@ namespace TNov
                 ToolTip = "Сформировать виды квартир для АМ ПСО."
             };
             ContextualHelp AMhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/");
+                HelpLinks.GetHelpLink("АМ ПСО"));
             buttonDataAM.SetContextualHelp(AMhelp);
 
             panelUtilsAR.AddItem(buttonDataAM);
@@ -1188,7 +1209,7 @@ namespace TNov
                 ToolTip = "Пакет функций для работы с парковками."
             };
             ContextualHelp parkhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/parking/");
+                HelpLinks.GetHelpLink("Парковки"));
             buttonDatapark.SetContextualHelp(parkhelp);
             panelParking.AddItem(buttonDatapark);
 
@@ -1208,7 +1229,7 @@ namespace TNov
                 ToolTip = "Вырезать объем бетонных перемычек из стен, сформировать эскизы ПР."
             };
             ContextualHelp beamshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/vedomostperemychek/");
+                HelpLinks.GetHelpLink("Перемычки"));
             buttonDatabeamscut.SetContextualHelp(beamshelp);
             panelBeams.AddItem(buttonDatabeamscut);
 
@@ -1232,7 +1253,7 @@ namespace TNov
                 ToolTip = "Пакет функций по работе со сваями."
             };
             ContextualHelp pileshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/svai_xmqe/");
+                HelpLinks.GetHelpLink("Сваи"));
             buttonDatapiles.SetContextualHelp(pileshelp);
             panelPiles.AddItem(buttonDatapiles);
 
@@ -1256,7 +1277,7 @@ namespace TNov
                 ToolTip = "Ускорить работу модели КЖ путем манипуляций с параметрами несущей арматуры."
             };
             ContextualHelp fixstructurefilehelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/uskorenierabotyfaylovmodeli_posu/");
+                HelpLinks.GetHelpLink("Ускорить файл"));
             buttonDatafixstructurefile.SetContextualHelp(fixstructurefilehelp);
             panelUtilsST.AddItem(buttonDatafixstructurefile);
 
@@ -1270,7 +1291,7 @@ namespace TNov
                 ToolTip = "Заполнить параметр A_Арм Эскиз формы у системной арматуры для ведомости деталей."
             };
             ContextualHelp rebarimageshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/vedomostdetaley/");
+                HelpLinks.GetHelpLink("Эскизы деталей"));
             buttonDatarebarimages.SetContextualHelp(rebarimageshelp);
 
             // сгруппированная кнопка "ВРС подчистить"
@@ -1283,7 +1304,7 @@ namespace TNov
                 ToolTip = "Подчистить все ведомости расхода стали в проекте (скрыть столбцы с нулевыми значениями)."
             };
             ContextualHelp steelschedulehelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/vedomostraskhodastali/");
+                HelpLinks.GetHelpLink("ВРС подчистить"));
             buttonDatasteelschedule.SetContextualHelp(steelschedulehelp);
 
             // сгруппированная кнопка "Группировка"
@@ -1296,7 +1317,7 @@ namespace TNov
                 ToolTip = "Заполнить параметр A_Группирование для сортировки спецификаций)."
             };
             ContextualHelp schemespechelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/skhemaraspolozheniyakonstruktsiy/");
+                HelpLinks.GetHelpLink("Группировка"));
             buttonDataschemespec.SetContextualHelp(schemespechelp);
 
             // группа кнопок "Эскизы деталей", "ВРС подчистить", "Группировка"
@@ -1315,7 +1336,7 @@ namespace TNov
                 ToolTip = "Изолирует на открытом 3D-виде несущую арматуру с незаполненным параметром A_Марка конструкции."
             };
             ContextualHelp RebarNoMarkhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/plaginyiskriptynovatsiya/");
+                HelpLinks.GetHelpLink("Арматура без марки"));
             buttonDataRebarNoMark.SetContextualHelp(RebarNoMarkhelp);
             panelUtilsST.AddItem(buttonDataRebarNoMark);
 
@@ -1339,7 +1360,7 @@ namespace TNov
                 ToolTip = "Заполнить параметры у элементов ВК ОВ / ЭЛ / СС ПС для формирования сводной спецификации."
             };
             ContextualHelp adskghelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/MEPspec/");
+                HelpLinks.GetHelpLink("Сводная спека"));
             buttonDataadskg.SetContextualHelp(adskghelp);
             panelMEPSpec.AddItem(buttonDataadskg);
 
@@ -1363,7 +1384,7 @@ namespace TNov
                 ToolTip = "Выполнить расчет теплопотерь."
             };
             ContextualHelp Qoveterhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/");
+                HelpLinks.GetHelpLink("Теплопотери"));
             buttonDataQoveter.SetContextualHelp(Qoveterhelp);
             panelVent.AddItem(buttonDataQoveter);
 
@@ -1377,7 +1398,7 @@ namespace TNov
                 ToolTip = "Заполнить толщины стенок и класс герметичности воздуховодов."
             };
             ContextualHelp adskstenkihelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/MEPductthickness/");
+                HelpLinks.GetHelpLink("ADSK Стенки"));
             buttonDataadskstenki.SetContextualHelp(adskstenkihelp);
 
 
@@ -1391,7 +1412,7 @@ namespace TNov
                 ToolTip = "Создать/заменить схемы систем вентиляции."
             };
             ContextualHelp duct3dhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/MEPviews/");
+                HelpLinks.GetHelpLink("Схемы ОВ2"));
             buttonDataduct3d.SetContextualHelp(duct3dhelp);
 
             // группа кнопок "Стенки Классы", "Схемы ОВ2"
@@ -1417,7 +1438,7 @@ namespace TNov
                 ToolTip = "Заполнить параметры N_ЭЛ.Высота стяжки и N_ЭЛ.Отметка потолка у выключателей, осветительных и электрических приборов, электрооборудования."
             };
             ContextualHelp eflhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/plaginyiskriptynovatsiya/");
+                HelpLinks.GetHelpLink("ЭЛ Отметки"));
             buttonDataefl.SetContextualHelp(eflhelp);
 
             // подкнопка "ЭЛ Отметки размещения. Настройки"
@@ -1440,7 +1461,7 @@ namespace TNov
                 ToolTip = "Крышки, перегородки для кабельных лотков, помещение лотков и их элементов в рабочий набор."
             };
             ContextualHelp cabletrayshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/lotki/");
+                HelpLinks.GetHelpLink("Лотки"));
             buttonDatacabletrays.SetContextualHelp(cabletrayshelp);
 
             // подкнопка "Лотки.Настройки"
@@ -1470,7 +1491,7 @@ namespace TNov
                 ToolTip = "Запись данных из цепей связанного файла в параметры автоматического выключателя."
             };
             ContextualHelp ElSystemSynchelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/");
+                HelpLinks.GetHelpLink("Синхронизатор"));
             buttonDataElSystemSync.SetContextualHelp(ElSystemSynchelp);
                         
             // подкнопка "Способы прокладки"
@@ -1483,7 +1504,7 @@ namespace TNov
                 ToolTip = "Запись значений в параметры автоматического выключателя."
             };
             ContextualHelp cablewayshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/");
+                HelpLinks.GetHelpLink("Способы прокладки"));
             buttonDatacableways.SetContextualHelp(cablewayshelp);
 
             // подкнопка "Прокладка.Настройки"
@@ -1526,7 +1547,7 @@ namespace TNov
                 ToolTip = "Пакет функций по адресации устройств СС ПС."
             };
             ContextualHelp sshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/");
+                HelpLinks.GetHelpLink("Адресатор"));
             buttonDatass.SetContextualHelp(sshelp);
 
 
@@ -1541,7 +1562,7 @@ namespace TNov
                 LongDescription = "Размещает элементы текущего файла рядом с элементами из связанных файлов\n\nГод напряженный - работаем эффективно!"
             };
             ContextualHelp buttonDataFamilyAToFamilyBhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/");
+                HelpLinks.GetHelpLink("Расстановщик СС ПС"));
             buttonDataFamilyAToFamilyB.SetContextualHelp(buttonDataFamilyAToFamilyBhelp);
 
             // группа
@@ -1570,7 +1591,7 @@ namespace TNov
                     "готовом листе. Настройки и правки хранятся в модели."
             };
             ContextualHelp schemeWizardHelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/");
+                HelpLinks.GetHelpLink("Конструктор СС"));
             buttonDataSchemeWizard.SetContextualHelp(schemeWizardHelp);
 
             PushButtonData buttonDataSchemeUgo = new PushButtonData(nameof(MapUgoCommand), "УГО", typeof(MapUgoCommand).Assembly.Location, typeof(MapUgoCommand).FullName)
@@ -1618,7 +1639,7 @@ namespace TNov
                 LongDescription = "Показывает пересечения элементов текущего файла со связанными файлами\n\nГод напряженный - ищем и устраняем коллизии!"
             };
             ContextualHelp buttonDataIntersectionCheckhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/");
+                HelpLinks.GetHelpLink("Проверка пересечений"));
             buttonDataIntersectionCheck.SetContextualHelp(buttonDataIntersectionCheckhelp);
             panel9p.AddItem(buttonDataIntersectionCheck);
             */
@@ -1641,7 +1662,7 @@ namespace TNov
                 ToolTip = "Выдать/перевыдать задание в систему выдачи заданий."
             };
             ContextualHelp gettaskhelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/samostoyatelnoemodelirovanieotverstiy/");
+                HelpLinks.GetHelpLink("Отправить задание"));
             buttonDatatasksend.SetContextualHelp(gettaskhelp);
             panelTasks.AddItem(buttonDatatasksend);
 
@@ -1670,7 +1691,7 @@ namespace TNov
                 ToolTip = "Пронумеровать элементы заданий в выбранной группе (в модели Заданий)."
             };
             ContextualHelp taskautohelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/MEPtasks/");
+                HelpLinks.GetHelpLink("Автонумерация заданий"));
             buttonDatataskauto.SetContextualHelp(taskautohelp);
 
             // сгруппированная кнопка "Найти по номеру"
@@ -1708,7 +1729,7 @@ namespace TNov
                 ToolTip = "Скопировать отверстия выбранной группы по нужным уровням либо обновить их на уровнях."
             };
             ContextualHelp holeshelp = new ContextualHelp(ContextualHelpType.Url,
-                "https://portal.talan.group/knowledge/proektirovanie/samostoyatelnoemodelirovanieotverstiy/");
+                HelpLinks.GetHelpLink("Копировать отверстия"));
             buttonDatacopyholes.SetContextualHelp(holeshelp);
             panelTasks.AddItem(buttonDatacopyholes);
 
@@ -1746,7 +1767,7 @@ namespace TNov
                 ToolTip = "Пакетный экспорт NWC, RVT (с очисткой)."
             };
             ContextualHelp bimhelp = new ContextualHelp(ContextualHelpType.Url,
-            "https://portal.talan.group/knowledge/proektirovanie/eksportmodeleyvnavisworks/");
+            HelpLinks.GetHelpLink("BIM Экспорт"));
             buttonDatabim.SetContextualHelp(bimhelp);
             panel10.AddItem(buttonDatabim);
 
@@ -1760,6 +1781,9 @@ namespace TNov
                 Image = GetImageSource(imgOtkryvashkamin),
                 ToolTip = "Пакетное открытие моделей с Revit Server (создать новый локальный)."
             };
+            ContextualHelp otkryvashkahelp = new ContextualHelp(ContextualHelpType.Url,
+                HelpLinks.GetHelpLink("Открывашка"));
+            buttonDataOtkryvashka.SetContextualHelp(otkryvashkahelp);
 
             // кнопка "Закрывашка"
 
@@ -1771,6 +1795,9 @@ namespace TNov
                 Image = GetImageSource(imgZakryvashkamin),
                 ToolTip = "Пакетная синхронизация локальных моделей с Revit Server и сохранение обычных файлов."
             };
+            ContextualHelp zakryvashkahelp = new ContextualHelp(ContextualHelpType.Url,
+                HelpLinks.GetHelpLink("Закрывашка"));
+            buttonDataZakryvashka.SetContextualHelp(zakryvashkahelp);
 
             panel10.AddStackedItems(buttonDataOtkryvashka, buttonDataZakryvashka);
 
@@ -1912,6 +1939,7 @@ namespace TNov
             application.Idling -= OnIdling;
             application.ViewActivated -= OnViewActivated;
             application.DialogBoxShowing -= a_DialogBoxShowing;
+            HelpPaneHost.Shutdown();
             #endregion
             return Result.Succeeded;
         }
@@ -1941,7 +1969,7 @@ namespace TNov
                     new InfoWindow280("Ваше имя пользователя в Revit: " + userName + "\n" +
                     "Имя должно соответствовать вашему логину в компании (пример: kadysheva.n). Измените имя в настройках Revit.").ShowDialog();
 
-                    string link = "https://portal.talan.group/knowledge/proektirovanie/startraboty/";
+                    string link = HelpLinks.GetHelpLink("Старт работы");
                     string commandText = @link;
                     var proc = new System.Diagnostics.Process();
                     proc.StartInfo.FileName = commandText;
@@ -2186,6 +2214,8 @@ namespace TNov
             // Revit периодически пересоздаёт visual tree заголовков — восстанавливаем иконку при пропаже.
             EnsureRibbonTabIcon();
 
+            // Отложенный показ панели справки: Idling гарантированно вне модального диалога.
+            HelpPaneHost.DrainPendingShow(sender as UIApplication);
             // 1. Если нет активного workshared-документа или таймера – сбрасываем цвет
             if (_activeDocument == null ||
                 !_docStopwatches.TryGetValue(_activeDocument, out Stopwatch sw) ||
