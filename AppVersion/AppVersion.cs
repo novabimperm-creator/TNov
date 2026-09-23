@@ -38,7 +38,7 @@ namespace TNov
 
             if (config.LicenseType=="corp")
             {
-                string[] rolesFile = File.ReadAllLines($"{config.ServerPath}roles.txt");
+                string[] rolesFile = TNovCommon.Server.ServerData.ReadAllLines("roles.txt");
                 foreach (string role in rolesFile)
                 {
                     if (role.Contains(userName))

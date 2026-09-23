@@ -124,6 +124,8 @@ namespace TNov
             #region Конфигурация и настройки программы
             //конфиг
             _config = LoadConfig();
+            // Досылка журналов, не ушедших на сервер в прошлых сессиях.
+            TNovCommon.Server.ServerOutbox.Start();
             if (_config.LicenseType != null)
             {
                 Debug.WriteLine($"Конфигурация загружена: LicenseType={_config.LicenseType}, CorpName={_config.CorpName}, ServerPath={_config.ServerPath}");
@@ -1902,6 +1904,9 @@ namespace TNov
         }
         public Result OnShutdown(UIControlledApplication application)
         {
+            // Дописать журналы (usage, открытия, синхронизации); что не успело — сохранится локально.
+            TNovCommon.Server.ServerOutbox.Shutdown(TimeSpan.FromSeconds(5));
+
             #region Апдейтеры отписка
             TNovHoleUpdater holeUpdater = new TNovHoleUpdater(application.ActiveAddInId);
             UpdaterRegistry.UnregisterUpdater(holeUpdater.GetUpdaterId());
@@ -1969,7 +1974,7 @@ namespace TNov
                 Application revitApp = sender as Application;
                 UIApplication uiApp = new UIApplication(e.Document.Application);
                 string userName = uiApp.Application.Username;
-                string[] rolesFile = File.ReadAllLines($"{serverPath}roles.txt");
+                string[] rolesFile = TNovCommon.Server.ServerData.ReadAllLines("roles.txt");
                 bool correctUserName = false;
                 foreach (string role in rolesFile)
                 {
@@ -2025,9 +2030,8 @@ namespace TNov
 
             if (_config.LicenseType == "corp") 
             {
-                string usagefilePath = serverPath + "usage.txt";
-                //время открытия
-                if (File.Exists(usagefilePath) && _startTime.HasValue && info.IsWorkshared)
+                //время открытия (запись уходит в фоновую очередь, доступность сервера здесь не проверяем)
+                if (_startTime.HasValue && info.IsWorkshared)
                 {
                     double seconds = (DateTime.Now - _startTime.Value).TotalSeconds;
                     seconds = Math.Round(seconds);
@@ -2037,7 +2041,7 @@ namespace TNov
                     Autodesk.Revit.ApplicationServices.Application rvtApp = e.Document.Application;
                     string userName = rvtApp.Username; string docNameUserName = "_" + userName; docName = docName.Replace(docNameUserName, "");
                     docName = docName.Replace(".rvt", "");
-                    string path = $"{serverPath}users/{userName},{docName}.txt";
+                    string path = $"users/{userName},{docName}.txt";
                     // Получаем таблицу рабочих наборов
                     WorksetTable worksetTable = doc.GetWorksetTable();
                     FilteredWorksetCollector collector = new FilteredWorksetCollector(doc);
@@ -2058,7 +2062,6 @@ namespace TNov
                     DateTime dateTime = DateTime.Now;
                     string date = dateTime.ToString(); date = date.Replace(":", "-"); date = date.Replace("/", "-"); date = date.Replace(" 0-00-00", "");
                     string fullUserName = WindowsIdentity.GetCurrent().Name;
-                    if (File.Exists(path)) date = "\n" + date;
                     string filePath = doc.PathName;
                     double fileSize = 0;
                     if (!string.IsNullOrEmpty(filePath))
@@ -2070,7 +2073,7 @@ namespace TNov
                             fileSize = Math.Round(fileSize);
                         }
                     }
-                    File.AppendAllText(path, $"{date},{seconds},pc: {fullUserName},opened: {opened},closed: {closed},{fileSize}");
+                    TNovCommon.Server.ServerOutbox.AppendLine(path, $"{date},{seconds},pc: {fullUserName},opened: {opened},closed: {closed},{fileSize}");
                 }
 
             }
@@ -2170,8 +2173,7 @@ namespace TNov
                 docName = docName.Replace(",", "");
                 DateTime dateTime = DateTime.Now; string TNovVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
                 string date = dateTime.ToString(); date = date.Replace(",", "");
-                string usagefilePath = $"{serverPath}projects/{docName},synchronizes.txt";
-                System.IO.File.AppendAllText(usagefilePath, "\n" + date + "," + userName + "," + docName);
+                TNovCommon.Server.ServerOutbox.AppendLine($"projects/{docName},synchronizes.txt", date + "," + userName + "," + docName);
             }
 
             //подсветка
