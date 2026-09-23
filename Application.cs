@@ -1801,6 +1801,21 @@ namespace TNov
 
             panel10.AddStackedItems(buttonDataOtkryvashka, buttonDataZakryvashka);
 
+            // кнопка "Отчет" (TNovUtils): свод чек-листов по моделям за 7 дней
+
+            System.Drawing.Image imgReport = Properties.Resources.checklist32;
+            System.Drawing.Image imgReportmin = Properties.Resources.checklist16;
+            PushButtonData buttonDataReport = new PushButtonData(nameof(ShowChecklistReportCommand), "Отчет", typeof(ShowChecklistReportCommand).Assembly.Location, typeof(ShowChecklistReportCommand).FullName)
+            {
+                LargeImage = GetImageSource(imgReport),
+                Image = GetImageSource(imgReportmin),
+                ToolTip = "Свод чек-листов по моделям, изменённым проектировщиками за 7 дней: автопроверки, BIM-проверки, актуальность NWC."
+            };
+            ContextualHelp reporthelp = new ContextualHelp(ContextualHelpType.Url,
+                HelpLinks.GetHelpLink("Отчет"));
+            buttonDataReport.SetContextualHelp(reporthelp);
+            panel10.AddItem(buttonDataReport);
+
             // Панель "BIM АР"
 
             RibbonPanel panel11 = application.CreateRibbonPanel(tabName, "BIM АР");
