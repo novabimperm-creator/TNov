@@ -126,6 +126,8 @@ namespace TNov
             _config = LoadConfig();
             // Досылка журналов, не ушедших на сервер в прошлых сессиях.
             TNovCommon.Server.ServerOutbox.Start();
+            // Фоновое чтение общих настроек TNovApi ({ServerPath}tnovapi.json), чтобы первая команда их уже видела.
+            TNovConfigLoad.GetCachedConfig();
             if (_config.LicenseType != null)
             {
                 Debug.WriteLine($"Конфигурация загружена: LicenseType={_config.LicenseType}, CorpName={_config.CorpName}, ServerPath={_config.ServerPath}");
