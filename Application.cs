@@ -124,6 +124,16 @@ namespace TNov
             #region Конфигурация и настройки программы
             //конфиг
             _config = LoadConfig();
+            if (_config == null)
+            {
+                // Нечитаемый TNovConfig.json раньше ронял весь плагин (NullReferenceException ниже).
+                // Работаем без корпоративных функций и говорим пользователю в первый Idling.
+                _config = new TNovConfig();
+                _startupMessage = "Не удалось прочитать настройки TNov: " +
+                    Path.Combine(clientFolderPath, "TNovConfig.json") +
+                    "\nПроверьте файл (формат JSON) или удалите его — TNovClient создаст новый. " +
+                    "До исправления корпоративные функции плагина отключены.";
+            }
             // Досылка журналов, не ушедших на сервер в прошлых сессиях.
             TNovCommon.Server.ServerOutbox.Start();
             // Фоновое чтение общих настроек TNovApi ({ServerPath}tnovapi.json), чтобы первая команда их уже видела.
@@ -133,7 +143,8 @@ namespace TNov
                 Debug.WriteLine($"Конфигурация загружена: LicenseType={_config.LicenseType}, CorpName={_config.CorpName}, ServerPath={_config.ServerPath}");
                 if(_config.LicenseType=="corp") serverPath = _config.ServerPath;
                 serverPath = serverPath.Replace('/', '\\');
-                if (!serverPath.StartsWith(@"\\"))
+                // Локальный путь с буквой диска (тестовая папка) не превращаем в UNC.
+                if (!serverPath.StartsWith(@"\\") && !Path.IsPathRooted(serverPath))
                     serverPath = @"\\" + serverPath.TrimStart('/');
             }
             //настройки программы
@@ -434,6 +445,16 @@ namespace TNov
             TNovParsOpredARUpdater parsOpredARUpdater = new TNovParsOpredARUpdater(application.ActiveAddInId); //Т Опред АР
             UpdaterRegistry.RegisterUpdater(parsOpredARUpdater, true);
             UpdaterRegistry.AddTrigger(parsOpredARUpdater.GetUpdaterId(), combinedFilterAR, Element.GetChangeTypeAny());
+
+            // Для блокировки плагина сервером (ApplyPluginBlock) — все апдейтеры TNov.
+            _updaterIds.AddRange(new[]
+            {
+                holeUpdater.GetUpdaterId(), shaftUpdater.GetUpdaterId(), worksetUpdater.GetUpdaterId(),
+                pinUpdater.GetUpdaterId(), pileUpdater.GetUpdaterId(), taskUpdater.GetUpdaterId(),
+                wallUpdater.GetUpdaterId(), roomUpdater.GetUpdaterId(), floorCeilingUpdater.GetUpdaterId(),
+                insulationUpdater.GetUpdaterId(), parsOpredSTUpdater.GetUpdaterId(), parsOVVKUpdater.GetUpdaterId(),
+                parsNaimOboznSTUpdater.GetUpdaterId(), parsOpredARUpdater.GetUpdaterId()
+            });
             #endregion
             #region Клиент
             // Старые клиенты (< 2.1.7) обновляет этот блок (Kill + copy).
@@ -1901,9 +1922,99 @@ namespace TNov
             }
             catch { }
 
-            
+            // Блокировка сервером (tnovapi.json: BlockBelowVersion / BlockFilesMode). Сейчас — по
+            // локальной копии политики; после фонового чтения шары — через ServerSettings.Changed.
+            _controlledApp = application;
+            TNovCommon.Server.ServerSettings.Changed += () => _blockPolicyDirty = true;
+            ApplyPluginBlock();
+
             return Result.Succeeded;
         }
+
+        #region Блокировка плагина сервером
+        private static readonly List<UpdaterId> _updaterIds = new List<UpdaterId>();
+        private static UIControlledApplication _controlledApp;
+        private static volatile bool _blockPolicyDirty;
+        private static string _blockReason;            // null — не заблокирован
+        private static bool _blockMessagePending;
+        private static string _startupMessage;         // ошибка запуска, показывается в первый Idling      // показать окно в ближайший Idling (вне запуска и модальных окон)
+        private static readonly HashSet<string> _blockNotifiedDocs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Плагин заблокирован сервером: обработчики событий пропускают свою работу.</summary>
+        internal static bool IsPluginBlocked => _blockReason != null;
+
+        /// <summary>
+        /// Привести ленту и апдейтеры в соответствие с политикой блокировки. Только UI-поток Revit.
+        /// Заблокирован — все кнопки TNov неактивны (кроме «Настройки»/«Справка» и списка «Режим»),
+        /// апдейтеры выключены, окно с причиной. Разблокирован — всё обратно, без перезапуска Revit.
+        /// </summary>
+        private static void ApplyPluginBlock()
+        {
+            string reason = PluginVersionGate.BlockReason(TNovConfigLoad.GetCachedConfig());
+            if (reason == _blockReason) return;
+
+            bool blocked = reason != null;
+            _blockReason = reason;
+            if (blocked) _blockMessagePending = true;
+            _blockNotifiedDocs.Clear();
+
+            try
+            {
+                foreach (RibbonPanel panel in _controlledApp.GetRibbonPanels(RibbonTabName))
+                    foreach (RibbonItem item in panel.GetItems())
+                        SetBlocked(item, blocked);
+            }
+            catch (Exception ex) { Debug.WriteLine("Блокировка ленты: " + ex.Message); }
+
+            foreach (UpdaterId id in _updaterIds)
+            {
+                try
+                {
+                    if (blocked) UpdaterRegistry.DisableUpdater(id);
+                    else UpdaterRegistry.EnableUpdater(id);
+                }
+                catch (Exception ex) { Debug.WriteLine("Блокировка апдейтера: " + ex.Message); }
+            }
+        }
+
+        private static void SetBlocked(RibbonItem item, bool blocked)
+        {
+            if (item is ComboBox) return; // «Режим» только скрывает панели
+            if (item is PulldownButton pulldown) // в т.ч. SplitButton
+                foreach (PushButton child in pulldown.GetItems())
+                    SetBlocked(child, blocked);
+            item.Enabled = !blocked || PluginVersionGate.IsAllowedWhenBlocked(item.Name);
+        }
+
+        /// <summary>Idling: применить изменившуюся политику и показать отложенное окно.</summary>
+        private static void DrainPluginBlock()
+        {
+            if (_startupMessage != null)
+            {
+                string message = _startupMessage;
+                _startupMessage = null;
+                new InfoWindow280(message).ShowDialog();
+            }
+            if (_blockPolicyDirty)
+            {
+                _blockPolicyDirty = false;
+                ApplyPluginBlock();
+            }
+            if (_blockMessagePending && _blockReason != null)
+            {
+                _blockMessagePending = false;
+                new InfoWindow280(_blockReason).ShowDialog();
+            }
+        }
+
+        /// <summary>Окно с причиной блокировки при открытии модели — не чаще раза на документ.</summary>
+        private static void NotifyBlockedOnDocument(Document doc)
+        {
+            if (_blockReason == null || doc == null) return;
+            string key = string.IsNullOrEmpty(doc.PathName) ? doc.Title : doc.PathName;
+            if (_blockNotifiedDocs.Add(key)) _blockMessagePending = true;
+        }
+        #endregion
         public Result OnShutdown(UIControlledApplication application)
         {
             // Дописать журналы (usage, открытия, синхронизации); что не успело — сохранится локально.
@@ -1970,7 +2081,7 @@ namespace TNov
         private void OnDocumentCreated(object sender, Autodesk.Revit.DB.Events.DocumentCreatedEventArgs e)
         {
             LoadSettings();
-            if(_config.LicenseType=="corp"&&_config.CorpName=="ООО ПМ Новация") //в перспективе - запускать для любой корп конфигурации (считывая с сайта)
+            if(_config.LicenseType=="corp"&&_config.CorpName=="ООО ПМ Новация"&&!IsPluginBlocked) //в перспективе - запускать для любой корп конфигурации (считывая с сайта)
             {
                 //Проверка имени пользователя
                 Application revitApp = sender as Application;
@@ -2029,8 +2140,9 @@ namespace TNov
 
             info = BasicFileInfo.Extract(e.Document.PathName);
             Document doc = e.Document;
+            NotifyBlockedOnDocument(doc);
 
-            if (_config.LicenseType == "corp") 
+            if (_config.LicenseType == "corp" && !IsPluginBlocked) // заблокирован сервером — журнал не пишем
             {
                 //время открытия (запись уходит в фоновую очередь, доступность сервера здесь не проверяем)
                 if (_startTime.HasValue && info.IsWorkshared)
@@ -2128,7 +2240,7 @@ namespace TNov
             LoadSettings();
 
             Document doc = e.Document;
-            if (_config.LicenseType == "corp") //подразумевается, что Корпоративная подписка содержит весь функционал
+            if (_config.LicenseType == "corp" && !IsPluginBlocked) //подразумевается, что Корпоративная подписка содержит весь функционал
             {
                 //задания
                 
@@ -2165,7 +2277,7 @@ namespace TNov
 
         public void OnSyncCentralEnd(object sender, DocumentSynchronizedWithCentralEventArgs e)
         {
-            if (_config.LicenseType == "corp")
+            if (_config.LicenseType == "corp" && !IsPluginBlocked)
             {
                 //журнал
                 info = BasicFileInfo.Extract(e.Document.PathName);
@@ -2230,6 +2342,9 @@ namespace TNov
 
         public void OnIdling(object sender, IdlingEventArgs e)
         {
+            // Блокировка плагина сервером: смена политики и отложенное окно с причиной.
+            DrainPluginBlock();
+
             // Revit периодически пересоздаёт visual tree заголовков — восстанавливаем иконку при пропаже.
             EnsureRibbonTabIcon();
 
