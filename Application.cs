@@ -446,6 +446,19 @@ namespace TNov
             UpdaterRegistry.RegisterUpdater(parsOpredARUpdater, true);
             UpdaterRegistry.AddTrigger(parsOpredARUpdater.GetUpdaterId(), combinedFilterAR, Element.GetChangeTypeAny());
 
+            TNovSectionNumberUpdater sectionNumberUpdater = new TNovSectionNumberUpdater(application.ActiveAddInId); //Т Номер секции
+            UpdaterRegistry.RegisterUpdater(sectionNumberUpdater, true);
+            ElementFilter filterSectionNumber = new LogicalOrFilter(new List<ElementFilter>
+            {
+                // все категории остальных апдейтеров
+                filterGM, filterWalls, filterF, filterFloors, filterCT, filterDuct, filterObor, filterPipe,
+                filterGrid, filterLevel, filterRebar, filterKorob, filterLight, filterLightF, filterElEq,
+                filterLinks, filterFound, filterGroups, filterCeilings, filterRooms,
+                filterPipeInsulations, filterDuctInsulations, filterDuctLining,
+                combinedFilterST, combinedFilterOVVK, combinedFilterAR
+            });
+            UpdaterRegistry.AddTrigger(sectionNumberUpdater.GetUpdaterId(), filterSectionNumber, Element.GetChangeTypeAny());
+
             // Для блокировки плагина сервером (ApplyPluginBlock) — все апдейтеры TNov.
             _updaterIds.AddRange(new[]
             {
@@ -453,7 +466,8 @@ namespace TNov
                 pinUpdater.GetUpdaterId(), pileUpdater.GetUpdaterId(), taskUpdater.GetUpdaterId(),
                 wallUpdater.GetUpdaterId(), roomUpdater.GetUpdaterId(), floorCeilingUpdater.GetUpdaterId(),
                 insulationUpdater.GetUpdaterId(), parsOpredSTUpdater.GetUpdaterId(), parsOVVKUpdater.GetUpdaterId(),
-                parsNaimOboznSTUpdater.GetUpdaterId(), parsOpredARUpdater.GetUpdaterId()
+                parsNaimOboznSTUpdater.GetUpdaterId(), parsOpredARUpdater.GetUpdaterId(),
+                sectionNumberUpdater.GetUpdaterId()
             });
             #endregion
             #region Клиент
@@ -1824,7 +1838,15 @@ namespace TNov
                 HelpLinks.GetHelpLink("Закрывашка"));
             buttonDataZakryvashka.SetContextualHelp(zakryvashkahelp);
 
-            panel10.AddStackedItems(buttonDataOtkryvashka, buttonDataZakryvashka);
+            // кнопка "Т Номер секции"
+
+            PushButtonData buttonDataTParsSection = new PushButtonData(nameof(TParsSection), "Т Номер секции", typeof(TParsSection).Assembly.Location, typeof(TParsSection).FullName)
+            {
+                ToolTip = "Номер секции из Сведений о проекте в Т_Номер секции у всех элементов (АР, КР, КЖ, ОВ, ВК). " +
+                          "При первом запуске добавляет параметр в Сведения о проекте и запрашивает значение."
+            };
+
+            panel10.AddStackedItems(buttonDataOtkryvashka, buttonDataZakryvashka, buttonDataTParsSection);
 
             // кнопка "Отчет" (TNovUtils): свод чек-листов по моделям за 7 дней
 
