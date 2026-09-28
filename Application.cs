@@ -38,6 +38,7 @@ using TNovTasks;
 using TNovUtils;
 using TNovUtils.Checklist.Commands;
 using TNovUtils.Issues.Commands;
+using TNovUtils.Issues.ModelSync;
 using TNovUtils.LinkWorksets;
 using TNovUtilsAR;
 using TNovUtilsST;
@@ -132,6 +133,9 @@ namespace TNov
                 if (!serverPath.StartsWith(@"\\"))
                     serverPath = @"\\" + serverPath.TrimStart('/');
             }
+            // «Модель» TNovPRO: ключ синхронизации лежит на корпоративной папке раздачи —
+            // синхронизация работает у всех, у кого стоит плагин, без входа в TNovPRO.
+            try { ModelSyncService.Configure(_config.LicenseType == "corp" ? serverPath : null); } catch { }
             //настройки программы
             var viewModel0 = new AppVersionViewModel();
             string jsonpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
@@ -187,6 +191,9 @@ namespace TNov
                 application.ControlledApplication.DocumentSynchronizingWithCentral += new EventHandler<DocumentSynchronizingWithCentralEventArgs>(OnSyncCentralStart);
                 application.ControlledApplication.DocumentSynchronizedWithCentral += new EventHandler<DocumentSynchronizedWithCentralEventArgs>(OnSyncCentralEnd);
                 application.ControlledApplication.DocumentClosing += new EventHandler<DocumentClosingEventArgs>(OnDocumentClosing);
+                // «Модель» TNovPRO: учёт изменений и отправка на сайт при синхронизации.
+                application.ControlledApplication.DocumentChanged += ModelSyncService.OnDocumentChanged;
+                application.ControlledApplication.DocumentSaved += OnDocumentSavedForTNovPro;
                 application.Idling += OnIdling;
                 application.ViewActivated += OnViewActivated;
                 application.ControlledApplication.DocumentCreated += OnDocumentCreated;
@@ -517,6 +524,18 @@ namespace TNov
                 HelpLinks.GetHelpLink("Вопросы"));
             buttonDataProQ.SetContextualHelp(issuesHelp);
             panelСommon.AddItem(buttonDataProQ);
+
+            // кнопка "Загрузить проект в TNovPRO" (вкладка «Модель» на сайте)
+
+            PushButtonData buttonDataProModel = new PushButtonData(nameof(UploadProjectCommand), "TNovPRO\nМодель", typeof(UploadProjectCommand).Assembly.Location, typeof(UploadProjectCommand).FullName)
+            {
+                LargeImage = GetImageSource(imgProQ),
+                Image = GetImageSource(imgProQmin),
+                ToolTip = "Загрузить проект в TNovPRO: вопросы о модели на сайте с ответом в 3D.",
+                LongDescription = "Выгружает дом целиком (сводный файл и выбранные связи) один раз. " +
+                                  "Дальше сайт обновляется сам при каждой синхронизации с центральной моделью."
+            };
+            panelСommon.AddItem(buttonDataProModel);
 
             // кнопка "Чек-лист" (TNovUtils)
 
@@ -1951,6 +1970,8 @@ namespace TNov
             application.ControlledApplication.DocumentSynchronizingWithCentral -= OnSyncCentralStart;
             application.ControlledApplication.DocumentSynchronizedWithCentral -= OnSyncCentralEnd;
             application.ControlledApplication.DocumentClosing -= OnDocumentClosing;
+            application.ControlledApplication.DocumentChanged -= ModelSyncService.OnDocumentChanged;
+            application.ControlledApplication.DocumentSaved -= OnDocumentSavedForTNovPro;
             application.Idling -= OnIdling;
             application.ViewActivated -= OnViewActivated;
             application.DialogBoxShowing -= a_DialogBoxShowing;
@@ -2158,8 +2179,18 @@ namespace TNov
             }
         }
 
+        /// <summary>«Модель» TNovPRO: файл без совместной работы обновляет сайт по сохранению.</summary>
+        private void OnDocumentSavedForTNovPro(object sender, DocumentSavedEventArgs e)
+        {
+            try { ModelSyncService.OnSaved(e.Document); } catch { }
+        }
+
         public void OnSyncCentralEnd(object sender, DocumentSynchronizedWithCentralEventArgs e)
         {
+            // «Модель» TNovPRO — первой: журнал ниже пишет на сетевую папку и при
+            // недоступной папке бросает исключение, обрывая всё, что после него.
+            try { ModelSyncService.OnSynchronized(e.Document); } catch { }
+
             if (_config.LicenseType == "corp")
             {
                 //журнал
