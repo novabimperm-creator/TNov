@@ -2084,6 +2084,9 @@ namespace TNov
 
             TNovParsOpredARUpdater parsOpredARUpdater = new TNovParsOpredARUpdater(application.ActiveAddInId); 
             UpdaterRegistry.UnregisterUpdater(parsOpredARUpdater.GetUpdaterId());
+
+            TNovSectionNumberUpdater sectionNumberUpdater = new TNovSectionNumberUpdater(application.ActiveAddInId);
+            UpdaterRegistry.UnregisterUpdater(sectionNumberUpdater.GetUpdaterId());
             #endregion
             #region События отписка
             application.ControlledApplication.DocumentOpening -= OnDocumentOpening;
