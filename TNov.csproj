@@ -13,7 +13,9 @@
 
   <!-- Графические ресурсы (иконки лент) -->
   <ItemGroup>
-    <None Include="resources\**\*.png" />
+    <None Include="resources\**\*.png" Exclude="resources\dark\**" />
+    <!-- Значки для тёмной темы Revit (tools\MakeDarkIcons.ps1), читает RibbonIcons -->
+    <EmbeddedResource Include="resources\dark\*.png" LogicalName="TNov.Dark.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <!-- ===== Проектные ссылки (все модули плагина) ===== -->
