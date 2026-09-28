@@ -570,7 +570,7 @@ namespace TNov
                 LongDescription = "Выгружает дом целиком (сводный файл и выбранные связи) один раз. " +
                                   "Дальше сайт обновляется сам при каждой синхронизации с центральной моделью."
             };
-            RibbonIcons.Set(buttonDataProModel, nameof(Properties.Resources.tnovproq16), nameof(Properties.Resources.tnovproq32));
+            RibbonIcons.Set(buttonDataProModel, nameof(Properties.Resources.tnovpromodels16), nameof(Properties.Resources.tnovpromodels32));
             panelСommon.AddItem(buttonDataProModel);
 
             // кнопка "Чек-лист" (TNovUtils)

@@ -2058,6 +2058,36 @@ namespace TNov.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap tnovpromodels16 {
+            get {
+                object obj = ResourceManager.GetObject("tnovpromodels16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap tnovpromodels32 {
+            get {
+                object obj = ResourceManager.GetObject("tnovpromodels32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap tnovpromodels64 {
+            get {
+                object obj = ResourceManager.GetObject("tnovpromodels64", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap tnovproq16 {
             get {
                 object obj = ResourceManager.GetObject("tnovproq16", resourceCulture);

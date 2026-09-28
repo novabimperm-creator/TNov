@@ -21,6 +21,9 @@ param(
 
 Add-Type -AssemblyName System.Drawing
 
+# pwsh -File передаёт "a,b" одной строкой — разбиваем сами.
+if ($Only) { $Only = @($Only | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ }) }
+
 $root = Split-Path $PSScriptRoot -Parent
 $outDir = Join-Path $root 'resources\dark'
 New-Item -ItemType Directory -Force $outDir | Out-Null
