@@ -562,17 +562,6 @@ namespace TNov
             buttonDataProQ.SetContextualHelp(issuesHelp);
             panelСommon.AddItem(buttonDataProQ);
 
-            // кнопка "Загрузить проект в TNovPRO" (вкладка «Модель» на сайте)
-
-            PushButtonData buttonDataProModel = new PushButtonData(nameof(UploadProjectCommand), "TNovPRO\nМодель", typeof(UploadProjectCommand).Assembly.Location, typeof(UploadProjectCommand).FullName)
-            {
-                ToolTip = "Загрузить проект в TNovPRO: вопросы о модели на сайте с ответом в 3D.",
-                LongDescription = "Выгружает дом целиком (сводный файл и выбранные связи) один раз. " +
-                                  "Дальше сайт обновляется сам при каждой синхронизации с центральной моделью."
-            };
-            RibbonIcons.Set(buttonDataProModel, nameof(Properties.Resources.tnovpromodels16), nameof(Properties.Resources.tnovpromodels32));
-            panelСommon.AddItem(buttonDataProModel);
-
             // кнопка "Чек-лист" (TNovUtils)
 
             PushButtonData buttonDataChecklist = new PushButtonData(nameof(ShowChecklistCommand), "Чек-лист", typeof(ShowChecklistCommand).Assembly.Location, typeof(ShowChecklistCommand).FullName)
@@ -1690,6 +1679,17 @@ namespace TNov
                 HelpLinks.GetHelpLink("Отчет"));
             buttonDataReport.SetContextualHelp(reporthelp);
             panel10.AddItem(buttonDataReport);
+
+            // кнопка "Загрузить проект в TNovPRO" (вкладка «Модель» на сайте)
+
+            PushButtonData buttonDataProModel = new PushButtonData(nameof(UploadProjectCommand), "TNovPRO\nМодель", typeof(UploadProjectCommand).Assembly.Location, typeof(UploadProjectCommand).FullName)
+            {
+                ToolTip = "Загрузить проект в TNovPRO: вопросы о модели на сайте с ответом в 3D.",
+                LongDescription = "Выгружает дом целиком (сводный файл и выбранные связи) один раз. " +
+                                  "Дальше сайт обновляется сам при каждой синхронизации с центральной моделью."
+            };
+            RibbonIcons.Set(buttonDataProModel, nameof(Properties.Resources.tnovpromodels16), nameof(Properties.Resources.tnovpromodels32));
+            panel10.AddItem(buttonDataProModel);
 
             // Панель "BIM АР"
 
