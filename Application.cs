@@ -1682,16 +1682,16 @@ namespace TNov
             buttonDataReport.SetContextualHelp(reporthelp);
             panel10.AddItem(buttonDataReport);
 
-            // кнопка "Загрузить проект в TNovPRO" (вкладка «Модель» на сайте)
-
-            PushButtonData buttonDataProModel = new PushButtonData(nameof(UploadProjectCommand), "TNovPRO\nМодель", typeof(UploadProjectCommand).Assembly.Location, typeof(UploadProjectCommand).FullName)
+            // кнопка "Загрузить проект в TNovPRO" (вкладка «Модель» на сайте).
+            // typeof(UploadProjectCommand) — ссылка на класс TNovUtils того же возраста,
+            // что ModelSyncService: при старом TNovUtils рядом с новым TNov она роняла бы
+            // JIT OnStartup так же, как 07.10.2026, поэтому — только через RunModelSync.
+            RunModelSync(() =>
             {
-                ToolTip = "Загрузить проект в TNovPRO: вопросы о модели на сайте с ответом в 3D.",
-                LongDescription = "Выгружает дом целиком (сводный файл и выбранные связи) один раз. " +
-                                  "Дальше сайт обновляется сам при каждой синхронизации с центральной моделью."
-            };
-            RibbonIcons.Set(buttonDataProModel, nameof(Properties.Resources.tnovpromodels16), nameof(Properties.Resources.tnovpromodels32));
-            panel10.AddItem(buttonDataProModel);
+                PushButtonData buttonDataProModel = ModelSyncButtonData();
+                RibbonIcons.Set(buttonDataProModel, nameof(Properties.Resources.tnovpromodels16), nameof(Properties.Resources.tnovpromodels32));
+                panel10.AddItem(buttonDataProModel);
+            });
 
             // Панель "BIM АР"
 
@@ -2157,6 +2157,15 @@ namespace TNov
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ModelSyncConfigure(string serverPath) => ModelSyncService.Configure(serverPath);
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static PushButtonData ModelSyncButtonData() =>
+            new PushButtonData(nameof(UploadProjectCommand), "TNovPRO\nМодель", typeof(UploadProjectCommand).Assembly.Location, typeof(UploadProjectCommand).FullName)
+            {
+                ToolTip = "Загрузить проект в TNovPRO: вопросы о модели на сайте с ответом в 3D.",
+                LongDescription = "Выгружает дом целиком (сводный файл и выбранные связи) один раз. " +
+                                  "Дальше сайт обновляется сам при каждой синхронизации с центральной моделью."
+            };
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ModelSyncDocumentChanged(object sender, DocumentChangedEventArgs e) => ModelSyncService.OnDocumentChanged(sender, e);
