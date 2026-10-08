@@ -1246,14 +1246,9 @@ namespace TNov
                 HelpLinks.GetHelpLink("Группировка"));
             buttonDataschemespec.SetContextualHelp(schemespechelp);
 
-            // группа кнопок "Эскизы деталей", "ВРС подчистить", "Группировка"
+            // сгруппированная кнопка "Арматура без марки"
 
-            panelUtilsST.AddStackedItems(buttonDatarebarimages, buttonDatasteelschedule, buttonDataschemespec);
-
-            //RebarNoMark
-            // кнопка "Арматура без марки"
-
-            PushButtonData buttonDataRebarNoMark = new PushButtonData(nameof(RebarNoMark), "Арматура\nбез марки", typeof(RebarNoMark).Assembly.Location, typeof(RebarNoMark).FullName)
+            PushButtonData buttonDataRebarNoMark = new PushButtonData(nameof(RebarNoMark), "Арматура без марки", typeof(RebarNoMark).Assembly.Location, typeof(RebarNoMark).FullName)
             {
                 ToolTip = "Изолирует на открытом 3D-виде несущую арматуру с незаполненным параметром A_Марка конструкции."
             };
@@ -1261,7 +1256,36 @@ namespace TNov
             ContextualHelp RebarNoMarkhelp = new ContextualHelp(ContextualHelpType.Url,
                 HelpLinks.GetHelpLink("Арматура без марки"));
             buttonDataRebarNoMark.SetContextualHelp(RebarNoMarkhelp);
-            panelUtilsST.AddItem(buttonDataRebarNoMark);
+
+            // сгруппированная кнопка "Коды материалов"
+
+            PushButtonData buttonDataMaterialCodesST = new PushButtonData(nameof(MaterialCodesST), "Коды материалов", typeof(MaterialCodesST).Assembly.Location, typeof(MaterialCodesST).FullName)
+            {
+                ToolTip = "Заполнить параметр N_Код материала у несущих колонн, стен, перекрытий, лестниц и термовкладышей по материалу типа."
+            };
+            RibbonIcons.Set(buttonDataMaterialCodesST, nameof(Properties.Resources.ParamTable16), nameof(Properties.Resources.ParamTable32));
+            ContextualHelp MaterialCodesSThelp = new ContextualHelp(ContextualHelpType.Url,
+                HelpLinks.GetHelpLink("Коды материалов"));
+            buttonDataMaterialCodesST.SetContextualHelp(MaterialCodesSThelp);
+
+            // сгруппированная кнопка "ВРМ подчистить"
+
+            PushButtonData buttonDataMaterialSchedule = new PushButtonData(nameof(MaterialSchedule), "ВРМ подчистить", typeof(MaterialSchedule).Assembly.Location, typeof(MaterialSchedule).FullName)
+            {
+                ToolTip = "Подчистить открытую ведомость расхода материалов (скрыть служебные столбцы и столбцы с нулевыми значениями)."
+            };
+            RibbonIcons.Set(buttonDataMaterialSchedule, nameof(Properties.Resources.steelschedule16));
+            ContextualHelp MaterialSchedulehelp = new ContextualHelp(ContextualHelpType.Url,
+                HelpLinks.GetHelpLink("ВРМ подчистить"));
+            buttonDataMaterialSchedule.SetContextualHelp(MaterialSchedulehelp);
+
+            // группа кнопок "ВРС подчистить", "Коды материалов", "ВРМ подчистить"
+
+            panelUtilsST.AddStackedItems(buttonDatasteelschedule, buttonDataMaterialCodesST, buttonDataMaterialSchedule);
+
+            // группа кнопок "Эскизы деталей", "Группировка", "Арматура без марки"
+
+            panelUtilsST.AddStackedItems(buttonDatarebarimages, buttonDataschemespec, buttonDataRebarNoMark);
 
             #endregion
 
@@ -1713,9 +1737,6 @@ namespace TNov
             RibbonPanel panel12 = application.CreateRibbonPanel(tabName, "BIM КЖ");
             _BIMRibbonItems.Add(panel12);
 
-            // кнопка "Коды материалов"
-            PushButtonData buttonDataMat = new PushButtonData(nameof(AssignMaterialCodesCommand), "Коды материалов", typeof(AssignMaterialCodesCommand).Assembly.Location, typeof(AssignMaterialCodesCommand).FullName);
-            
             // кнопка "Т Определение КЖ"
             PushButtonData buttonDataTParsOpredST = new PushButtonData(nameof(TParsOpredST), "Т Определение", typeof(TParsOpredST).Assembly.Location, typeof(TParsOpredST).FullName);
             
@@ -1724,7 +1745,7 @@ namespace TNov
 
             //группа
 
-            panel12.AddStackedItems(buttonDataMat, buttonDataTParsOpredST, buttonDataTParsNaimOboznST);
+            panel12.AddStackedItems(buttonDataTParsOpredST, buttonDataTParsNaimOboznST);
 
             // Панель "BIM Сети"
 
