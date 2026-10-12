@@ -88,6 +88,9 @@ namespace TNov
         private AddInCommandBinding _partsBinding;
         private bool _purgeExecutedSubscribed = false;
         private bool _partsExecutedSubscribed = false;
+        private bool _canRevisions;
+        private AddInCommandBinding _revisionsBinding;
+        private bool _revisionsExecutedSubscribed = false;
         //параметры раскраски вкладок
         private string syncOption = "Подсветка 20/30 минут";
         private int time1 = 0;
@@ -125,7 +128,9 @@ namespace TNov
         {
             #region Конфигурация и настройки программы
             //конфиг
-            _config = LoadConfig();
+            // Общий загрузчик TNovCommon: заодно запускает фоновое чтение общих настроек
+            // TNovApi ({ServerPath}tnovapi.json), чтобы первая команда их уже видела.
+            _config = TNovConfigLoad.GetCachedConfig();
             if (_config == null)
             {
                 // Нечитаемый TNovConfig.json раньше ронял весь плагин (NullReferenceException ниже).
@@ -138,23 +143,19 @@ namespace TNov
             }
             // Досылка журналов, не ушедших на сервер в прошлых сессиях.
             TNovCommon.Server.ServerOutbox.Start();
-            // Фоновое чтение общих настроек TNovApi ({ServerPath}tnovapi.json), чтобы первая команда их уже видела.
-            TNovConfigLoad.GetCachedConfig();
             if (_config.LicenseType != null)
             {
                 Debug.WriteLine($"Конфигурация загружена: LicenseType={_config.LicenseType}, CorpName={_config.CorpName}, ServerPath={_config.ServerPath}");
-                if(_config.LicenseType=="corp") serverPath = _config.ServerPath;
-                serverPath = serverPath.Replace('/', '\\');
-                // Локальный путь с буквой диска (тестовая папка) не превращаем в UNC.
-                if (!serverPath.StartsWith(@"\\") && !Path.IsPathRooted(serverPath))
-                    serverPath = @"\\" + serverPath.TrimStart('/');
+                // Личная конфигурация: «сервер» — папка TNovClient, клиент обновляется сам (EnsureTNovClient).
+                if (CorpGate.IsCorp(_config)) serverPath = TNovCommon.Server.ServerData.NormalizeRoot(_config.ServerPath);
             }
             // «Модель» TNovPRO: ключ синхронизации лежит на корпоративной папке раздачи —
             // синхронизация работает у всех, у кого стоит плагин, без входа в TNovPRO.
-            string modelSyncPath = _config.LicenseType == "corp" ? serverPath : null;
+            // В личной конфигурации модели на сайт не уходят.
+            string modelSyncPath = CorpGate.IsCorp(_config) ? serverPath : null;
             RunModelSync(() => ModelSyncConfigure(modelSyncPath));
             // Временный переезд Revit Server (RSredirect.txt): тот же сервер и в окне «Открыть с Revit Server».
-            if (_config.LicenseType == "corp") StartRsnIniRedirect(application.ControlledApplication.VersionNumber);
+            if (CorpGate.IsCorp(_config)) StartRsnIniRedirect(application.ControlledApplication.VersionNumber);
             //настройки программы
             var viewModel0 = new AppVersionViewModel();
             string jsonpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
@@ -182,6 +183,15 @@ namespace TNov
             {
                 _partsBinding.Executed += OnPurgeExecuted;
                 _partsExecutedSubscribed = true;
+            }
+            _canRevisions = viewModel0.canRevisions;
+            var revisionsCmdId = RevitCommandId.LookupPostableCommandId(PostableCommand.SheetIssuesOrRevisions);
+            _revisionsBinding = application.CreateAddInCommandBinding(revisionsCmdId);
+            _revisionsBinding.CanExecute += (s, e) => e.CanExecute = _canRevisions;
+            if (!_canRevisions)
+            {
+                _revisionsBinding.Executed += OnRevisionsExecuted;
+                _revisionsExecutedSubscribed = true;
             }
             /*
             if (!viewModel0.canPurge)
@@ -221,6 +231,11 @@ namespace TNov
                 application.ThemeChanged += OnThemeChanged;
 #endif
             }
+            catch (Exception) { }
+            #endregion
+            #region Коннектор Claude (MCP)
+            // ExternalEvent создаётся только в контексте Revit API — здесь, в OnStartup.
+            try { TNov.Mcp.ClaudeConnector.OnStartup(); }
             catch (Exception) { }
             #endregion
             #region Панель справки
@@ -543,6 +558,16 @@ namespace TNov
             _comboBox.AddItem(new ComboBoxMemberData("BIM", "BIM"));
             _comboBox.AddItem(new ComboBoxMemberData("Тесты", "Тесты"));
             _comboBox.CurrentChanged += OnComboBoxCurrentChanged; //подписка на событие изменения выбора
+
+            // кнопка "Claude" — коннектор MCP
+            PushButtonData buttonDataClaude = new PushButtonData(nameof(TNov.Mcp.ClaudeConnectorCommand), "Claude", typeof(TNov.Mcp.ClaudeConnectorCommand).Assembly.Location, typeof(TNov.Mcp.ClaudeConnectorCommand).FullName)
+            {
+                ToolTip = "Коннектор Revit — Claude (MCP): запуск, адрес подключения, уровень доступа.",
+                LongDescription = "Позволяет Claude читать открытую модель и, в зависимости от уровня доступа, менять параметры и выполнять скрипты.",
+                Image = TNov.Mcp.ClaudeConnector.Icon(16),
+                LargeImage = TNov.Mcp.ClaudeConnector.Icon(32)
+            };
+            panel0.AddItem(buttonDataClaude);
 
 
             #endregion
@@ -1892,6 +1917,9 @@ namespace TNov
         #endregion
         public Result OnShutdown(UIControlledApplication application)
         {
+            try { TNov.Mcp.ClaudeConnector.OnShutdown(); }
+            catch (Exception) { }
+
             // Дописать журналы (usage, открытия, синхронизации); что не успело — сохранится локально.
             TNovCommon.Server.ServerOutbox.Shutdown(TimeSpan.FromSeconds(5));
 
@@ -1964,23 +1992,14 @@ namespace TNov
         private void OnDocumentCreated(object sender, Autodesk.Revit.DB.Events.DocumentCreatedEventArgs e)
         {
             LoadSettings();
-            if(_config.LicenseType=="corp"&&_config.CorpName=="ООО ПМ Новация"&&!IsPluginBlocked) //в перспективе - запускать для любой корп конфигурации (считывая с сайта)
+            if(CorpGate.IsCorp(_config)&&_config.CorpName=="ООО ПМ Новация"&&!IsPluginBlocked) //в перспективе - запускать для любой корп конфигурации (считывая с сайта)
             {
                 //Проверка имени пользователя
                 Application revitApp = sender as Application;
                 UIApplication uiApp = new UIApplication(e.Document.Application);
                 string userName = uiApp.Application.Username;
-                string[] rolesFile = TNovCommon.Server.ServerData.ReadAllLines("roles.txt");
-                bool correctUserName = false;
-                foreach (string role in rolesFile)
-                {
-                    if (role.Contains(userName))
-                    {
-                        correctUserName = true; break;
-                    }
-                }
-
-                if (!correctUserName)
+                // roles.txt не прочитан — проверять не по чему, молчим.
+                if (RolesService.TryGetUser(userName, out RolesService.UserRole userRole) && !userRole.Found)
                 {
                     new InfoWindow280("Ваше имя пользователя в Revit: " + userName + "\n" +
                     "Имя должно соответствовать вашему логину в компании (пример: kadysheva.n). Измените имя в настройках Revit.").ShowDialog();
@@ -2003,8 +2022,8 @@ namespace TNov
         }
         void a_DialogBoxShowing(object sender, DialogBoxShowingEventArgs e)
         {
-            TaskDialogShowingEventArgs e2
-              = e as TaskDialogShowingEventArgs;
+            // Сюда приходят и обычные диалоги (например, «Новый проект») — у них аргументы другого типа.
+            if (!(e is TaskDialogShowingEventArgs e2)) return;
             if (e2.Message == "RICOH MP C2011 PCL 6_2 - не может быть использовано с настройками печати А2А. Будут установлены <сеансные> настройки.") { e.OverrideResult(1); }
             if (e2.Message == "RICOH MP C2011 PCL 6 - не может быть использовано с настройками печати А1А. Будут установлены <сеансные> настройки.") { e.OverrideResult(1); }
             if (e2.Message == "RustDesk Printer - не может быть использовано с настройками печати А2А. Будут установлены <сеансные> настройки.") { e.OverrideResult(1); }
@@ -2025,7 +2044,7 @@ namespace TNov
             Document doc = e.Document;
             NotifyBlockedOnDocument(doc);
 
-            if (_config.LicenseType == "corp" && !IsPluginBlocked) // заблокирован сервером — журнал не пишем
+            if (CorpGate.IsCorp(_config) && !IsPluginBlocked) // заблокирован сервером — журнал не пишем
             {
                 //время открытия (запись уходит в фоновую очередь, доступность сервера здесь не проверяем)
                 if (_startTime.HasValue && info.IsWorkshared)
@@ -2123,7 +2142,7 @@ namespace TNov
             LoadSettings();
 
             Document doc = e.Document;
-            if (_config.LicenseType == "corp" && !IsPluginBlocked) //подразумевается, что Корпоративная подписка содержит весь функционал
+            if (CorpGate.IsCorp(_config) && !IsPluginBlocked) //подразумевается, что Корпоративная подписка содержит весь функционал
             {
                 //задания
                 
@@ -2134,7 +2153,7 @@ namespace TNov
 
                 if (taskModel)
                 {
-                    string usagefilePath = serverPath + "usage.txt";
+                    string usagefilePath = Path.Combine(serverPath, "usage.txt");
                     if (File.Exists(usagefilePath))
                     {
                         //сохранение заданий в базу
@@ -2275,7 +2294,7 @@ namespace TNov
             // недоступной папке бросает исключение, обрывая всё, что после него.
             RunModelSync(() => ModelSyncSynchronized(e.Document));
 
-            if (_config.LicenseType == "corp" && !IsPluginBlocked)
+            if (CorpGate.IsCorp(_config) && !IsPluginBlocked)
             {
                 //журнал
                 info = BasicFileInfo.Extract(e.Document.PathName);
@@ -2439,6 +2458,10 @@ namespace TNov
             // Это событие полностью ЗАМЕНЯЕТ стандартное поведение команды.
             // Revit не выполнит очистку, а просто выведет наше сообщение.
             new InfoWindow280("Эта команда отключена.").ShowDialog();
+        }
+        private void OnRevisionsExecuted(object sender, ExecutedEventArgs e)
+        {
+            new InfoWindow280("Эта команда отключена. Используйте TNov - Изменения.").ShowDialog();
         }
         private void OnComboBoxCurrentChanged(object sender, EventArgs e)
         {
@@ -2605,6 +2628,17 @@ namespace TNov
                 {
                     _partsBinding.Executed += OnPurgeExecuted;
                     _partsExecutedSubscribed = true;
+                }
+                _canRevisions = viewModel.canRevisions;
+                if (_canRevisions && _revisionsExecutedSubscribed)
+                {
+                    _revisionsBinding.Executed -= OnRevisionsExecuted;
+                    _revisionsExecutedSubscribed = false;
+                }
+                else if (!_canRevisions && !_revisionsExecutedSubscribed)
+                {
+                    _revisionsBinding.Executed += OnRevisionsExecuted;
+                    _revisionsExecutedSubscribed = true;
                 }
             }
             catch {}
@@ -2791,8 +2825,11 @@ namespace TNov
             string serverClientFolder = Path.Combine(serverPath, "actual", "client");
             string serverVersionFile = Path.Combine(serverPath, "actual", "clientversion.txt");
 
+            // Личная конфигурация: сервера нет, клиент обновляет себя сам из внешнего хранилища
+            // (TNovClient\GoogleDriveMirror) — здесь только запускаем его.
+            bool corp = CorpGate.IsCorp(_config);
             Version localVersion = TryReadClientFileVersion(localDll) ?? new Version(1, 0, 0, 0);
-            Version actualVersion = TryReadClientTextVersion(serverVersionFile)
+            Version actualVersion = !corp ? localVersion : TryReadClientTextVersion(serverVersionFile)
                 ?? TryReadClientFileVersion(Path.Combine(serverClientFolder, "TNovClient.dll"))
                 ?? localVersion;
 
@@ -2886,28 +2923,6 @@ namespace TNov
             }
 
             return new Version(nums[0], nums[1], nums[2], nums[3]);
-        }
-
-        public static TNovConfig LoadConfig() 
-        {
-            string configPath = Path.Combine(clientFolderPath, "TNovConfig.json");
-
-            try
-            {
-                string jsonContent = File.ReadAllText(configPath);
-                TNovConfig config = JsonConvert.DeserializeObject<TNovConfig>(jsonContent);
-                return config;
-            }
-            catch (JsonException ex)
-            {
-                Debug.WriteLine($"Ошибка при десериализации JSON: {ex.Message}");
-                return null;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Неожиданная ошибка: {ex.Message}");
-                return null;
-            }
         }
         #endregion
     }

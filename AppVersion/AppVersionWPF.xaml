@@ -112,6 +112,68 @@
                     </StackPanel>
                 </ToggleButton>
 
+                <ToggleButton Style="{StaticResource CardToggleStyle}" IsChecked="{Binding canRevisions}">
+                    <StackPanel>
+                        <TextBlock Text="Разрешить «Вид — Изменения»" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="Не рекомендуется - лучше используйте TNov - Изменения"
+                                   Style="{StaticResource CardSubtitleStyle}"/>
+                    </StackPanel>
+                </ToggleButton>
+
+                <TextBlock Text="Коннектор Claude"
+                           Style="{StaticResource SectionTitleStyle}"/>
+
+                <Border x:Name="McpCard" Style="{StaticResource InfoCardBorderStyle}" Margin="0,0,0,10">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="10" Height="10" Fill="{Binding StatusBrush}"
+                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding StatusText}" Style="{StaticResource InfoCardValueStyle}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Details}" Style="{StaticResource InfoCardLabelStyle}"
+                                   TextWrapping="Wrap" Margin="0,6,0,0"/>
+                        <TextBlock Text="{Binding OtherMcpWarning}" TextWrapping="Wrap" FontSize="12"
+                                   Foreground="{StaticResource ElementErrorBrush}" Margin="0,6,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding OtherMcpWarning}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <StackPanel Visibility="{Binding CanChooseLevel, Converter={StaticResource BoolToVis}}" Margin="0,8,0,0">
+                            <TextBlock Text="{Binding LevelChoiceLabel}"
+                                       Style="{StaticResource InfoCardLabelStyle}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                            <ComboBox Style="{StaticResource DarkComboBoxStyle}"
+                                      ItemsSource="{Binding LevelOptions}"
+                                      SelectedItem="{Binding SelectedLevel, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding CheckResult}"
+                                   TextWrapping="Wrap" Margin="0,6,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource InfoCardLabelStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding CheckResult}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <UniformGrid Columns="2" Margin="0,8,0,0">
+                            <Button Content="Проверить" Style="{StaticResource CloseButtonStyle}"
+                                    Margin="0,0,4,0" Click="McpCheckButton_Click"/>
+                            <Button Content="{Binding ToggleText}" IsEnabled="{Binding CanToggle}"
+                                    Style="{StaticResource CloseButtonStyle}"
+                                    Margin="4,0,0,0" Click="McpToggleButton_Click"/>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
+
                 <TextBlock Text="Предупреждения о синхронизации"
                            Style="{StaticResource SectionTitleStyle}"/>
 

@@ -1,0 +1,218 @@
+<Window x:Class="TNov.Mcp.ClaudeConnectorWPF"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:TNov.Mcp"
+        mc:Ignorable="d"
+        Width="450"
+        SizeToContent="Height"
+        d:DataContext="{d:DesignInstance local:McpStatusViewModel}"
+        WindowStartupLocation="CenterOwner"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        WindowStyle="None">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/TNovCommon;component/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+            <!-- Ступень шкалы уровней: неактивная — карточка, достигнутая — акцент. -->
+            <Style x:Key="LevelStepStyle" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource CardBrush}"/>
+                <Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="Padding" Value="10,8"/>
+                <Setter Property="BorderThickness" Value="0"/>
+            </Style>
+            <Style x:Key="LevelNumberStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="22"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            </Style>
+            <Style x:Key="LevelTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="30"
+                      ResizeBorderThickness="5"
+                      GlassFrameThickness="0"
+                      CornerRadius="12"/>
+    </WindowChrome.WindowChrome>
+
+    <Border CornerRadius="12"
+            Background="{StaticResource BgBrush}"
+            BorderBrush="{StaticResource AccentBrush}"
+            BorderThickness="1">
+        <StackPanel Margin="18">
+            <Border MouseDown="TitleBar_MouseDown" Background="Transparent">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="35"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="CLAUDE"
+                               Foreground="{StaticResource AccentBrush}"
+                               FontSize="22"
+                               FontWeight="Bold"
+                               VerticalAlignment="Center"/>
+                    <Button Content="✕"
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            Style="{StaticResource CloseButtonStyleMini}"
+                            Click="CloseButton_Click"
+                            WindowChrome.IsHitTestVisibleInChrome="True"/>
+                </Grid>
+            </Border>
+
+            <StackPanel Margin="0,16,0,0">
+                <!-- Статус -->
+                <Border Style="{StaticResource InfoCardBorderStyle}" Margin="0,0,0,10">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="10" Height="10" Fill="{Binding StatusBrush}"
+                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding StatusText}" Style="{StaticResource InfoCardValueStyle}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Activity}" Style="{StaticResource InfoCardLabelStyle}"
+                                   TextWrapping="Wrap" Margin="18,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Другой MCP-коннектор в Revit -->
+                <Border BorderBrush="{StaticResource ElementErrorBrush}" BorderThickness="1"
+                        CornerRadius="10" Padding="12,10" Margin="0,0,0,10">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding OtherMcpWarning}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="{Binding OtherMcpWarning}" TextWrapping="Wrap"
+                               Foreground="{StaticResource ElementErrorBrush}" FontSize="12"/>
+                </Border>
+
+                <!-- Уровень доступа -->
+                <TextBlock Text="Уровень доступа" Style="{StaticResource SectionTitleStyle}"/>
+                <UniformGrid Columns="3" Margin="0,0,0,6">
+                    <Border Margin="0,0,4,0">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource LevelStepStyle}">
+                                <!-- Уровень 1 есть у всех -->
+                                <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel>
+                            <TextBlock Text="1" Style="{StaticResource LevelNumberStyle}" Foreground="{StaticResource DarkBrush}"/>
+                            <TextBlock Text="Чтение модели" Style="{StaticResource LevelTextStyle}" Foreground="{StaticResource DarkBrush}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Margin="2,0,2,0">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource LevelStepStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Level}" Value="2">
+                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Level}" Value="3">
+                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel>
+                            <TextBlock Text="2"><TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource LevelNumberStyle}"><Style.Triggers><DataTrigger Binding="{Binding Level}" Value="2"><Setter Property="Foreground" Value="{StaticResource DarkBrush}"/></DataTrigger><DataTrigger Binding="{Binding Level}" Value="3"><Setter Property="Foreground" Value="{StaticResource DarkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+                            <TextBlock Text="Параметры экземпляров"><TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource LevelTextStyle}"><Style.Triggers><DataTrigger Binding="{Binding Level}" Value="2"><Setter Property="Foreground" Value="{StaticResource DarkBrush}"/></DataTrigger><DataTrigger Binding="{Binding Level}" Value="3"><Setter Property="Foreground" Value="{StaticResource DarkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+                        </StackPanel>
+                    </Border>
+                    <Border Margin="4,0,0,0">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource LevelStepStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Level}" Value="3">
+                                        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel>
+                            <TextBlock Text="3"><TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource LevelNumberStyle}"><Style.Triggers><DataTrigger Binding="{Binding Level}" Value="3"><Setter Property="Foreground" Value="{StaticResource DarkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+                            <TextBlock Text="Полный доступ и скрипты"><TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource LevelTextStyle}"><Style.Triggers><DataTrigger Binding="{Binding Level}" Value="3"><Setter Property="Foreground" Value="{StaticResource DarkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+                <TextBlock Text="{Binding LevelCaption}" Style="{StaticResource InfoCardLabelStyle}"
+                           TextWrapping="Wrap" Margin="0,0,0,10"/>
+                <StackPanel Visibility="{Binding CanChooseLevel, Converter={StaticResource BoolToVis}}" Margin="0,0,0,10">
+                    <TextBlock Text="{Binding LevelChoiceLabel}" TextWrapping="Wrap" Style="{StaticResource InfoCardLabelStyle}" Margin="0,0,0,4"/>
+                    <ComboBox Style="{StaticResource DarkComboBoxStyle}"
+                              ItemsSource="{Binding LevelOptions}"
+                              SelectedItem="{Binding SelectedLevel, Mode=TwoWay}"/>
+                </StackPanel>
+
+                <!-- Подключение -->
+                <TextBlock Text="Подключение в Claude Code" Style="{StaticResource SectionTitleStyle}"/>
+                <Border Style="{StaticResource InfoCardBorderStyle}" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock Text="Адрес" Style="{StaticResource InfoCardLabelStyle}"/>
+                        <TextBox Text="{Binding Url, Mode=OneWay}" IsReadOnly="True"
+                                 Background="Transparent" BorderThickness="0"
+                                 Foreground="{StaticResource PrimaryTextBrush}"
+                                 FontFamily="Consolas" Margin="0,2,0,8"/>
+                        <TextBlock Text="Команда для терминала (один раз на компьютере)" Style="{StaticResource InfoCardLabelStyle}"/>
+                        <TextBox Text="{Binding ConnectCommand, Mode=OneWay}" IsReadOnly="True"
+                                 Background="Transparent" BorderThickness="0" TextWrapping="Wrap"
+                                 Foreground="{StaticResource PrimaryTextBrush}"
+                                 FontFamily="Consolas" Margin="0,2,0,8"/>
+                        <Button Content="Скопировать команду"
+                                Style="{StaticResource CloseButtonStyle}"
+                                Click="CopyButton_Click"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="{Binding CheckResult}" TextWrapping="Wrap" Margin="0,0,0,10">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource InfoCardLabelStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CheckResult}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <UniformGrid Columns="2" Margin="0,0,0,10">
+                    <Button Content="Проверить" Style="{StaticResource CloseButtonStyle}"
+                            Margin="0,0,4,0" Click="CheckButton_Click"/>
+                    <Button Content="{Binding ToggleText}" IsEnabled="{Binding CanToggle}"
+                            Style="{StaticResource CloseButtonStyle}"
+                            Margin="4,0,0,0" Click="ToggleButton_Click"/>
+                </UniformGrid>
+
+                <Button Content="Готово"
+                        Style="{StaticResource RunButtonStyle}"
+                        IsCancel="True"
+                        IsDefault="True"
+                        Margin="0"
+                        Click="CloseButton_Click"/>
+
+                <TextBlock Text="Claude работает с активным документом. Изменения отменяются Ctrl+Z."
+                           Style="{StaticResource InfoCardLabelStyle}"
+                           HorizontalAlignment="Center" TextWrapping="Wrap" Margin="0,10,0,0"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

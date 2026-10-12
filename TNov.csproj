@@ -11,6 +11,13 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
+  <!-- Коннектор Claude (Mcp\ScriptRunner): компилятор C# для execute_csharp.
+       Только R2027 — в R2022 используется встроенный CSharpCodeProvider: Roslyn на net48
+       конфликтует со старыми System.Collections.Immutable/System.Memory из папки Revit 2022. -->
+  <ItemGroup Condition="'$(Configuration)' == 'R2027'">
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+  </ItemGroup>
+
   <!-- Графические ресурсы (иконки лент) -->
   <ItemGroup>
     <None Include="resources\**\*.png" Exclude="resources\dark\**" />

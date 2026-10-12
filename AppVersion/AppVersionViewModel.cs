@@ -28,6 +28,11 @@ namespace TNov
         {
             get => _canCreateParts; set { _canCreateParts = value; OnPropertyChanged(); }
         }
+        private bool _canRevisions = false;
+        public bool canRevisions
+        {
+            get => _canRevisions; set { _canRevisions = value; OnPropertyChanged(); }
+        }
         [JsonIgnore] public string userName { get; set; }
         [JsonIgnore] public string userDep { get; set; }
         [JsonIgnore] public string userDepRole { get; set; }
@@ -89,13 +94,13 @@ namespace TNov
 
             try
             {
-                if (!File.Exists(TNovPaths.ReleasesFile))
+                if (!File.Exists(TNovPaths.CurrentReleasesFile))
                 {
                     JournalStatusMessage = "Журнал версий недоступен";
                     return;
                 }
 
-                foreach (ReleaseEntry entry in ReleaseLogParser.ParseFile(TNovPaths.ReleasesFile))
+                foreach (ReleaseEntry entry in ReleaseLogParser.ParseFile(TNovPaths.CurrentReleasesFile))
                     ReleaseEntries.Add(entry);
 
                 if (ReleaseEntries.Count == 0)

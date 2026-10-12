@@ -36,17 +36,11 @@ namespace TNov
             string userDepartment = "";
             string userDepRole = "";
 
-            if (config.LicenseType=="corp")
+            if (CorpGate.IsCorp(config))
             {
-                string[] rolesFile = TNovCommon.Server.ServerData.ReadAllLines("roles.txt");
-                foreach (string role in rolesFile)
-                {
-                    if (role.Contains(userName))
-                    {
-                        string[] line = role.Split(','); userDepartment = line[1]; userDepRole = line[2]; break;
-                    }
-
-                }
+                RolesService.UserRole userRole = RolesService.GetCurrentUser(userName);
+                if (userRole.Found) userDepartment = userRole.Department;
+                if (userRole.Role != RolesService.None) userDepRole = userRole.Role;
                 switch (userDepartment)
                 {
                     case "AR": userDepartment = "АР"; break;
