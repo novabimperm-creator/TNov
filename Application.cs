@@ -153,6 +153,8 @@ namespace TNov
             // синхронизация работает у всех, у кого стоит плагин, без входа в TNovPRO.
             string modelSyncPath = _config.LicenseType == "corp" ? serverPath : null;
             RunModelSync(() => ModelSyncConfigure(modelSyncPath));
+            // Временный переезд Revit Server (RSredirect.txt): тот же сервер и в окне «Открыть с Revit Server».
+            if (_config.LicenseType == "corp") StartRsnIniRedirect(application.ControlledApplication.VersionNumber);
             //настройки программы
             var viewModel0 = new AppVersionViewModel();
             string jsonpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TNovClient/TNovSettings.json");
@@ -2155,6 +2157,63 @@ namespace TNov
                 }
             }
         }
+
+        #region RSN.ini: временная подмена Revit Server
+        /// <summary>
+        /// Список серверов окна «Открыть с Revit Server» (%ProgramData%\Autodesk\Revit Server 20XX\Config\RSN.ini)
+        /// правится по тем же правилам RSredirect.txt, что и пути в Открывашке/BIM Экспорте/Связях.
+        /// В фоне: правила читаются с шары, а старт Revit ждать не должен. Нет файла или прав на запись — тихо пропускаем.
+        /// </summary>
+        private static void StartRsnIniRedirect(string revitVersion)
+        {
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                try { RedirectRsnIni(revitVersion); }
+                catch (Exception ex) { Debug.WriteLine($"RSN.ini не обновлён: {ex.Message}"); }
+            });
+        }
+
+        // NoInlining: при старом TNovCommon без RevitServerRedirect TypeLoadException ловится выше, а не роняет OnStartup.
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void RedirectRsnIni(string revitVersion)
+        {
+            string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                "Autodesk", "Revit Server " + revitVersion, "Config", "RSN.ini");
+            if (!File.Exists(path)) return;
+
+            byte[] bytes = File.ReadAllBytes(path);
+            Encoding encoding;
+            string text;
+            using (var reader = new StreamReader(new MemoryStream(bytes), new UTF8Encoding(false), true))
+            {
+                text = reader.ReadToEnd();
+                encoding = reader.CurrentEncoding;
+            }
+
+            var lines = new List<string>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            bool changed = false;
+            foreach (string line in text.Replace("\r\n", "\n").Split('\n'))
+            {
+                string server = line.Trim();
+                if (server.Length == 0) continue;
+                string redirected = TNovCommon.Server.RevitServerRedirect.Apply(server);
+                if (!string.Equals(redirected, server, StringComparison.Ordinal)) changed = true;
+                // После замены старый и новый сервер могут совпасть — дубль в списке не нужен.
+                if (seen.Add(redirected)) lines.Add(redirected);
+                else changed = true;
+            }
+            if (!changed) return;
+
+            // Кодировку (UTF-16 у Revit, иногда ANSI/UTF-8) и BOM сохраняем как были.
+            bool hadBom = bytes.Length >= 2 && ((bytes[0] == 0xFF && bytes[1] == 0xFE) || (bytes[0] == 0xFE && bytes[1] == 0xFF)
+                          || (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF));
+            byte[] body = encoding.GetBytes(string.Join("\r\n", lines) + "\r\n");
+            byte[] preamble = hadBom ? encoding.GetPreamble() : new byte[0];
+            File.WriteAllBytes(path, preamble.Concat(body).ToArray());
+            Debug.WriteLine($"RSN.ini обновлён по RSredirect.txt: {string.Join(", ", lines)}");
+        }
+        #endregion
 
         #region «Модель» TNovPRO
         // К ModelSyncService (TNovUtils) обращаемся только из NoInlining-методов ниже.
