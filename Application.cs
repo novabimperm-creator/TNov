@@ -1754,10 +1754,17 @@ namespace TNov
 
             // сгруппированная кнопка "Т Определение АР"
             PushButtonData buttonDataTParsOpredAR = new PushButtonData(nameof(TParsOpredAR), "Т Определение", typeof(TParsOpredAR).Assembly.Location, typeof(TParsOpredAR).FullName);
-            
+
+            // сгруппированная кнопка "Проверка этажей"
+            PushButtonData buttonDataFloorCheck = new PushButtonData(nameof(FloorCheck), "Проверка этажей", typeof(FloorCheck).Assembly.Location, typeof(FloorCheck).FullName)
+            {
+                ToolTip = "Немодальное окно: на 3D-виде временно изолирует элементы с заданным значением N_Эт.Номер или Т_Этаж. " +
+                          "Уровни остаются видимыми."
+            };
+
             //группа
 
-            panel11.AddStackedItems(buttonDataTParsOpredAR, buttonDataTParsNazn);
+            panel11.AddStackedItems(buttonDataTParsOpredAR, buttonDataTParsNazn, buttonDataFloorCheck);
 
             // Панель "BIM КЖ"
 
