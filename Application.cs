@@ -1335,6 +1335,18 @@ namespace TNov
             buttonDataadskg.SetContextualHelp(adskghelp);
             panelMEPSpec.AddItem(buttonDataadskg);
 
+            // кнопка "Спеку на листы"
+
+            PushButtonData buttonDataSpecSheets = new PushButtonData(nameof(MEPSpecSheets), "Спеку\nна листы", typeof(MEPSpecSheets).Assembly.Location, typeof(MEPSpecSheets).FullName)
+            {
+                ToolTip = "Разбить сводную спецификацию комплектов *.СО по листам: создать недостающие и удалить лишние пустые листы."
+            };
+            RibbonIcons.Set(buttonDataSpecSheets, nameof(Properties.Resources.sheets16), nameof(Properties.Resources.sheets32));
+            ContextualHelp specSheetsHelp = new ContextualHelp(ContextualHelpType.Url,
+                HelpLinks.GetHelpLink("Спеку на листы"));
+            buttonDataSpecSheets.SetContextualHelp(specSheetsHelp);
+            panelMEPSpec.AddItem(buttonDataSpecSheets);
+
             #endregion
 
             #region Панель "ОВ"
