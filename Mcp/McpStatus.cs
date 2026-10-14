@@ -126,6 +126,13 @@ namespace TNov.Mcp
             try { System.Windows.Clipboard.SetText(ConnectCommand); CheckResult = "Команда подключения скопирована."; }
             catch (Exception) { CheckResult = "Не удалось скопировать — выделите команду и нажмите Ctrl+C."; }
         }
+
+        /// <summary>Подключение к обычному чату Claude Desktop через мост stdio -> HTTP.</summary>
+        public void ConnectClaudeDesktop()
+        {
+            try { CheckResult = ClaudeDesktopSetup.Install(McpServer.IsRunning ? McpServer.Port : McpAccess.Local.Port); }
+            catch (Exception ex) { CheckResult = "Не удалось подключить Claude Desktop: " + ex.Message; }
+        }
         public string ToggleText => McpServer.IsRunning ? "Остановить" : "Запустить";
         public bool CanToggle => McpAccess.Enabled || McpServer.IsRunning;
 
@@ -289,6 +296,15 @@ namespace TNov.Mcp
                     break;
                 default:
                     lines.AppendLine("? Claude Code на этом компьютере не найден.");
+                    break;
+            }
+            switch (ClaudeDesktopSetup.IsConfigured())
+            {
+                case true:
+                    lines.AppendLine("✓ Мост прописан в Claude Desktop (обычный чат).");
+                    break;
+                case false:
+                    lines.AppendLine("– В Claude Desktop мост не прописан (нужен только для обычного чата).");
                     break;
             }
             return lines.ToString().TrimEnd();

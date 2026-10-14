@@ -146,7 +146,7 @@ nav.toc a:hover { color: var(--accent); border-color: var(--accent); }
       <li><b>Приложение Claude для Windows</b> (claude.ai/download). Права администратора для установки не нужны. Войдите под своим аккаунтом.</li>
     </ul>
     <div class="callout">
-      <p>Нужна именно вкладка <b>Code</b> в приложении Claude (Claude Code). В обычном чате (вкладка Chat) и на сайте claude.ai коннектор не работает.</p>
+      <p>Основной способ — вкладка <b>Code</b> в приложении Claude (Claude Code). Обычный чат приложения подключается через мост (см. <a href="#desktop-chat">«Обычный чат Claude Desktop»</a>). На сайте claude.ai коннектор не работает.</p>
     </div>
   </section>
 
@@ -189,6 +189,22 @@ nav.toc a:hover { color: var(--accent); border-color: var(--accent); }
         <p>Claude должен назвать файл модели и уровни. Если он отвечает, что не видит Revit, загляните в раздел <a href="#problems">«Если не работает»</a>.</p>
       </div></li>
     </ol>
+  </section>
+
+  <section id="desktop-chat">
+    <h2>Обычный чат Claude Desktop</h2>
+    <p>Если Claude Code недоступен (например, на бесплатном тарифе), коннектор можно подключить к обычному чату приложения Claude через мост.</p>
+    <ol class="steps">
+      <li><div>
+        <h3>Подключите мост из Revit</h3>
+        <p>Нажмите кнопку <b>Claude</b> на ленте, затем <span class="ui">Подключить к Claude Desktop</span>. Плагин сам пропишет мост в настройки приложения Claude.</p>
+      </div></li>
+      <li><div>
+        <h3>Перезапустите Claude Desktop</h3>
+        <p>Закройте приложение полностью: значок в трее → <span class="ui">Выход</span>. Откройте снова и начните новый чат. Инструменты Revit появятся в меню инструментов чата.</p>
+      </div></li>
+    </ol>
+    <p class="note">Если Revit или коннектор не запущены, Claude скажет об этом. Инструменты Revit появятся сами, как только вы нажмёте кнопку Claude. Лимиты бесплатного тарифа небольшие, а работа с моделью тратит их быстро, особенно изображения видов. Для регулярной работы нужен Claude Code.</p>
   </section>
 
   <span class="part" id="daily">Часть 2 · Как работать каждый день</span>

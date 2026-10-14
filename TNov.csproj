@@ -11,6 +11,11 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
+  <!-- Коннектор Claude: мост stdio -> HTTP для обычного чата Claude Desktop (ставит Mcp\ClaudeDesktopSetup). -->
+  <ItemGroup>
+    <EmbeddedResource Include="Mcp\Bridge\TNovMcpBridge.ps1" LogicalName="TNov.Mcp.TNovMcpBridge.ps1" />
+  </ItemGroup>
+
   <!-- Коннектор Claude (Mcp\ScriptRunner): компилятор C# для execute_csharp.
        Только R2027 — в R2022 используется встроенный CSharpCodeProvider: Roslyn на net48
        конфликтует со старыми System.Collections.Immutable/System.Memory из папки Revit 2022. -->

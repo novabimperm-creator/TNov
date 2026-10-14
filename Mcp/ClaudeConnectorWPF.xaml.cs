@@ -18,6 +18,8 @@ namespace TNov.Mcp
 
         private void CopyButton_Click(object sender, RoutedEventArgs e) => _status.CopyConnectCommand();
 
+        private void DesktopButton_Click(object sender, RoutedEventArgs e) => _status.ConnectClaudeDesktop();
+
         private void CheckButton_Click(object sender, RoutedEventArgs e) => _status.Check();
 
         private void ToggleButton_Click(object sender, RoutedEventArgs e) => _status.Toggle();

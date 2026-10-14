@@ -179,6 +179,12 @@
                         <Button Content="Скопировать команду"
                                 Style="{StaticResource CloseButtonStyle}"
                                 Click="CopyButton_Click"/>
+                        <TextBlock Text="Обычный чат Claude Desktop (без Claude Code)" Style="{StaticResource InfoCardLabelStyle}"
+                                   TextWrapping="Wrap" Margin="0,4,0,4"/>
+                        <Button Content="Подключить к Claude Desktop"
+                                Style="{StaticResource CloseButtonStyle}"
+                                Margin="0"
+                                Click="DesktopButton_Click"/>
                     </StackPanel>
                 </Border>
 
