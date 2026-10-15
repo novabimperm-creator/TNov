@@ -46,7 +46,7 @@ namespace TNov.Mcp
             string code = args["code"]?.ToString();
             if (string.IsNullOrWhiteSpace(code)) throw new ArgumentException("Пустой код.");
             bool useTransaction = args["transaction"]?.Type == JTokenType.Boolean && (bool)args["transaction"];
-            string transactionName = args["transaction_name"]?.ToString() ?? "Claude: скрипт";
+            string transactionName = args["transaction_name"]?.ToString() ?? McpClient.Current.Name + ": скрипт";
 
             UIDocument uidoc = app.ActiveUIDocument;
             Document doc = uidoc?.Document;
@@ -257,10 +257,10 @@ namespace TNov.Mcp
             if (_trustedScope != null && scope <= _trustedScope.Value) return true;
 
             string shown = code.Length > MaxCodeInDialog ? code.Substring(0, MaxCodeInDialog) + "\n…" : code;
-            var dialog = new TaskDialog("TNov — Claude")
+            var dialog = new TaskDialog("TNov — " + McpClient.Current.Name)
             {
                 MainIcon = TaskDialogIcon.TaskDialogIconWarning,
-                MainInstruction = "Claude хочет выполнить код в Revit",
+                MainInstruction = McpClient.Current.Name + " хочет выполнить код в Revit",
                 MainContent = "Права скрипта: " + ScopeText(scope) + ". Изменения сверх прав будут отменены целиком.\n" +
                     "Результат можно отменить Ctrl+Z.\n\n" + shown,
                 CommonButtons = TaskDialogCommonButtons.Cancel,

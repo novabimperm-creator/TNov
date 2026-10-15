@@ -53,7 +53,39 @@ namespace TNov.Mcp
             }
         }
 
-        private static void WriteBridge()
+        /// <summary>Обновляет уже установленный мост до версии из этой сборки TNov (ошибки молча пропускаем).</summary>
+        internal static void RefreshBridgeIfInstalled()
+        {
+            try { if (File.Exists(BridgePath)) WriteBridge(); }
+            catch (Exception) { } // файл занят запущенным мостом и т.п. — обновится в следующий раз
+        }
+
+        /// <summary>
+        /// Журналы моста: обычный и копии в папках пакетов Microsoft Store — запись в AppData
+        /// из приложения Store (и запущенного им моста) Windows может перенаправить туда.
+        /// </summary>
+        internal static List<string> BridgeLogs()
+        {
+            var logs = new List<string>();
+            string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string main = Path.Combine(local, "TNov", "mcp", "bridge.log");
+            if (File.Exists(main)) logs.Add(main);
+            string packages = Path.Combine(local, "Packages");
+            try
+            {
+                if (Directory.Exists(packages))
+                    foreach (string package in Directory.GetDirectories(packages))
+                    {
+                        string log = Path.Combine(package, "LocalCache", "Local", "TNov", "mcp", "bridge.log");
+                        if (File.Exists(log)) logs.Add(log);
+                    }
+            }
+            catch (Exception) { }
+            return logs;
+        }
+
+        /// <summary>Кладёт мост из ресурсов TNov.dll в BridgePath (общий для Claude Desktop и Codex).</summary>
+        internal static void WriteBridge()
         {
             string text;
             using (Stream stream = typeof(ClaudeDesktopSetup).Assembly.GetManifestResourceStream(ResourceName)

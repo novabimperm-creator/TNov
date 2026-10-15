@@ -11,7 +11,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
-  <!-- Коннектор Claude: мост stdio -> HTTP для обычного чата Claude Desktop (ставит Mcp\ClaudeDesktopSetup). -->
+  <!-- Коннекторы MCP: мост stdio -> HTTP для Claude Desktop и Codex (ставят Mcp\ClaudeDesktopSetup и Mcp\CodexSetup). -->
   <ItemGroup>
     <EmbeddedResource Include="Mcp\Bridge\TNovMcpBridge.ps1" LogicalName="TNov.Mcp.TNovMcpBridge.ps1" />
   </ItemGroup>

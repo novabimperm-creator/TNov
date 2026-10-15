@@ -3,15 +3,15 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 
 namespace TNov.Mcp
 {
     /// <summary>
     /// MCP-сервер (транспорт Streamable HTTP, ответы обычным JSON без SSE) внутри Revit.
-    /// Слушает только loopback: http://localhost:{порт}/mcp. Claude Code подключается по этому адресу.
+    /// Слушает только петлевые адреса 127.0.0.1 и [::1] (LoopbackHttp): http://localhost:{порт}/mcp — Claude,
+    /// http://localhost:{порт}/codex — Codex (см. McpClient). Из сети порт не открыт.
     /// </summary>
     internal static class McpServer
     {
@@ -37,11 +37,12 @@ namespace TNov.Mcp
             "- Каждое изменение — отдельная транзакция, пользователь может отменить её Ctrl+Z в Revit.\n" +
             "- Если Revit не отвечает, у пользователя открыт диалог или идёт команда: попросите его освободить Revit.";
 
-        private static HttpListener _listener;
+        private static LoopbackHttp _server;
 
-        public static bool IsRunning => _listener != null && _listener.IsListening;
+        public static bool IsRunning => _server != null;
         public static int Port { get; private set; }
-        public static string Url => $"http://localhost:{Port}/mcp";
+        public static string Url => UrlFor(McpClient.Claude);
+        public static string UrlFor(McpClient client) => $"http://localhost:{Port}{client.Path}";
 
         /// <summary>Запускает сервер на первом свободном порту начиная с preferredPort.</summary>
         public static void Start(int preferredPort)
@@ -51,23 +52,19 @@ namespace TNov.Mcp
             Exception last = null;
             for (int port = preferredPort; port < preferredPort + PortAttempts; port++)
             {
-                var listener = new HttpListener();
-                listener.Prefixes.Add($"http://localhost:{port}/");
                 try
                 {
-                    listener.Start();
+                    // Только петлевые адреса: из сети порт недоступен (см. LoopbackHttp).
+                    _server = LoopbackHttp.Start(port, Handle);
                 }
-                catch (HttpListenerException ex)
+                catch (SocketException ex)
                 {
                     // Порт занят (например, второй экземпляр Revit) — пробуем следующий.
                     last = ex;
-                    listener.Close();
                     continue;
                 }
 
-                _listener = listener;
                 Port = port;
-                new Thread(() => Listen(listener)) { IsBackground = true, Name = "TNov MCP" }.Start();
                 McpAccess.RegisterFirstUseInBackground();
                 return;
             }
@@ -77,86 +74,57 @@ namespace TNov.Mcp
 
         public static void Stop()
         {
-            HttpListener listener = _listener;
-            _listener = null;
-            if (listener == null) return;
-            try { listener.Stop(); listener.Close(); }
-            catch (Exception) { }
+            LoopbackHttp server = _server;
+            _server = null;
+            server?.Stop();
         }
 
-        private static void Listen(HttpListener listener)
+        private static LoopbackHttp.Response Handle(LoopbackHttp.Request request)
         {
-            while (listener.IsListening)
-            {
-                HttpListenerContext context;
-                try { context = listener.GetContext(); }
-                catch (Exception) { break; } // Stop()
-                ThreadPool.QueueUserWorkItem(_ =>
-                {
-                    // Ошибка вне Handle (например, MissingMethodException при JIT из-за версии Newtonsoft в Revit)
-                    // не должна оставлять запрос без ответа — клиент иначе висит до таймаута HTTP.sys.
-                    try { Handle(context); }
-                    catch (Exception) { Abort(context.Response); }
-                });
-            }
-        }
-
-        private static void Handle(HttpListenerContext context)
-        {
-            HttpListenerRequest request = context.Request;
-            HttpListenerResponse response = context.Response;
             try
             {
-                // Защита от DNS rebinding и запросов со страниц браузера (требование спецификации MCP).
-                string origin = request.Headers["Origin"];
-                if (!string.IsNullOrEmpty(origin) && !IsLoopbackOrigin(origin))
-                {
-                    Send(response, 403, null);
-                    return;
-                }
-                if (!string.Equals(request.Url.AbsolutePath.TrimEnd('/'), "/mcp", StringComparison.OrdinalIgnoreCase))
-                {
-                    Send(response, 404, null);
-                    return;
-                }
-                if (request.HttpMethod != "POST")
+                // Защита от DNS rebinding: страница из сети, разрешившая своё имя в 127.0.0.1,
+                // пришлёт чужой Host. Принимаем только петлевые имена.
+                if (!IsLoopbackHost(request.Header("Host"))) return Send(403, null);
+                // Запросы со страниц браузера (требование спецификации MCP).
+                string origin = request.Header("Origin");
+                if (!string.IsNullOrEmpty(origin) && !IsLoopbackOrigin(origin)) return Send(403, null);
+
+                McpClient client = McpClient.FromPath(request.Path.TrimEnd('/'));
+                if (client == null) return Send(404, null);
+                if (request.Method != "POST")
                 {
                     // Поток SSE (GET) и завершение сессии (DELETE) не поддерживаем — спецификация разрешает 405.
-                    response.AddHeader("Allow", "POST");
-                    Send(response, 405, null);
-                    return;
+                    LoopbackHttp.Response notAllowed = Send(405, null);
+                    notAllowed.Headers["Allow"] = "POST";
+                    return notAllowed;
                 }
                 // application/json обязателен: браузер не может прислать его без CORS-preflight, а preflight мы не одобряем.
-                if (request.ContentType == null || !request.ContentType.StartsWith("application/json", StringComparison.OrdinalIgnoreCase))
-                {
-                    Send(response, 415, null);
-                    return;
-                }
+                string contentType = request.Header("Content-Type");
+                if (contentType == null || !contentType.StartsWith("application/json", StringComparison.OrdinalIgnoreCase))
+                    return Send(415, null);
 
-                bool selfTest = request.Headers["X-TNov-SelfTest"] != null;
-                if (!selfTest) McpActivity.LastRequestUtc = DateTime.UtcNow;
+                bool selfTest = request.Header("X-TNov-SelfTest") != null;
+                if (!selfTest) client.Activity.LastRequestUtc = DateTime.UtcNow;
 
-                string body;
-                using (var reader = new StreamReader(request.InputStream, Encoding.UTF8))
-                    body = reader.ReadToEnd();
+                string body = Encoding.UTF8.GetString(request.Body);
 
                 JToken message;
                 try { message = JToken.Parse(body); }
                 catch (JsonException)
                 {
-                    Send(response, 400, Error(null, -32700, "Parse error"));
-                    return;
+                    return Send(400, Error(null, -32700, "Parse error"));
                 }
 
                 JToken reply;
                 if (message is JArray batch)
                 {
-                    var replies = new JArray(batch.OfType<JObject>().Select(HandleMessage).Where(r => r != null));
+                    var replies = new JArray(batch.OfType<JObject>().Select(m => HandleMessage(m, client)).Where(r => r != null));
                     reply = replies.Count > 0 ? replies : null;
                 }
                 else if (message is JObject single)
                 {
-                    reply = HandleMessage(single);
+                    reply = HandleMessage(single, client);
                 }
                 else
                 {
@@ -164,16 +132,15 @@ namespace TNov.Mcp
                 }
 
                 // Уведомления и ответы клиента: 202 без тела.
-                Send(response, reply == null ? 202 : 200, reply);
+                return Send(reply == null ? 202 : 200, reply);
             }
             catch (Exception ex)
             {
-                try { Send(response, 500, Error(null, -32603, ex.Message)); }
-                catch (Exception) { Abort(response); }
+                return Send(500, Error(null, -32603, ex.Message));
             }
         }
 
-        private static JObject HandleMessage(JObject message)
+        private static JObject HandleMessage(JObject message, McpClient client)
         {
             string method = (string)message["method"];
             JToken id = message["id"];
@@ -187,7 +154,7 @@ namespace TNov.Mcp
                 {
                     case "initialize":
                         result = Initialize(message["params"] as JObject);
-                        McpActivity.OnInitialize(message["params"]?["clientInfo"] as JObject);
+                        client.Activity.OnInitialize(message["params"]?["clientInfo"] as JObject);
                         break;
                     case "ping":
                         result = new JObject();
@@ -196,7 +163,7 @@ namespace TNov.Mcp
                         result = new JObject { ["tools"] = McpTools.List() };
                         break;
                     case "tools/call":
-                        result = McpTools.Call(message["params"] as JObject);
+                        result = McpTools.Call(message["params"] as JObject, client);
                         break;
                     default:
                         return isNotification ? null : Error(id, -32601, "Method not found: " + method);
@@ -241,23 +208,24 @@ namespace TNov.Mcp
             return uri.IsLoopback;
         }
 
-        private static void Abort(HttpListenerResponse response)
+        /// <summary>Host — только петлевое имя: localhost, 127.0.0.1, [::1] (с портом или без).</summary>
+        private static bool IsLoopbackHost(string host)
         {
-            try { response.Abort(); }
-            catch (Exception) { }
+            if (string.IsNullOrEmpty(host)) return false;
+            if (!Uri.TryCreate("http://" + host, UriKind.Absolute, out Uri uri)) return false;
+            return uri.IsLoopback;
         }
 
-        private static void Send(HttpListenerResponse response, int status, JToken body)
+        private static LoopbackHttp.Response Send(int status, JToken body)
         {
-            response.StatusCode = status;
+            var response = new LoopbackHttp.Response { Status = status };
             if (body != null)
             {
-                byte[] bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(body, Formatting.None));
+                // JsonConvert, а не JToken.ToString(Formatting): в Revit 2022 загружен Newtonsoft 11.
+                response.Body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(body, Formatting.None));
                 response.ContentType = "application/json; charset=utf-8";
-                response.ContentLength64 = bytes.Length;
-                response.OutputStream.Write(bytes, 0, bytes.Length);
             }
-            response.Close();
+            return response;
         }
     }
 }

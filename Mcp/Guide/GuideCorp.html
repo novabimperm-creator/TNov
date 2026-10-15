@@ -1,0 +1,429 @@
+<title>Revit × нейросети в Новации</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column on a faint blueprint grid; steps as a real numbered sequence, levels as a table; accent = violet of the «Нейросетошная» icon */
+:root {
+  --bg: #f5f6f9;
+  --surface: #ffffff;
+  --fg: #1d2030;
+  --muted: #5e6378;
+  --line: #dcdde8;
+  --grid: rgba(70, 60, 140, 0.06);
+  --accent: #5f47c2;
+  --accent-soft: #ebe7fa;
+  --code-bg: #eff0f5;
+  --ok: #2f8a4a;
+  --warn: #a8710a;
+  --display: "Unbounded", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #13141c; --surface: #1b1d28; --fg: #e5e6f0; --muted: #9a9db2; --line: #2e3040;
+    --grid: rgba(160, 150, 230, 0.05); --accent: #a996f2; --accent-soft: #2b2545; --code-bg: #232534;
+    --ok: #5cc27a; --warn: #e0a83a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #13141c; --surface: #1b1d28; --fg: #e5e6f0; --muted: #9a9db2; --line: #2e3040;
+  --grid: rgba(160, 150, 230, 0.05); --accent: #a996f2; --accent-soft: #2b2545; --code-bg: #232534;
+  --ok: #5cc27a; --warn: #e0a83a; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--fg);
+  font: 400 16px/1.6 var(--body);
+  padding-inline: 16px;
+  padding-block: 40px 64px;
+}
+main { max-width: 720px; margin: 0 auto; display: grid; gap: 44px; }
+main > * { min-width: 0; }
+h1, h2 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(28px, 6vw, 40px); font-weight: 700; line-height: 1.15; }
+h2 { font-size: 20px; font-weight: 500; }
+h3 { font-size: 16px; font-weight: 600; margin: 0; }
+p { margin: 0; }
+a { color: var(--accent); }
+section { display: grid; gap: 14px; }
+section > * { min-width: 0; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.lead { font-size: 18px; color: var(--muted); max-width: 62ch; }
+header { display: grid; gap: 14px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font: 500 12px/1 var(--mono); padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+
+code, kbd { font-family: var(--mono); font-size: .9em; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+.cmd { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: 8px; background: var(--code-bg); overflow: hidden; }
+.cmd pre { margin: 0; padding: 12px 14px; overflow-x: auto; font: 14px/1.5 var(--mono); flex: 1; min-width: 0; }
+.cmd button {
+  border: 0; border-left: 1px solid var(--line); background: var(--surface); color: var(--fg);
+  font: 500 13px var(--body); padding: 0 14px; cursor: pointer;
+}
+.cmd button:hover { color: var(--accent); }
+.cmd button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; counter-reset: step; }
+ol.steps > li { display: grid; grid-template-columns: 40px 1fr; gap: 14px; counter-increment: step; }
+ol.steps > li::before {
+  content: counter(step); font: 700 16px/40px var(--display); text-align: center;
+  width: 40px; height: 40px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+}
+ol.steps > li > div { display: grid; gap: 8px; min-width: 0; padding-top: 8px; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 520px; }
+th, td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+th { font: 500 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+td.lvl { font: 700 22px/1 var(--display); color: var(--accent); width: 56px; }
+
+.pick { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.pick > div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
+.pick .who { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+
+.examples { display: grid; gap: 10px; }
+.example { border-left: 3px solid var(--line); padding: 4px 0 4px 14px; }
+.example .tag { font: 500 11px var(--mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+
+ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.callout { background: var(--accent-soft); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; }
+
+dl.faq { margin: 0; display: grid; gap: 16px; }
+dl.faq dt { font-weight: 600; }
+dl.faq dd { margin: 4px 0 0; color: var(--muted); }
+
+.status { display: grid; gap: 8px; }
+.status div { display: flex; gap: 10px; align-items: baseline; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; transform: translateY(1px); }
+.dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.off { background: var(--muted); }
+
+footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+@media (max-width: 480px) { ol.steps > li { grid-template-columns: 32px 1fr; } ol.steps > li::before { width: 32px; height: 32px; line-height: 32px; font-size: 14px; } }
+.ui { font: 500 .9em var(--body); padding: 1px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); white-space: nowrap; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px; }
+nav.toc a { font: 500 13px var(--body); color: var(--fg); text-decoration: none; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+nav.toc a:hover { color: var(--accent); border-color: var(--accent); }
+.part { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding-top: 8px; border-top: 1px solid var(--line); }
+.prompt { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 10px; }
+.prompt .row { display: flex; flex-wrap: wrap; gap: 8px; }
+.prompt p { font-size: 15px; }
+.cmd pre.file { white-space: pre; }
+.note { font-size: 14px; color: var(--muted); }
+</style>
+
+<main>
+  <header>
+    <span class="eyebrow">TNov · бета-тест</span>
+    <h1>Revit × Claude и Codex</h1>
+    <p class="lead">Коннектор из плагина TNov даёт нейросети доступ к модели, открытой у вас в Revit. Можно спросить о модели словами, найти и выделить элементы, посмотреть вид, а с ростом уровня доступа — поправить параметры или запустить скрипт. Работает с Claude (Anthropic) и Codex (OpenAI).</p>
+    <div class="meta">
+      <span class="chip">Revit 2022 / 2027</span>
+      <span class="chip">Claude Code</span>
+      <span class="chip">Codex</span>
+      <span class="chip">своя подписка</span>
+    </div>
+    <nav class="toc" aria-label="Разделы">
+      <a href="#setup">Настройка (один раз)</a>
+      <a href="#daily">Как работать</a>
+      <a href="#permissions">Разрешения</a>
+      <a href="#levels">Уровни доступа</a>
+      <a href="#problems">Если не работает</a>
+    </nav>
+  </header>
+
+  <section>
+    <h2>Как это устроено</h2>
+    <p>Кнопка <b>Нейросетошная</b> в Revit включает у вас на компьютере небольшой сервер. Claude Code или Codex подключается к нему и получает набор инструментов: «найти элементы», «прочитать параметры», «показать вид» и другие. Вы пишете задачу обычным текстом, нейросеть сама решает, какие инструменты вызвать, и отвечает.</p>
+    <p>Инструменты, уровень доступа и защита модели у Claude и Codex одинаковые. Можно пользоваться одной из них или обеими. Revit и модель остаются у вас. Нейросеть видит только то, что прочитала через инструменты, и только пока Revit открыт, а коннектор включён.</p>
+  </section>
+
+  <span class="part" id="setup">Часть 1 · Настройка, один раз</span>
+
+  <section>
+    <h2>Что понадобится</h2>
+    <ul class="plain">
+      <li><b>Revit с плагином TNov</b> последней версии. На вкладке TNov, панель <b>Настройки</b>, должна быть кнопка <b>Нейросетошная</b> с фиолетовым значком-схемой.</li>
+      <li>Одна из нейросетей на ваш аккаунт. Запросы к Revit расходуют лимиты вашей подписки, как обычная переписка.</li>
+    </ul>
+    <div class="pick">
+      <div>
+        <span class="who">Claude</span>
+        <p>Подписка Claude Pro, Max или Team и приложение Claude для Windows (claude.ai/download). Права администратора не нужны.</p>
+        <p class="note">Основной способ — вкладка <b>Code</b> в приложении (Claude Code). Обычный чат подключается через мост. На сайте claude.ai коннектор не работает.</p>
+      </div>
+      <div>
+        <span class="who">Codex</span>
+        <p>Платный тариф ChatGPT с доступом к Codex и Codex на компьютере. Проще всего — приложение ChatGPT для Windows, Codex встроен в него: скачайте с <a href="https://chatgpt.com/ru-RU/download/">chatgpt.com/ru-RU/download</a> и откройте в приложении раздел Codex. Подойдут и Codex для терминала или расширение для VS Code (developers.openai.com/codex).</p>
+        <p class="note">Все варианты Codex берут настройки из одного файла, поэтому подключение делается один раз. На сайте chatgpt.com коннектор не работает.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Подключение к Claude Code</h2>
+    <ol class="steps">
+      <li><div>
+        <h3>Создайте рабочую папку</h3>
+        <p>Например, <code>C:\Claude\Revit</code>. В ней лежит настройка, по которой Claude Code находит Revit, поэтому работать с Revit через Claude нужно из этой папки.</p>
+      </div></li>
+      <li><div>
+        <h3>Положите в неё файл настроек</h3>
+        <p>Откройте Блокнот, вставьте текст ниже и сохраните в эту папку под именем <code>.mcp.json</code>. В окне сохранения выберите тип файла <span class="ui">Все файлы (*.*)</span>, иначе Блокнот допишет <code>.txt</code>.</p>
+        <div class="cmd">
+          <pre id="mcp-json" class="file">{
+  "mcpServers": {
+    "revit": {
+      "type": "http",
+      "url": "http://localhost:48884/mcp"
+    }
+  }
+}</pre>
+          <button type="button" data-copy="mcp-json">Копировать</button>
+        </div>
+        <p class="note">Если вы пользуетесь Claude Code в терминале, вместо файла можно выполнить одну команду в PowerShell (не в чате Claude). Она подключает Revit сразу во всех папках. Её же копирует кнопка в разделе Claude окна «Нейросетошная».</p>
+        <div class="cmd">
+          <pre id="connect-cmd">claude mcp add --transport http --scope user revit http://localhost:48884/mcp</pre>
+          <button type="button" data-copy="connect-cmd">Копировать</button>
+        </div>
+      </div></li>
+      <li><div>
+        <h3>Откройте папку в Claude Code</h3>
+        <p>Приложение Claude → вкладка <span class="ui">Code</span> → новый сеанс → выберите папку <code>C:\Claude\Revit</code>.</p>
+        <p>При первом открытии Claude Code спросит, доверять ли серверу <b>revit</b> из файла <code>.mcp.json</code>. Разрешите — это и есть коннектор TNov.</p>
+      </div></li>
+      <li><div>
+        <h3>Проверьте связь</h3>
+        <p>Откройте модель в Revit, нажмите кнопку <b>Нейросетошная</b>, затем напишите в Claude Code:</p>
+        <div class="prompt"><p>Какая модель сейчас открыта в Revit? Сколько в ней уровней?</p></div>
+        <p>Claude должен назвать файл модели и уровни. Если он отвечает, что не видит Revit, загляните в раздел <a href="#problems">«Если не работает»</a>.</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <section id="desktop-chat">
+    <h2>Обычный чат Claude Desktop</h2>
+    <p>Если Claude Code недоступен (например, на бесплатном тарифе), коннектор можно подключить к обычному чату приложения Claude через мост.</p>
+    <ol class="steps">
+      <li><div>
+        <h3>Подключите мост из Revit</h3>
+        <p>Нажмите кнопку <b>Нейросетошная</b>, в разделе Claude нажмите <span class="ui">Claude Desktop</span>. Плагин сам пропишет мост в настройки приложения Claude.</p>
+      </div></li>
+      <li><div>
+        <h3>Перезапустите Claude Desktop</h3>
+        <p>Закройте приложение полностью: значок в трее → <span class="ui">Выход</span>. Откройте снова и начните новый чат. Инструменты Revit появятся в меню инструментов чата.</p>
+      </div></li>
+    </ol>
+    <p class="note">Лимиты бесплатного тарифа небольшие, а работа с моделью тратит их быстро, особенно изображения видов. Для регулярной работы нужен Claude Code.</p>
+  </section>
+
+  <section id="codex">
+    <h2>Подключение к Codex</h2>
+    <div class="callout">
+      <p><b>Ставьте ChatGPT и Codex только со страницы OpenAI.</b> В Microsoft Store есть сторонние приложения с названиями вроде «Codex AI for (OpenAI ChatGPT)». Это обычные чат-боты от других издателей, к Revit они не подключаются. У настоящего приложения издатель — OpenAI.</p>
+    </div>
+    <ol class="steps">
+      <li><div>
+        <h3>Подключите коннектор из Revit</h3>
+        <p>Нажмите кнопку <b>Нейросетошная</b>, в разделе Codex нажмите <span class="ui">Подключить к Codex</span>. Плагин сам пропишет сервер <b>revit</b> в файл настроек Codex <code>%USERPROFILE%\.codex\config.toml</code>. Остальные ваши настройки не меняются, копия файла сохраняется рядом как <code>config.toml.bak-tnov</code>.</p>
+        <p class="note">Права администратора не нужны: файл лежит в вашем профиле. Если кнопка не сработала, можно вручную: <span class="ui">Скопировать блок</span> в разделе Codex, открыть <code>%USERPROFILE%\.codex\config.toml</code> в Блокноте, вставить блок в конец файла и сохранить.</p>
+        <div class="callout">
+          <p><b>Блок и команды из окна не отправляйте в чат Codex или Claude.</b> Нейросеть их не выполнит, а только начнёт рассуждать о них. Подключение делается кнопкой в Revit или правкой файла.</p>
+        </div>
+      </div></li>
+      <li><div>
+        <h3>Перезапустите Codex</h3>
+        <p>Полностью закройте приложение ChatGPT (или Codex) и откройте снова, затем начните новый сеанс в разделе Codex. Сервер <b>revit</b> должен появиться в списке MCP-серверов в настройках Codex (в терминале: команда <code>codex mcp list</code>).</p>
+      </div></li>
+      <li><div>
+        <h3>Проверьте связь</h3>
+        <p>Откройте модель в Revit (окно «Нейросетошная» уже включило коннектор) и напишите в Codex:</p>
+        <div class="prompt"><p>Какая модель сейчас открыта в Revit? Сколько в ней уровней?</p></div>
+        <p>Если Revit закрыт, Codex всё равно запустится и сообщит, что Revit не отвечает. Это нормально.</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <span class="part" id="daily">Часть 2 · Как работать каждый день</span>
+
+  <section>
+    <h2>Порядок работы</h2>
+    <ol class="steps">
+      <li><div>
+        <h3>Revit: откройте модель и нажмите «Нейросетошная»</h3>
+        <p>Коннектор включается вручную при каждом запуске Revit. В окне видно состояние Claude и Codex, их адреса и ваш уровень доступа. Окно можно просто закрыть.</p>
+      </div></li>
+      <li><div>
+        <h3>Новый сеанс в Claude Code или Codex</h3>
+        <p>Если коннектор включили уже после открытия сеанса, начните новый сеанс, чтобы нейросеть подхватила инструменты.</p>
+      </div></li>
+      <li><div>
+        <h3>Пишите задачу обычным языком</h3>
+        <p>Называйте категории и параметры так же, как в интерфейсе Revit: «Стены», «Комментарии», «Марка». Значения указывайте в единицах проекта, как в свойствах: «3000», «Да».</p>
+      </div></li>
+      <li><div>
+        <h3>Проверяйте результат в Revit</h3>
+        <p>Попросите выделить найденные элементы, и они подсветятся в Revit. Перед правками сначала посмотрите список.</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Примеры запросов</h2>
+    <div class="examples">
+      <div class="example"><span class="tag">уровень 1 · чтение</span><p>Сколько дверей на каждом уровне и каких типов? Сведи в таблицу.</p></div>
+      <div class="example"><span class="tag">уровень 1 · чтение</span><p>Найди помещения без номера и выдели их в Revit.</p></div>
+      <div class="example"><span class="tag">уровень 1 · оформление</span><p>Промаркируй все окна на активном виде, у которых нет марки.</p></div>
+      <div class="example"><span class="tag">уровень 1 · листы</span><p>Раздели спецификацию «Ведомость перемычек» на части по 30 строк и размести их на листах серии КЖ.</p></div>
+      <div class="example"><span class="tag">уровень 1 · подсчёт</span><p>Посчитай массу арматуры по каждой марке конструкции.</p></div>
+      <div class="example"><span class="tag">уровень 2 · 3D-элементы</span><p>Всем стенам толщиной больше 400 мм на «Этаж 3» поставь «Комментарии» = «Проверить». Сначала покажи список.</p></div>
+      <div class="example"><span class="tag">уровень 3 · удаление</span><p>Удали все пустые помещения на этаже 2. Сначала покажи список.</p></div>
+    </div>
+    <p class="note">В хорошем запросе сказано, что найти, где и в каком виде нужен ответ. Если нейросеть поняла неверно, уточните следующим сообщением: переписка продолжается.</p>
+  </section>
+
+  <section id="permissions">
+    <h2>Разрешения</h2>
+    <p>Перед вызовом инструмента Revit Claude Code и Codex могут спросить разрешения. В запросе видно название инструмента, например <code>revit · find_elements</code>, и его параметры. Как часто спрашивать, зависит от настроек программы.</p>
+    <ul class="plain">
+      <li><b>Чтение</b> (<code>get_document_info</code>, <code>find_elements</code>, <code>summarize_elements</code>, <code>list_views</code>, <code>export_view_image</code>, <code>wiki_search</code> и т. п.) ничего не меняет в модели. Его можно разрешить всегда.</li>
+      <li><b>Изменения 3D</b> (<code>set_parameters</code>, <code>place_family_instance</code>, <code>move_elements</code>, <code>delete_elements</code>): разрешайте каждый раз отдельно и читайте, что именно будет сделано.</li>
+      <li><b>Скрипты</b> (<code>execute_csharp</code>): Revit дополнительно сам покажет код, права скрипта в этой модели и спросит подтверждение. В заголовке окна видно, кто прислал код: Claude или Codex. Если не понимаете, что делает код, нажмите «Отмена» и попросите объяснить.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Правила безопасной работы</h2>
+    <div class="callout">
+      <p><b>На время бета-теста работайте на копиях или отсоединённых моделях.</b> С локальными копиями рабочих файлов из хранилища — только уровень 1.</p>
+    </div>
+    <ul class="plain">
+      <li>Нейросеть работает с <b>активным</b> документом. Перед запросом переключитесь на нужную модель.</li>
+      <li>Каждое изменение записывается отдельной операцией в списке отмены с подписью «Claude:» или «Codex:». Отменяется <kbd>Ctrl+Z</kbd> в Revit.</li>
+      <li>Пока в Revit открыт диалог или идёт команда (синхронизация, печать), запрос ждёт и через 2 минуты получает отказ. Закройте окно и попросите повторить.</li>
+      <li>Нейросеть может ошибиться в выборе элементов. Для массовых правок сначала просите список и выделение.</li>
+      <li>Не давайте Claude и Codex одновременно менять одну модель: их правки могут пересечься.</li>
+      <li>Изображения видов расходуют лимиты подписки заметно быстрее текста.</li>
+    </ul>
+  </section>
+
+  <span class="part">Часть 3 · Справка</span>
+
+  <section id="levels">
+    <h2>Уровни доступа</h2>
+    <p>Возможности открываются постепенно. Инструменты выше вашего уровня нейросеть не видит и вызвать не может. Уровень общий для Claude и Codex.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ур.</th><th>Что может нейросеть</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="lvl">1</td>
+            <td>Читать модель целиком, считать объёмы и арматуру по всей модели, проверять высоты, расстояния и пересечения. Оформлять: марки и другие аннотации, виды, листы, размещение видов и спецификаций на листах, импорт изображений. Экспортировать в IFC, NWC, DWG, PDF, FBX. 3D-элементы не меняет и ничего не удаляет.</td>
+          </tr>
+          <tr>
+            <td class="lvl">2</td>
+            <td>Плюс 3D-элементы: заполнять параметры, размещать и перемещать элементы, до 50 штук за запрос.</td>
+          </tr>
+          <tr>
+            <td class="lvl">3</td>
+            <td>Всё, включая параметры типов, удаление элементов и скрипты без ограничений.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Нестандартные задачи нейросеть решает небольшими C#-скриптами. Плагин проверяет, что изменил скрипт, и <b>отменяет его целиком</b>, если тот вышел за права вашего уровня в этой модели. Например, на уровне 1 скрипт может расставить марки, а попытку сдвинуть стену плагин отменит.</p>
+  </section>
+
+  <section>
+    <h2>Где какой уровень действует</h2>
+    <p>Ограничения зависят от модели. <b>Локальная копия файла-хранилища</b> — модель, открытая из хранилища без отсоединения. <b>Свободная модель</b> — отсоединённая от хранилища или обычный файл без совместной работы.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ур.</th><th>Где действует</th></tr></thead>
+        <tbody>
+          <tr><td class="lvl">1</td><td>Любые модели</td></tr>
+          <tr><td class="lvl">2</td><td>Любые модели. Скрипты меняют 3D-элементы только в свободных моделях</td></tr>
+          <tr><td class="lvl">3</td><td>Любые модели</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Вне разрешённых моделей нейросеть работает на правах уровня 1 и сама скажет об этом.</p>
+  </section>
+
+  <section>
+    <h2>Как получить уровень</h2>
+    <p>Уровень 2 открывается сам, как только выполнится любое из условий: больше 3 дней работы с коннектором подряд, больше 5 дней всего или больше 30 успешных операций. Запросы Claude и Codex считаются вместе. Уровень 3 и другие изменения назначает BIM-менеджер.</p>
+    <p>В пределах доступного уровня можно временно выбрать более низкий (например, для тестов) в окне кнопки «Нейросетошная». Когда вам откроют новый уровень, выбор сам поднимется до него.</p>
+    <p>Текущий уровень, прогресс и уровень в последней модели видны в окне кнопки <b>Нейросетошная</b>. После смены уровня начните новый сеанс в Claude Code или Codex, чтобы появились новые инструменты.</p>
+  </section>
+
+  <section>
+    <h2>База знаний</h2>
+    <p>Нейросеть сама заглядывает в базу знаний <b>tnov.pm-nova.ru/wiki</b>, когда вопрос касается стандартов Новации, правил оформления или функций TNov, и даёт ссылку на статью. Можно попросить явно: «Посмотри в базе знаний, как у нас оформляют узлы».</p>
+  </section>
+
+  <section>
+    <h2>Мониторинг подключения</h2>
+    <p>Подробно — в окне кнопки <b>Нейросетошная</b>, кратко — в Revit → TNov → <b>Настройки</b>, блок «Нейросети (Claude, Codex)». У каждой нейросети своя строка состояния, она обновляется каждые 2 секунды.</p>
+    <div class="status">
+      <div><span class="dot ok"></span><span><b>Подключён</b>: запросы были за последние 10 минут.</span></div>
+      <div><span class="dot warn"></span><span><b>Ещё не подключался</b> или <b>нет запросов</b>: коннектор работает, но эта нейросеть давно не обращалась.</span></div>
+      <div><span class="dot off"></span><span><b>Коннектор остановлен</b>: нажмите «Запустить» или кнопку «Нейросетошная» на ленте.</span></div>
+    </div>
+    <p>Кнопка <b>Проверить</b> показывает, отвечают ли адреса Claude и Codex и прописан ли коннектор в Claude Code, Claude Desktop и Codex. В окне кнопки видно число запросов и последнюю ошибку для каждой нейросети.</p>
+    <p class="note">Проверка «прописан ли в Claude Code» находит только подключение командой из терминала. Если вы подключались через файл <code>.mcp.json</code>, строка «не прописан» — это нормально.</p>
+  </section>
+
+  <section id="problems">
+    <h2>Если не работает</h2>
+    <dl class="faq">
+      <div><dt>Нейросеть говорит, что у неё нет доступа к Revit</dt><dd>Проверьте по порядку: Revit открыт, кнопка «Нейросетошная» нажата, сеанс начат после нажатия кнопки. Для Claude Code — сеанс открыт в папке с <code>.mcp.json</code>; если Claude Code спрашивал про сервер revit, а вы отклонили, откройте новый сеанс и разрешите. Для Codex — нажата «Подключить к Codex», и Codex перезапущен после этого.</dd></div>
+      <div><dt>Codex отвечает, что не может подключиться к Revit или к вашему окружению</dt><dd>Нажмите «Проверить» в окне «Нейросетошная». Если там «Codex ни разу не запускал мост», это не тот Codex: сайт chatgpt.com или стороннее приложение из Microsoft Store. Узнать, что установлено, можно в PowerShell командой <code>Get-StartApps | Where-Object Name -match 'codex|chatgpt'</code>: стороннее приложение будет с чужим издателем в AppID (например, <code>ChatDog…</code>). Удалите его и поставьте ChatGPT с <a href="https://chatgpt.com/ru-RU/download/">chatgpt.com/ru-RU/download</a>.</dd></div>
+      <div><dt>Codex в ответ на команду рассуждает о ней, вместо того чтобы подключиться</dt><dd>Команду или блок отправили в чат Codex. Нейросеть их не выполняет. Нажмите «Подключить к Codex» в окне «Нейросетошная» и перезапустите Codex.</dd></div>
+      <div><dt>Подключали Codex командой <code>codex mcp add</code></dt><dd>Так тоже работает, но остаются стандартные таймауты Codex, и долгие скрипты могут обрываться. Нажмите «Подключить к Codex»: кнопка заменит эту запись своей, с увеличенными таймаутами.</dd></div>
+      <div><dt>«В config.toml уже есть сервер revit, прописанный не TNov»</dt><dd>В настройках Codex уже есть сервер с именем revit, который ведёт не к TNov, например от другой надстройки. Плагин его не трогает. Удалите или переименуйте этот блок в <code>%USERPROFILE%\.codex\config.toml</code> и нажмите кнопку снова.</dd></div>
+      <div><dt>«Revit не ответил за 120 с»</dt><dd>В Revit открыт диалог, идёт синхронизация или другая команда. Освободите Revit и попросите повторить.</dd></div>
+      <div><dt>Нейросеть говорит, что такого инструмента нет</dt><dd>Инструмент выше вашего уровня доступа. Уровень видно в окне кнопки «Нейросетошная».</dd></div>
+      <div><dt>«Изменения отменены»</dt><dd>Скрипт вышел за права вашего уровня в этой модели, например попытался изменить 3D-элементы на уровне 1 или в локальной копии хранилища. Плагин отменил всё, что сделал скрипт. Нейросеть обычно сама предлагает другой путь; если нужен более высокий уровень, работайте в отсоединённой модели или обратитесь к BIM-менеджеру.</dd></div>
+      <div><dt>В Revit загружен другой MCP-коннектор</dt><dd>Окно «Нейросетошная» показывает красное предупреждение, если в Revit стоит сторонняя надстройка-коннектор. Её действия не ограничены уровнями TNov и не попадают в журнал. Отключите её в настройках Claude Code или Codex или удалите надстройку.</dd></div>
+      <div><dt>Открыто два Revit</dt><dd>Второй Revit получает порт 48885, он указан в окне «Нейросетошная». Claude работает с тем Revit, чей адрес записан в <code>.mcp.json</code>; для второго заведите отдельную папку со своим файлом. Codex работает с тем Revit, из которого последний раз нажимали «Подключить к Codex».</dd></div>
+      <div><dt>«Не удалось открыть порты»</dt><dd>Порты 48884–48893 заняты другими программами. Сообщите BIM-менеджеру.</dd></div>
+      <div><dt>Скрипт не компилируется в Revit 2022</dt><dd>В Revit 2022 скрипты собираются старым компилятором C# 5. Попросите переписать код без новых конструкций языка.</dd></div>
+    </dl>
+  </section>
+
+  <section>
+    <h2>Что сообщать</h2>
+    <p>По каждой находке отправьте BIM-менеджеру TNov:</p>
+    <ul class="plain">
+      <li>версию Revit и плагина (окно «Настройки»);</li>
+      <li>какой нейросетью пользовались: Claude или Codex;</li>
+      <li>ваш запрос дословно;</li>
+      <li>что ожидали и что получилось, со скриншотом;</li>
+      <li>скриншот окна «Нейросетошная» после нажатия «Проверить».</li>
+    </ul>
+  </section>
+
+  <footer>TNov · коннектор Revit — Claude и Codex (MCP), бета-версия. Коннектор принимает запросы только с вашего компьютера. Данные модели, которые прочитала нейросеть, уходят в Anthropic (Claude) или OpenAI (Codex) в составе вашего сеанса, как и всё, что вы пишете. Вызовы инструментов и тексты скриптов записываются в журнал TNov.</footer>
+</main>
+
+<script>
+document.querySelectorAll("[data-copy]").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    var pre = document.getElementById(btn.getAttribute("data-copy"));
+    var text = pre.textContent;
+    function done() { btn.textContent = "Скопировано"; setTimeout(function () { btn.textContent = "Копировать"; }, 1600); }
+    function fallback() {
+      var range = document.createRange(); range.selectNodeContents(pre);
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      btn.textContent = "Выделено — Ctrl+C";
+    }
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+  });
+});
+</script>

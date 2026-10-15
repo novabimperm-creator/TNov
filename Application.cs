@@ -233,9 +233,9 @@ namespace TNov
             }
             catch (Exception) { }
             #endregion
-            #region Коннектор Claude (MCP)
+            #region Коннекторы Claude и Codex (MCP)
             // ExternalEvent создаётся только в контексте Revit API — здесь, в OnStartup.
-            try { TNov.Mcp.ClaudeConnector.OnStartup(); }
+            try { TNov.Mcp.McpConnector.OnStartup(); }
             catch (Exception) { }
             #endregion
             #region Панель справки
@@ -559,15 +559,15 @@ namespace TNov
             _comboBox.AddItem(new ComboBoxMemberData("Тесты", "Тесты"));
             _comboBox.CurrentChanged += OnComboBoxCurrentChanged; //подписка на событие изменения выбора
 
-            // кнопка "Claude" — коннектор MCP
-            PushButtonData buttonDataClaude = new PushButtonData(nameof(TNov.Mcp.ClaudeConnectorCommand), "Claude", typeof(TNov.Mcp.ClaudeConnectorCommand).Assembly.Location, typeof(TNov.Mcp.ClaudeConnectorCommand).FullName)
+            // кнопка "Нейросетошная" — коннекторы MCP для Claude и Codex
+            PushButtonData buttonDataMcp = new PushButtonData(nameof(TNov.Mcp.McpConnectorCommand), "Нейросетошная", typeof(TNov.Mcp.McpConnectorCommand).Assembly.Location, typeof(TNov.Mcp.McpConnectorCommand).FullName)
             {
-                ToolTip = "Коннектор Revit — Claude (MCP): запуск, адрес подключения, уровень доступа.",
-                LongDescription = "Позволяет Claude читать открытую модель и, в зависимости от уровня доступа, менять параметры и выполнять скрипты.",
-                Image = TNov.Mcp.ClaudeConnector.Icon(16),
-                LargeImage = TNov.Mcp.ClaudeConnector.Icon(32)
+                ToolTip = "Коннекторы Revit — Claude и Codex (MCP): запуск, подключение, уровень доступа.",
+                LongDescription = "Позволяет Claude и Codex читать открытую модель и, в зависимости от уровня доступа, менять параметры и выполнять скрипты.",
+                Image = TNov.Mcp.McpConnector.Icon(16),
+                LargeImage = TNov.Mcp.McpConnector.Icon(32)
             };
-            panel0.AddItem(buttonDataClaude);
+            panel0.AddItem(buttonDataMcp);
 
 
             #endregion
@@ -1159,6 +1159,41 @@ namespace TNov
             buttonDataAM.SetContextualHelp(AMhelp);
 
             panelUtilsAR.AddItem(buttonDataAM);
+
+            // группа "Редактор окон" (WindowEditor, на тестировании)
+
+            PushButtonData buttonDataWEEdit = new PushButtonData(nameof(WindowEditor.RevitSide.EditWindowCommand), "Редактировать окно", typeof(WindowEditor.RevitSide.EditWindowCommand).Assembly.Location, typeof(WindowEditor.RevitSide.EditWindowCommand).FullName)
+            {
+                ToolTip = "Открыть схему выбранного окна в редакторе и перегенерировать семейство. Окна в группах обновятся автоматически."
+            };
+            PushButtonData buttonDataWENew = new PushButtonData(nameof(WindowEditor.RevitSide.NewWindowCommand), "Новое окно", typeof(WindowEditor.RevitSide.NewWindowCommand).Assembly.Location, typeof(WindowEditor.RevitSide.NewWindowCommand).FullName)
+            {
+                ToolTip = "Создать новое семейство окна по схеме и загрузить в проект."
+            };
+            PushButtonData buttonDataWECorner = new PushButtonData(nameof(WindowEditor.RevitSide.CornerWindowCommand), "Угловое окно", typeof(WindowEditor.RevitSide.CornerWindowCommand).Assembly.Location, typeof(WindowEditor.RevitSide.CornerWindowCommand).FullName)
+            {
+                ToolTip = "Два окна (или пустых проёма) у наружного угла 90°: выровнять к углу, поставить угловой соединитель, вырезать угол стен."
+            };
+            PushButtonData buttonDataWECheck = new PushButtonData(nameof(WindowEditor.RevitSide.CheckWindowsCommand), "Проверить окна", typeof(WindowEditor.RevitSide.CheckWindowsCommand).Assembly.Location, typeof(WindowEditor.RevitSide.CheckWindowsCommand).FullName)
+            {
+                ToolTip = "Найти отзеркаленные окна и окна, развёрнутые наружной стороной в помещение; исправить или выделить."
+            };
+
+            PulldownButtonData buttonDataWEgroup = new PulldownButtonData("WindowEditor", "Редактор\nокон")
+            {
+                ToolTip = "Редактор схем окон и балконных блоков: генерация семейства окна по схеме (на тестировании)."
+            };
+            RibbonIcons.Set(buttonDataWEgroup, nameof(Properties.Resources.CopyWindows16), nameof(Properties.Resources.CopyWindows32));
+            buttonDataWEgroup.SetContextualHelp(mainhelp);
+            PulldownButton groupWE = panelUtilsAR.AddItem(buttonDataWEgroup) as PulldownButton;
+            groupWE.AddPushButton(buttonDataWEEdit);
+            groupWE.AddPushButton(buttonDataWENew);
+            groupWE.AddPushButton(buttonDataWECorner);
+            groupWE.AddPushButton(buttonDataWECheck);
+            groupWE.AddPushButton(new PushButtonData(nameof(WindowEditor.RevitSide.UpdateAccessoriesCommand), "Комплектация", typeof(WindowEditor.RevitSide.UpdateAccessoriesCommand).Assembly.Location, typeof(WindowEditor.RevitSide.UpdateAccessoriesCommand).FullName)
+            {
+                ToolTip = "Подогнать подоконники, отливы и откосы под окна редактора и их стены: выбранные окна или вся модель (элементы без окна удаляются)."
+            });
 
             #endregion
 
@@ -1936,7 +1971,7 @@ namespace TNov
         #endregion
         public Result OnShutdown(UIControlledApplication application)
         {
-            try { TNov.Mcp.ClaudeConnector.OnShutdown(); }
+            try { TNov.Mcp.McpConnector.OnShutdown(); }
             catch (Exception) { }
 
             // Дописать журналы (usage, открытия, синхронизации); что не успело — сохранится локально.

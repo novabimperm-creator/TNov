@@ -10,11 +10,17 @@
     - tools/list возвращает один инструмент revit_status с подсказкой для пользователя;
     - как только коннектор отвечает, мост шлёт notifications/tools/list_changed — Claude перечитает инструменты.
 
-  Скрипт кладёт на диск и прописывает в claude_desktop_config.json сам плагин (кнопка в окне «Claude»).
-  В stdout пишутся только сообщения протокола; диагностика — в stderr (журнал MCP в Claude Desktop).
+  Скрипт кладёт на диск и прописывает сам плагин: в claude_desktop_config.json (окно «Claude»)
+  и в ~/.codex/config.toml с -Client Codex (окно «Codex»; коннектор Codex — адрес /codex).
+  В stdout пишутся только сообщения протокола; диагностика — в stderr (журнал MCP клиента)
+  и в %LOCALAPPDATA%\TNov\mcp\bridge.log: по нему видно, запускает ли клиент мост вообще.
+  У приложений из Microsoft Store запись в AppData может уйти в папку пакета
+  (%LOCALAPPDATA%\Packages\<пакет>\LocalCache\Local\TNov\mcp) — «Проверить» в Revit ищет и там.
 #>
 param(
-    [int]$Port = 48884
+    [int]$Port = 48884,
+    [ValidateSet('Claude', 'Codex')]
+    [string]$Client = 'Claude'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -25,12 +31,24 @@ $stdin = New-Object System.IO.StreamReader([Console]::OpenStandardInput(), $utf8
 $stdout = New-Object System.IO.StreamWriter([Console]::OpenStandardOutput(), $utf8)
 $stdout.AutoFlush = $true
 
-$url = "http://localhost:$Port/mcp"
+$path = if ($Client -eq 'Codex') { 'codex' } else { 'mcp' }
+$url = "http://localhost:$Port/$path"
 $script:revitUp = $false
 $script:announcedDown = $false
 
+$logPath = Join-Path $env:LOCALAPPDATA 'TNov\mcp\bridge.log'
+
 function Log([string]$text) {
     [Console]::Error.WriteLine("[tnov-revit bridge] $text")
+    # Журнал не должен ломать мост: любые ошибки записи игнорируем.
+    try {
+        $dir = Split-Path $logPath
+        if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+        if ((Test-Path $logPath) -and (Get-Item $logPath).Length -gt 512KB) { Move-Item $logPath "$logPath.old" -Force }
+        $line = "{0:yyyy-MM-dd HH:mm:ss} [{1} pid {2}] {3}`r`n" -f (Get-Date), $Client, $PID, $text
+        [System.IO.File]::AppendAllText($logPath, $line, $utf8)
+    }
+    catch { }
 }
 
 function Send([string]$json) {
@@ -85,7 +103,7 @@ function IdJson($id) {
     return ($id | ConvertTo-Json -Compress)
 }
 
-$downMessage = "Revit с коннектором TNov не отвечает. Откройте Revit, нажмите на ленте TNov → Настройки → Claude и повторите запрос."
+$downMessage = "Revit с коннектором TNov не отвечает. Откройте Revit, нажмите на ленте TNov кнопку «Нейросетошная» и повторите запрос."
 
 function Local-Response([string]$method, $id) {
     $idJson = IdJson $id
@@ -115,6 +133,13 @@ function Local-Response([string]$method, $id) {
 function Handle([string]$line) {
     $method = Get-Method $line
     $id = Get-Id $line
+    if ($method -eq 'initialize') {
+        try { $info = ($line | ConvertFrom-Json).params.clientInfo; Log "initialize от $($info.name) $($info.version)" } catch { Log 'initialize' }
+    }
+    elseif ($method -eq 'tools/list') { Log 'tools/list' }
+    elseif ($method -eq 'tools/call') {
+        try { Log "tools/call $(($line | ConvertFrom-Json).params.name)" } catch { Log 'tools/call' }
+    }
     try {
         # Скрипты в Revit могут работать до 10 минут — ждём чуть дольше.
         $r = Post $line 660000
@@ -132,23 +157,30 @@ function Handle([string]$line) {
     }
 }
 
-Log "запущен, коннектор: $url"
+Log "запущен, коннектор: $url (PowerShell $($PSVersionTable.PSVersion))"
 $script:revitUp = Test-Revit
-if (-not $script:revitUp) { Log 'коннектор пока не отвечает — жду запуска Revit' }
+if ($script:revitUp) { Log 'коннектор в Revit отвечает' }
+else { Log 'коннектор пока не отвечает — жду запуска Revit' }
 
-while ($true) {
-    $task = $stdin.ReadLineAsync()
-    # Пока ждём сообщения от Claude, раз в 5 секунд проверяем, не запустили ли коннектор.
-    while (-not $task.Wait(5000)) {
-        if (-not $script:revitUp -and $script:announcedDown -and (Test-Revit)) {
-            $script:revitUp = $true
-            $script:announcedDown = $false
-            Log 'коннектор запустился — сообщаю Claude о новых инструментах'
-            Send '{"jsonrpc":"2.0","method":"notifications/tools/list_changed"}'
+try {
+    while ($true) {
+        $task = $stdin.ReadLineAsync()
+        # Пока ждём сообщения от клиента, раз в 5 секунд проверяем, не запустили ли коннектор.
+        while (-not $task.Wait(5000)) {
+            if (-not $script:revitUp -and $script:announcedDown -and (Test-Revit)) {
+                $script:revitUp = $true
+                $script:announcedDown = $false
+                Log "коннектор запустился — сообщаю $Client о новых инструментах"
+                Send '{"jsonrpc":"2.0","method":"notifications/tools/list_changed"}'
+            }
         }
+        $line = $task.Result
+        if ($null -eq $line) { Log 'клиент закрыл соединение — выход'; break }
+        if ($line.Trim().Length -eq 0) { continue }
+        Handle $line
     }
-    $line = $task.Result
-    if ($null -eq $line) { break }   # Claude Desktop закрыл stdin — выходим
-    if ($line.Trim().Length -eq 0) { continue }
-    Handle $line
+}
+catch {
+    Log "аварийное завершение: $($_.Exception.Message)"
+    throw
 }

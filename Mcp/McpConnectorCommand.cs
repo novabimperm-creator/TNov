@@ -13,8 +13,8 @@ using System.Windows.Media.Imaging;
 
 namespace TNov.Mcp
 {
-    /// <summary>Запуск/остановка коннектора и связь с жизненным циклом плагина.</summary>
-    internal static class ClaudeConnector
+    /// <summary>Запуск/остановка коннекторов Claude и Codex и связь с жизненным циклом плагина.</summary>
+    internal static class McpConnector
     {
         public static void OnStartup()
         {
@@ -23,7 +23,10 @@ namespace TNov.Mcp
 
         public static void OnShutdown() => McpServer.Stop();
 
-        public static string ConnectCommand => $"claude mcp add --transport http --scope user revit {McpServer.Url}";
+        /// <summary>Ручное подключение (один раз на компьютере): для Claude — команда терминала, для Codex — блок config.toml.</summary>
+        public static string ConnectCommand(McpClient client) => client == McpClient.Codex
+            ? CodexSetup.Block(McpServer.IsRunning ? McpServer.Port : McpAccess.Local.Port).TrimEnd()
+            : $"claude mcp add --transport http --scope user revit {McpServer.UrlFor(client)}";
 
         /// <summary>
         /// Другие MCP-коннекторы, загруженные в Revit (по именам и папкам сборок со словом «mcp»
@@ -32,7 +35,7 @@ namespace TNov.Mcp
         public static List<string> OtherMcpAddins()
         {
             var found = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
-            Assembly own = typeof(ClaudeConnector).Assembly;
+            Assembly own = typeof(McpConnector).Assembly;
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 try
@@ -52,23 +55,25 @@ namespace TNov.Mcp
             return found.ToList();
         }
 
-        /// <summary>Значок кнопки: рисуется в коде, чтобы не заводить ресурс под один значок.</summary>
+        /// <summary>Значок кнопки «Нейросетошная» — узлы нейросети; рисуется в коде, чтобы не заводить ресурс под один значок.</summary>
         public static BitmapSource Icon(int size)
         {
             var visual = new DrawingVisual();
             using (DrawingContext dc = visual.RenderOpen())
             {
-                var background = new SolidColorBrush(Color.FromRgb(0xD9, 0x77, 0x57));
+                var background = new SolidColorBrush(Color.FromRgb(0x6E, 0x56, 0xCF));
                 dc.DrawRoundedRectangle(background, null, new Rect(0, 0, size, size), size * 0.2, size * 0.2);
-                var pen = new Pen(Brushes.White, size * 0.11) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round };
-                var center = new Point(size / 2.0, size / 2.0);
-                double r = size * 0.32;
-                for (int i = 0; i < 4; i++)
-                {
-                    double a = Math.PI / 4 * i;
-                    var d = new Vector(Math.Cos(a) * r, Math.Sin(a) * r);
-                    dc.DrawLine(pen, center - d, center + d);
-                }
+                var pen = new Pen(Brushes.White, Math.Max(1, size * 0.07));
+                Point[] inputs = { new Point(size * 0.25, size * 0.28), new Point(size * 0.25, size * 0.72) };
+                Point[] hidden = { new Point(size * 0.5, size * 0.2), new Point(size * 0.5, size * 0.5), new Point(size * 0.5, size * 0.8) };
+                var output = new Point(size * 0.77, size * 0.5);
+                foreach (Point a in inputs)
+                    foreach (Point b in hidden)
+                        dc.DrawLine(pen, a, b);
+                foreach (Point b in hidden) dc.DrawLine(pen, b, output);
+                double r = size * 0.09;
+                foreach (Point p in inputs.Concat(hidden).Concat(new[] { output }))
+                    dc.DrawEllipse(Brushes.White, null, p, r, r);
             }
             var bitmap = new RenderTargetBitmap(size, size, 96, 96, PixelFormats.Pbgra32);
             bitmap.Render(visual);
@@ -77,41 +82,45 @@ namespace TNov.Mcp
         }
     }
 
+    /// <summary>Кнопка «Нейросетошная»: общее окно коннекторов Claude и Codex.</summary>
     [Transaction(TransactionMode.Manual)]
-    public class ClaudeConnectorCommand : IExternalCommand
+    public class McpConnectorCommand : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, Autodesk.Revit.DB.ElementSet elements)
         {
             if (!McpAccess.Enabled)
             {
                 McpServer.Stop();
-                new InfoWindow280("Коннектор Claude отключён администратором.").ShowDialog();
+                new InfoWindow280("Коннекторы нейросетей отключены администратором.").ShowDialog();
                 return Result.Succeeded;
             }
+
+            // Мост у пользователя мог остаться от прошлой версии TNov.
+            ClaudeDesktopSetup.RefreshBridgeIfInstalled();
 
             if (!McpServer.IsRunning)
             {
                 try { McpServer.Start(McpAccess.Local.Port); }
                 catch (Exception ex)
                 {
-                    TaskDialog.Show("TNov — Claude", "Не удалось запустить коннектор:\n" + ex.Message);
+                    TaskDialog.Show("TNov — нейросети", "Не удалось запустить коннектор:\n" + ex.Message);
                     return Result.Failed;
                 }
             }
 
-            // Немодально: пока окно открыто, Revit должен выполнять запросы Claude.
+            // Немодально: пока окно открыто, Revit должен выполнять запросы Claude и Codex.
             if (_window != null)
             {
                 _window.Activate();
                 return Result.Succeeded;
             }
-            _window = new ClaudeConnectorWPF();
+            _window = new McpConnectorWPF();
             new WindowInteropHelper(_window) { Owner = commandData.Application.MainWindowHandle };
             _window.Closed += (s, e) => _window = null;
             _window.Show();
             return Result.Succeeded;
         }
 
-        private static ClaudeConnectorWPF _window;
+        private static McpConnectorWPF _window;
     }
 }

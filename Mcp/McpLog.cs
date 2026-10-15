@@ -14,7 +14,7 @@ namespace TNov.Mcp
     ///   {ServerPath}mcp\{логин}.txt — строка на каждый вызов инструмента (через ServerOutbox: переживает недоступность шары);
     ///   {ServerPath}mcp\scripts\{логин}_{время}.cs — полный текст каждого C#-скрипта
     ///   (нет доступа к шаре — %LOCALAPPDATA%\TNov\mcp-scripts).
-    /// Формат строки: дата;логин;модель;тип модели;уровень выбранный/доступный;уровень в модели;инструмент;итог;аргументы.
+    /// Формат строки: дата;логин;модель;тип модели;уровень выбранный/доступный;уровень в модели;инструмент;итог;аргументы;коннектор (Claude/Codex).
     /// </summary>
     internal static class McpLog
     {
@@ -26,6 +26,7 @@ namespace TNov.Mcp
             public string Model = "-";
             public string Kind = "-";
             public int EffectiveLevel;
+            public string Client = "-";
         }
 
         public static void Write(string tool, JObject args, Context context, string outcome, string scriptFile)
@@ -47,7 +48,8 @@ namespace TNov.Mcp
                     context?.EffectiveLevel ?? 0,
                     tool,
                     Clean(outcome),
-                    Clean(argsText));
+                    Clean(argsText),
+                    Clean(context?.Client));
                 ServerOutbox.AppendLine("mcp/" + Environment.UserName + ".txt", line);
             }
             catch (Exception) { } // журнал не должен ломать работу Claude

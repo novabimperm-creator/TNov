@@ -120,18 +120,25 @@
                     </StackPanel>
                 </ToggleButton>
 
-                <TextBlock Text="Коннектор Claude"
+                <TextBlock Text="Нейросети (Claude, Codex)"
                            Style="{StaticResource SectionTitleStyle}"/>
 
+                <!-- Упрощённо: статус коннекторов и уровень; подключение и выбор уровня — в окне кнопки «Нейросетошная». -->
                 <Border x:Name="McpCard" Style="{StaticResource InfoCardBorderStyle}" Margin="0,0,0,10">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="10" Height="10" Fill="{Binding StatusBrush}"
+                            <Ellipse Width="10" Height="10" Fill="{Binding Claude.StatusBrush}"
                                      VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="{Binding StatusText}" Style="{StaticResource InfoCardValueStyle}"
+                            <TextBlock Text="{Binding Claude.StatusText}" Style="{StaticResource InfoCardValueStyle}"
                                        TextWrapping="Wrap"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding Details}" Style="{StaticResource InfoCardLabelStyle}"
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <Ellipse Width="10" Height="10" Fill="{Binding Codex.StatusBrush}"
+                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding Codex.StatusText}" Style="{StaticResource InfoCardValueStyle}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding LevelSummary}" Style="{StaticResource InfoCardLabelStyle}"
                                    TextWrapping="Wrap" Margin="0,6,0,0"/>
                         <TextBlock Text="{Binding OtherMcpWarning}" TextWrapping="Wrap" FontSize="12"
                                    Foreground="{StaticResource ElementErrorBrush}" Margin="0,6,0,0">
@@ -145,13 +152,6 @@
                                 </Style>
                             </TextBlock.Style>
                         </TextBlock>
-                        <StackPanel Visibility="{Binding CanChooseLevel, Converter={StaticResource BoolToVis}}" Margin="0,8,0,0">
-                            <TextBlock Text="{Binding LevelChoiceLabel}"
-                                       Style="{StaticResource InfoCardLabelStyle}" TextWrapping="Wrap" Margin="0,0,0,4"/>
-                            <ComboBox Style="{StaticResource DarkComboBoxStyle}"
-                                      ItemsSource="{Binding LevelOptions}"
-                                      SelectedItem="{Binding SelectedLevel, Mode=TwoWay}"/>
-                        </StackPanel>
                         <TextBlock Text="{Binding CheckResult}"
                                    TextWrapping="Wrap" Margin="0,6,0,0">
                             <TextBlock.Style>

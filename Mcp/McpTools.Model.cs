@@ -109,7 +109,7 @@ namespace TNov.Mcp
 
                 case "ifc":
                     // Экспорт IFC требует открытой транзакции; изменений в модели не оставляем.
-                    using (var t = new Transaction(doc, "Claude: экспорт IFC"))
+                    using (var t = new Transaction(doc, McpClient.Current.Name + ": экспорт IFC"))
                     {
                         t.Start();
                         var options = new IFCExportOptions();
@@ -169,7 +169,7 @@ namespace TNov.Mcp
 
             var created = new JArray();
             var warnings = new List<string>();
-            using (var t = new Transaction(doc, "Claude: размещение элементов"))
+            using (var t = new Transaction(doc, McpClient.Current.Name + ": размещение элементов"))
             {
                 t.Start();
                 SuppressWarnings(t, warnings);
@@ -206,7 +206,7 @@ namespace TNov.Mcp
             }
 
             var warnings = new List<string>();
-            using (var t = new Transaction(doc, "Claude: перемещение элементов"))
+            using (var t = new Transaction(doc, McpClient.Current.Name + ": перемещение элементов"))
             {
                 t.Start();
                 SuppressWarnings(t, warnings);
@@ -224,7 +224,7 @@ namespace TNov.Mcp
 
             ICollection<ElementId> deleted;
             var warnings = new List<string>();
-            using (var t = new Transaction(doc, "Claude: удаление элементов"))
+            using (var t = new Transaction(doc, McpClient.Current.Name + ": удаление элементов"))
             {
                 t.Start();
                 SuppressWarnings(t, warnings);

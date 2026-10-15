@@ -1,4 +1,4 @@
-<Window x:Class="TNov.Mcp.ClaudeConnectorWPF"
+<Window x:Class="TNov.Mcp.McpConnectorWPF"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -52,14 +52,15 @@
             Background="{StaticResource BgBrush}"
             BorderBrush="{StaticResource AccentBrush}"
             BorderThickness="1">
-        <StackPanel Margin="18">
-            <Border MouseDown="TitleBar_MouseDown" Background="Transparent">
+        <!-- Окно не выше рабочей области экрана (MaxHeight в коде), содержимое под заголовком прокручивается. -->
+        <DockPanel Margin="18">
+            <Border DockPanel.Dock="Top" MouseDown="TitleBar_MouseDown" Background="Transparent">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="35"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="CLAUDE"
+                    <TextBlock Text="НЕЙРОСЕТОШНАЯ"
                                Foreground="{StaticResource AccentBrush}"
                                FontSize="22"
                                FontWeight="Bold"
@@ -73,18 +74,45 @@
                 </Grid>
             </Border>
 
-            <StackPanel Margin="0,16,0,0">
-                <!-- Статус -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,16,0,0">
+            <StackPanel>
+                <!-- Статус: по строке на коннектор -->
                 <Border Style="{StaticResource InfoCardBorderStyle}" Margin="0,0,0,10">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="10" Height="10" Fill="{Binding StatusBrush}"
+                            <Ellipse Width="10" Height="10" Fill="{Binding Claude.StatusBrush}"
                                      VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="{Binding StatusText}" Style="{StaticResource InfoCardValueStyle}"
+                            <TextBlock Text="{Binding Claude.StatusText}" Style="{StaticResource InfoCardValueStyle}"
                                        TextWrapping="Wrap"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding Activity}" Style="{StaticResource InfoCardLabelStyle}"
-                                   TextWrapping="Wrap" Margin="18,4,0,0"/>
+                        <TextBlock Text="{Binding Claude.Activity}" TextWrapping="Wrap" Margin="18,2,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource InfoCardLabelStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Claude.Activity}" Value="">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Ellipse Width="10" Height="10" Fill="{Binding Codex.StatusBrush}"
+                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding Codex.StatusText}" Style="{StaticResource InfoCardValueStyle}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Codex.Activity}" TextWrapping="Wrap" Margin="18,2,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource InfoCardLabelStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Codex.Activity}" Value="">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </StackPanel>
                 </Border>
 
@@ -163,28 +191,58 @@
                 </StackPanel>
 
                 <!-- Подключение -->
-                <TextBlock Text="Подключение в Claude Code" Style="{StaticResource SectionTitleStyle}"/>
+                <TextBlock Text="Claude" Style="{StaticResource SectionTitleStyle}"/>
                 <Border Style="{StaticResource InfoCardBorderStyle}" Margin="0,0,0,10">
                     <StackPanel>
                         <TextBlock Text="Адрес" Style="{StaticResource InfoCardLabelStyle}"/>
-                        <TextBox Text="{Binding Url, Mode=OneWay}" IsReadOnly="True"
+                        <TextBox Text="{Binding Claude.Url, Mode=OneWay}" IsReadOnly="True"
                                  Background="Transparent" BorderThickness="0"
                                  Foreground="{StaticResource PrimaryTextBrush}"
                                  FontFamily="Consolas" Margin="0,2,0,8"/>
-                        <TextBlock Text="Команда для терминала (один раз на компьютере)" Style="{StaticResource InfoCardLabelStyle}"/>
-                        <TextBox Text="{Binding ConnectCommand, Mode=OneWay}" IsReadOnly="True"
+                        <TextBlock Text="Claude Code — выполните в PowerShell (не в чате Claude), один раз на компьютере" TextWrapping="Wrap"
+                                   Style="{StaticResource InfoCardLabelStyle}"/>
+                        <TextBox Text="{Binding Claude.ConnectCommand, Mode=OneWay}" IsReadOnly="True"
                                  Background="Transparent" BorderThickness="0" TextWrapping="Wrap"
                                  Foreground="{StaticResource PrimaryTextBrush}"
                                  FontFamily="Consolas" Margin="0,2,0,8"/>
-                        <Button Content="Скопировать команду"
-                                Style="{StaticResource CloseButtonStyle}"
-                                Click="CopyButton_Click"/>
-                        <TextBlock Text="Обычный чат Claude Desktop (без Claude Code)" Style="{StaticResource InfoCardLabelStyle}"
-                                   TextWrapping="Wrap" Margin="0,4,0,4"/>
-                        <Button Content="Подключить к Claude Desktop"
-                                Style="{StaticResource CloseButtonStyle}"
-                                Margin="0"
-                                Click="DesktopButton_Click"/>
+                        <UniformGrid Columns="2">
+                            <Button Content="Скопировать команду"
+                                    Style="{StaticResource CloseButtonStyle}"
+                                    Margin="0,0,4,0"
+                                    Click="CopyClaudeButton_Click"/>
+                            <Button Content="Claude Desktop"
+                                    ToolTip="Обычный чат Claude Desktop (без Claude Code): прописать мост в настройки приложения"
+                                    Style="{StaticResource CloseButtonStyle}"
+                                    Margin="4,0,0,0"
+                                    Click="DesktopButton_Click"/>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="Codex" Style="{StaticResource SectionTitleStyle}"/>
+                <Border Style="{StaticResource InfoCardBorderStyle}" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock Text="Адрес" Style="{StaticResource InfoCardLabelStyle}"/>
+                        <TextBox Text="{Binding Codex.Url, Mode=OneWay}" IsReadOnly="True"
+                                 Background="Transparent" BorderThickness="0"
+                                 Foreground="{StaticResource PrimaryTextBrush}"
+                                 FontFamily="Consolas" Margin="0,2,0,8"/>
+                        <TextBlock Text="«Подключить к Codex» прописывает коннектор в %USERPROFILE%\.codex\config.toml (программа для терминала, расширение IDE и приложение Codex). Права администратора не нужны. Вручную: вставьте этот блок в конец того же файла в Блокноте. Не отправляйте его в чат Codex."
+                                   TextWrapping="Wrap" Style="{StaticResource InfoCardLabelStyle}"/>
+                        <TextBox Text="{Binding Codex.ConnectCommand, Mode=OneWay}" IsReadOnly="True"
+                                 Background="Transparent" BorderThickness="0" TextWrapping="Wrap"
+                                 Foreground="{StaticResource PrimaryTextBrush}"
+                                 FontFamily="Consolas" Margin="0,2,0,8"/>
+                        <UniformGrid Columns="2">
+                            <Button Content="Скопировать блок"
+                                    Style="{StaticResource CloseButtonStyle}"
+                                    Margin="0,0,4,0"
+                                    Click="CopyCodexButton_Click"/>
+                            <Button Content="Подключить к Codex"
+                                    Style="{StaticResource CloseButtonStyle}"
+                                    Margin="4,0,0,0"
+                                    Click="CodexButton_Click"/>
+                        </UniformGrid>
                     </StackPanel>
                 </Border>
 
@@ -215,10 +273,11 @@
                         Margin="0"
                         Click="CloseButton_Click"/>
 
-                <TextBlock Text="Claude работает с активным документом. Изменения отменяются Ctrl+Z."
+                <TextBlock Text="Claude и Codex работают с активным документом. Изменения отменяются Ctrl+Z."
                            Style="{StaticResource InfoCardLabelStyle}"
-                           HorizontalAlignment="Center" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                           HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,10,0,0"/>
             </StackPanel>
-        </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
     </Border>
 </Window>

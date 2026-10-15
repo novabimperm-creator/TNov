@@ -19,7 +19,7 @@ namespace TNov
             InitializeComponent();
             DataContext = viewModel;
 
-            // Блок «Коннектор Claude» живёт своей моделью и обновляется, пока окно открыто.
+            // Блок «Нейросети» живёт своей моделью и обновляется, пока окно открыто.
             McpCard.DataContext = _mcpStatus;
             Loaded += (s, e) => _mcpStatus.StartMonitoring();
             Closed += (s, e) => _mcpStatus.StopMonitoring();

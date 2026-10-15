@@ -337,20 +337,20 @@ namespace TNov.Mcp
             }));
         }
 
-        public static JObject Call(JObject parameters)
+        public static JObject Call(JObject parameters, McpClient client)
         {
             string name = (string)parameters?["name"];
             JObject args = parameters?["arguments"] as JObject ?? new JObject();
             Tool tool = _tools.FirstOrDefault(t => t.Name == name);
             if (tool == null) return TextResult("Неизвестный инструмент: " + name, true);
             int level = McpAccess.Level;
-            var context = new McpLog.Context { EffectiveLevel = level };
+            var context = new McpLog.Context { EffectiveLevel = level, Client = client.Name };
             if (tool.Level > level)
             {
                 McpLog.Write(name, args, context, "отказ: уровень пользователя " + level, null);
                 return TextResult(
                     $"Инструмент {name} требует уровня доступа {tool.Level}, выбран {McpAccess.LevelName(level)}." +
-                    (McpAccess.MaxLevel >= tool.Level ? " Пользователь может переключить уровень в окне кнопки Claude, затем начать новый сеанс." : ""), true);
+                    (McpAccess.MaxLevel >= tool.Level ? $" Пользователь может переключить уровень в окне кнопки «Нейросетошная», затем начать новый сеанс." : ""), true);
             }
             string scriptFile = name == "execute_csharp" ? McpLog.SaveScript(args["code"]?.ToString()) : null;
 
@@ -359,6 +359,8 @@ namespace TNov.Mcp
                 object result = tool.NeedsRevit
                     ? RevitDispatcher.Invoke(app =>
                     {
+                        // Имена транзакций и диалог скрипта называют коннектор этого вызова.
+                        McpClient.Current = client;
                         Document doc = app.ActiveUIDocument?.Document;
                         CaptureContext(app, doc, context);
                         if (tool.Level > context.EffectiveLevel)
@@ -380,7 +382,7 @@ namespace TNov.Mcp
                 if (result is JObject declined && declined["declined"] != null) outcome = "отклонено пользователем";
                 McpLog.Write(name, args, context, outcome, scriptFile);
 
-                McpActivity.OnToolCall(name, null);
+                client.Activity.OnToolCall(name, null);
                 int? raised = McpAccess.RegisterSuccessfulCall();
                 if (raised != null)
                 {
@@ -388,7 +390,8 @@ namespace TNov.Mcp
                     {
                         ["type"] = "text",
                         ["text"] = $"Уровень доступа пользователя повышен до {McpAccess.LevelName(raised.Value)}. " +
-                                   "Сообщите пользователю: новые инструменты появятся после переподключения коннектора (команда /mcp или новый сеанс)."
+                                   "Сообщите пользователю: новые инструменты появятся после переподключения коннектора (" +
+                                   (client == McpClient.Codex ? "новый сеанс Codex" : "команда /mcp или новый сеанс") + ")."
                     });
                 }
                 return new JObject { ["content"] = content, ["isError"] = false };
@@ -396,7 +399,7 @@ namespace TNov.Mcp
             catch (Exception ex)
             {
                 McpLog.Write(name, args, context, "ошибка: " + ex.Message, scriptFile);
-                McpActivity.OnToolCall(name, ex.Message);
+                client.Activity.OnToolCall(name, ex.Message);
                 return TextResult(ex.Message, true);
             }
         }
@@ -459,7 +462,7 @@ namespace TNov.Mcp
                     ["scriptRights"] = ScriptRunner.ScopeText(McpAccess.ScriptScopeFor(doc)),
                     ["restriction"] = McpAccess.RestrictionReason(doc),
                     // Claude должен знать, что изменения через другой коннектор обходят уровни TNov.
-                    ["otherMcpConnectors"] = new JArray(ClaudeConnector.OtherMcpAddins())
+                    ["otherMcpConnectors"] = new JArray(McpConnector.OtherMcpAddins())
                 },
                 ["projectInfo"] = projectInfo,
                 ["levels"] = new JArray(new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>()
@@ -636,7 +639,7 @@ namespace TNov.Mcp
             var warnings = new List<string>();
             int succeeded = 0;
 
-            using (var t = new Transaction(doc, Str(args, "transaction_name") ?? "Claude: изменение параметров"))
+            using (var t = new Transaction(doc, Str(args, "transaction_name") ?? McpClient.Current.Name + ": изменение параметров"))
             {
                 t.Start();
                 SuppressWarnings(t, warnings);
@@ -716,7 +719,7 @@ namespace TNov.Mcp
             View view = uidoc.ActiveView;
             string mode = (Str(args, "mode") ?? "").ToLowerInvariant();
 
-            using (var t = new Transaction(doc, "Claude: временная изоляция"))
+            using (var t = new Transaction(doc, McpClient.Current.Name + ": временная изоляция"))
             {
                 t.Start();
                 switch (mode)
