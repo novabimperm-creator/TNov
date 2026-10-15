@@ -11,7 +11,8 @@
     - как только коннектор отвечает, мост шлёт notifications/tools/list_changed — Claude перечитает инструменты.
 
   Скрипт кладёт на диск и прописывает сам плагин: в claude_desktop_config.json (окно «Claude»)
-  и в ~/.codex/config.toml с -Client Codex (окно «Codex»; коннектор Codex — адрес /codex).
+  и в ~/.codex/config.toml с -Client Codex (окно «Codex»; коннектор Codex — адрес /codex),
+  и в ~/.qwen/settings.json с -Client Qwen (коннектор Qwen Code — адрес /qwen).
   В stdout пишутся только сообщения протокола; диагностика — в stderr (журнал MCP клиента)
   и в %LOCALAPPDATA%\TNov\mcp\bridge.log: по нему видно, запускает ли клиент мост вообще.
   У приложений из Microsoft Store запись в AppData может уйти в папку пакета
@@ -19,7 +20,7 @@
 #>
 param(
     [int]$Port = 48884,
-    [ValidateSet('Claude', 'Codex')]
+    [ValidateSet('Claude', 'Codex', 'Qwen')]
     [string]$Client = 'Claude'
 )
 
@@ -31,7 +32,7 @@ $stdin = New-Object System.IO.StreamReader([Console]::OpenStandardInput(), $utf8
 $stdout = New-Object System.IO.StreamWriter([Console]::OpenStandardOutput(), $utf8)
 $stdout.AutoFlush = $true
 
-$path = if ($Client -eq 'Codex') { 'codex' } else { 'mcp' }
+$path = switch ($Client) { 'Codex' { 'codex' } 'Qwen' { 'qwen' } default { 'mcp' } }
 $url = "http://localhost:$Port/$path"
 $script:revitUp = $false
 $script:announcedDown = $false

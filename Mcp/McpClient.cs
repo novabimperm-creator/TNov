@@ -3,15 +3,16 @@ using System;
 namespace TNov.Mcp
 {
     /// <summary>
-    /// Коннектор (клиент) сервера: Claude ходит на /mcp, Codex — на /codex.
+    /// Коннектор (клиент) сервера: Claude ходит на /mcp, Codex — на /codex, Qwen Code — на /qwen.
     /// Инструменты и уровень доступа общие, отдельно ведутся статус, счётчики и столбец журнала.
     /// </summary>
     internal sealed class McpClient
     {
         public static readonly McpClient Claude = new McpClient("Claude", "/mcp");
         public static readonly McpClient Codex = new McpClient("Codex", "/codex");
+        public static readonly McpClient Qwen = new McpClient("Qwen", "/qwen");
 
-        public static readonly McpClient[] All = { Claude, Codex };
+        public static readonly McpClient[] All = { Claude, Codex, Qwen };
 
         /// <summary>Коннектор вызова, который выполняется сейчас на потоке Revit (вызовы там идут по одному).</summary>
         public static McpClient Current { get; set; } = Claude;

@@ -23,10 +23,17 @@ namespace TNov.Mcp
 
         public static void OnShutdown() => McpServer.Stop();
 
-        /// <summary>Ручное подключение (один раз на компьютере): для Claude — команда терминала, для Codex — блок config.toml.</summary>
-        public static string ConnectCommand(McpClient client) => client == McpClient.Codex
-            ? CodexSetup.Block(McpServer.IsRunning ? McpServer.Port : McpAccess.Local.Port).TrimEnd()
-            : $"claude mcp add --transport http --scope user revit {McpServer.UrlFor(client)}";
+        /// <summary>
+        /// Ручное подключение (один раз на компьютере): для Claude — команда терминала,
+        /// для Codex — блок config.toml, для Qwen Code — фрагмент settings.json.
+        /// </summary>
+        public static string ConnectCommand(McpClient client)
+        {
+            int port = McpServer.IsRunning ? McpServer.Port : McpAccess.Local.Port;
+            if (client == McpClient.Codex) return CodexSetup.Block(port).TrimEnd();
+            if (client == McpClient.Qwen) return QwenSetup.Snippet(port);
+            return $"claude mcp add --transport http --scope user revit {McpServer.UrlFor(client)}";
+        }
 
         /// <summary>
         /// Другие MCP-коннекторы, загруженные в Revit (по именам и папкам сборок со словом «mcp»

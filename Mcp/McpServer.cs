@@ -11,7 +11,7 @@ namespace TNov.Mcp
     /// <summary>
     /// MCP-сервер (транспорт Streamable HTTP, ответы обычным JSON без SSE) внутри Revit.
     /// Слушает только петлевые адреса 127.0.0.1 и [::1] (LoopbackHttp): http://localhost:{порт}/mcp — Claude,
-    /// http://localhost:{порт}/codex — Codex (см. McpClient). Из сети порт не открыт.
+    /// http://localhost:{порт}/codex — Codex, http://localhost:{порт}/qwen — Qwen Code (см. McpClient). Из сети порт не открыт.
     /// </summary>
     internal static class McpServer
     {

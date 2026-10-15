@@ -559,11 +559,11 @@ namespace TNov
             _comboBox.AddItem(new ComboBoxMemberData("Тесты", "Тесты"));
             _comboBox.CurrentChanged += OnComboBoxCurrentChanged; //подписка на событие изменения выбора
 
-            // кнопка "Нейросетошная" — коннекторы MCP для Claude и Codex
+            // кнопка "Нейросетошная" — коннекторы MCP для Claude, Codex и Qwen
             PushButtonData buttonDataMcp = new PushButtonData(nameof(TNov.Mcp.McpConnectorCommand), "Нейросетошная", typeof(TNov.Mcp.McpConnectorCommand).Assembly.Location, typeof(TNov.Mcp.McpConnectorCommand).FullName)
             {
-                ToolTip = "Коннекторы Revit — Claude и Codex (MCP): запуск, подключение, уровень доступа.",
-                LongDescription = "Позволяет Claude и Codex читать открытую модель и, в зависимости от уровня доступа, менять параметры и выполнять скрипты.",
+                ToolTip = "Коннекторы Revit — Claude, Codex и Qwen (MCP): запуск, подключение, уровень доступа.",
+                LongDescription = "Позволяет Claude, Codex и Qwen читать открытую модель и, в зависимости от уровня доступа, менять параметры и выполнять скрипты.",
                 Image = TNov.Mcp.McpConnector.Icon(16),
                 LargeImage = TNov.Mcp.McpConnector.Icon(32)
             };

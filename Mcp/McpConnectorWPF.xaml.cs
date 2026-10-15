@@ -3,7 +3,7 @@ using System.Windows.Input;
 
 namespace TNov.Mcp
 {
-    /// <summary>Окно кнопки «Нейросетошная»: состояние коннекторов Claude и Codex, общий уровень доступа, подключение.</summary>
+    /// <summary>Окно кнопки «Нейросетошная»: состояние коннекторов Claude, Codex и Qwen, общий уровень доступа, подключение.</summary>
     public partial class McpConnectorWPF : Window
     {
         private readonly McpStatusViewModel _status = new McpStatusViewModel();
@@ -25,6 +25,10 @@ namespace TNov.Mcp
         private void DesktopButton_Click(object sender, RoutedEventArgs e) => _status.ConnectClaudeDesktop();
 
         private void CodexButton_Click(object sender, RoutedEventArgs e) => _status.ConnectCodex();
+
+        private void CopyQwenButton_Click(object sender, RoutedEventArgs e) => _status.CopyConnectCommand(_status.Qwen);
+
+        private void QwenButton_Click(object sender, RoutedEventArgs e) => _status.ConnectQwen();
 
         private void CheckButton_Click(object sender, RoutedEventArgs e) => _status.Check();
 

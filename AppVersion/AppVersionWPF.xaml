@@ -120,7 +120,7 @@
                     </StackPanel>
                 </ToggleButton>
 
-                <TextBlock Text="Нейросети (Claude, Codex)"
+                <TextBlock Text="Нейросети (Claude, Codex, Qwen)"
                            Style="{StaticResource SectionTitleStyle}"/>
 
                 <!-- Упрощённо: статус коннекторов и уровень; подключение и выбор уровня — в окне кнопки «Нейросетошная». -->
@@ -136,6 +136,12 @@
                             <Ellipse Width="10" Height="10" Fill="{Binding Codex.StatusBrush}"
                                      VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="{Binding Codex.StatusText}" Style="{StaticResource InfoCardValueStyle}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <Ellipse Width="10" Height="10" Fill="{Binding Qwen.StatusBrush}"
+                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding Qwen.StatusText}" Style="{StaticResource InfoCardValueStyle}"
                                        TextWrapping="Wrap"/>
                         </StackPanel>
                         <TextBlock Text="{Binding LevelSummary}" Style="{StaticResource InfoCardLabelStyle}"

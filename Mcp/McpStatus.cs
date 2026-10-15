@@ -61,7 +61,7 @@ namespace TNov.Mcp
         }
     }
 
-    /// <summary>Состояние одного коннектора (Claude или Codex) — строка статуса в окнах.</summary>
+    /// <summary>Состояние одного коннектора (Claude, Codex или Qwen) — строка статуса в окнах.</summary>
     public class McpClientStatus : INotifyPropertyChanged
     {
         internal McpClientStatus(McpClient client) => Client = client;
@@ -83,7 +83,7 @@ namespace TNov.Mcp
 
     /// <summary>
     /// Модель общего окна кнопки «Нейросетошная» и упрощённого блока «Нейросети» в окне «Настройки»:
-    /// один сервер, общий уровень доступа, два коннектора — Claude и Codex. Обновляется таймером окна.
+    /// один сервер, общий уровень доступа, коннекторы Claude, Codex и Qwen. Обновляется таймером окна.
     /// </summary>
     public class McpStatusViewModel : INotifyPropertyChanged
     {
@@ -105,6 +105,7 @@ namespace TNov.Mcp
 
         public McpClientStatus Claude { get; } = new McpClientStatus(McpClient.Claude);
         public McpClientStatus Codex { get; } = new McpClientStatus(McpClient.Codex);
+        public McpClientStatus Qwen { get; } = new McpClientStatus(McpClient.Qwen);
 
         /// <summary>Уровень доступа 1–3 (шкала в окне).</summary>
         public int Level { get; private set; }
@@ -121,7 +122,7 @@ namespace TNov.Mcp
             if (others.Count == 0) return null;
             return $"⚠ В Revit загружен другой MCP-коннектор: {string.Join(", ", others)}. " +
                    "Его действия уровнями доступа TNov не ограничиваются и в журнал TNov не попадают. " +
-                   "Для работы и тестов отключите его в Claude Code / Codex или удалите надстройку.";
+                   "Для работы и тестов отключите его в Claude Code / Codex / Qwen Code или удалите надстройку.";
         }
 
         /// <summary>Переключатель уровня: в личной — 1–3, в корпоративной — в пределах доступного (скрыт, если доступен только 1).</summary>
@@ -129,7 +130,7 @@ namespace TNov.Mcp
         public int[] LevelOptions { get; private set; } = { 1 };
         public string LevelChoiceLabel => McpAccess.IsCorp
             ? "Уровень для работы (не выше доступного вам)"
-            : "Уровень Claude и Codex (уровни 2–3 — только в отсоединённых моделях)";
+            : "Уровень нейросетей (уровни 2–3 — только в отсоединённых моделях)";
         public int SelectedLevel
         {
             get => Level;
@@ -137,7 +138,7 @@ namespace TNov.Mcp
             {
                 if (value == McpAccess.Level) return;
                 McpAccess.SetLevel(value);
-                CheckResult = "Уровень сохранён. Новые инструменты Claude и Codex увидят в новом сеансе.";
+                CheckResult = "Уровень сохранён. Новые инструменты нейросети увидят в новом сеансе.";
                 Refresh();
             }
         }
@@ -149,6 +150,8 @@ namespace TNov.Mcp
                 System.Windows.Clipboard.SetText(client.ConnectCommand);
                 CheckResult = client.Client == McpClient.Codex
                     ? "Блок скопирован. Вставьте его в конец config.toml в Блокноте и перезапустите Codex."
+                    : client.Client == McpClient.Qwen
+                    ? "Фрагмент скопирован. Добавьте сервер «revit» в раздел mcpServers файла %USERPROFILE%\\.qwen\\settings.json и перезапустите Qwen Code."
                     : "Команда скопирована. Выполните её в PowerShell, не в чате Claude.";
             }
             catch (Exception) { CheckResult = "Не удалось скопировать — выделите команду и нажмите Ctrl+C."; }
@@ -168,6 +171,13 @@ namespace TNov.Mcp
             catch (Exception ex) { CheckResult = "Не удалось подключить Codex: " + ex.Message; }
         }
 
+        /// <summary>Подключение к Qwen Code: мост stdio -> HTTP в ~/.qwen/settings.json.</summary>
+        public void ConnectQwen()
+        {
+            try { CheckResult = QwenSetup.Install(McpServer.IsRunning ? McpServer.Port : McpAccess.Local.Port); }
+            catch (Exception ex) { CheckResult = "Не удалось подключить Qwen Code: " + ex.Message; }
+        }
+
         public string ToggleText => McpServer.IsRunning ? "Остановить" : "Запустить";
         public bool CanToggle => McpAccess.Enabled || McpServer.IsRunning;
 
@@ -185,6 +195,7 @@ namespace TNov.Mcp
         {
             Update(Claude);
             Update(Codex);
+            Update(Qwen);
 
             int level = McpAccess.Level;
             Level = level;
@@ -203,7 +214,7 @@ namespace TNov.Mcp
                 LevelCaption = $"Доступен уровень {max} ({(McpAccess.AssignedLevel != null ? "назначен BIM-менеджером" : "получен за опыт работы")}).";
                 if (level < max) LevelCaption += $" Сейчас выбран уровень {level}.";
             }
-            LevelCaption += " Уровень общий для Claude и Codex.";
+            LevelCaption += " Уровень общий для всех нейросетей.";
             if (McpActivity.LastModel != null && McpActivity.LastEffectiveLevel > 0 && McpActivity.LastEffectiveLevel < level)
                 LevelCaption += $"\nВ модели «{McpActivity.LastModel}» ({McpActivity.LastModelKind}) действует уровень {McpActivity.LastEffectiveLevel}.";
 
@@ -212,6 +223,7 @@ namespace TNov.Mcp
 
             Claude.RaiseAll();
             Codex.RaiseAll();
+            Qwen.RaiseAll();
             OnPropertyChanged(nameof(ToggleText));
             OnPropertyChanged(nameof(CanToggle));
             OnPropertyChanged(nameof(Level));
@@ -352,6 +364,16 @@ namespace TNov.Mcp
                     break;
             }
             if (CodexSetup.IsConfigured() == true) lines.AppendLine(BridgeLogLine(McpClient.Codex));
+            switch (QwenSetup.IsConfigured())
+            {
+                case true:
+                    lines.AppendLine("✓ Коннектор прописан в Qwen Code.");
+                    lines.AppendLine(BridgeLogLine(McpClient.Qwen));
+                    break;
+                case false:
+                    lines.AppendLine("– В Qwen Code коннектор не прописан — нажмите «Подключить к Qwen Code».");
+                    break;
+            }
             return lines.ToString().TrimEnd();
         }
 
