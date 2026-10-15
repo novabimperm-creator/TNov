@@ -2109,7 +2109,7 @@ namespace TNov
                     string docName = Path.GetFileName(modelPath);
                     docName = docName.Replace(",", " ");
                     Autodesk.Revit.ApplicationServices.Application rvtApp = e.Document.Application;
-                    string userName = rvtApp.Username; string docNameUserName = "_" + userName; docName = docName.Replace(docNameUserName, "");
+                    string userName = rvtApp.Username; docName = TNovCommon.ModelName.StripUserSuffix(docName, userName);
                     docName = docName.Replace(".rvt", "");
                     string path = $"users/{userName},{docName}.txt";
                     // Получаем таблицу рабочих наборов
@@ -2212,7 +2212,9 @@ namespace TNov
                     {
                         //сохранение заданий в базу
                         info = BasicFileInfo.Extract(e.Document.PathName);
-                        string userName = info.Username;
+                        // как в командах заданий: BasicFileInfo в начале синхронизации бывает без имени
+                        string userName = app.Username;
+                        if (string.IsNullOrEmpty(userName)) userName = info.Username;
                         TaskTools.SaveGroupsData(doc, userName);
                     }
                 }
@@ -2353,8 +2355,9 @@ namespace TNov
                 //журнал
                 info = BasicFileInfo.Extract(e.Document.PathName);
                 string docName = e.Document.Title;
-                string userName = info.Username;
-                string docNameUserName = "_" + userName; docName = docName.Replace(docNameUserName, "");
+                string userName = e.Document.Application.Username;
+                if (string.IsNullOrEmpty(userName)) userName = info.Username;
+                docName = TNovCommon.ModelName.StripUserSuffix(docName, userName);
                 docName = docName.Replace(",", "");
                 DateTime dateTime = DateTime.Now; string TNovVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
                 string date = dateTime.ToString(); date = date.Replace(",", "");

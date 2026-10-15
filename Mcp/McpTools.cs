@@ -409,7 +409,7 @@ namespace TNov.Mcp
             context.Kind = McpAccess.ModelKind(doc);
             context.EffectiveLevel = McpAccess.EffectiveLevel(doc);
             // Как в журнале usage: имя локальной копии без суффикса «_пользователь».
-            if (doc != null) context.Model = doc.Title.Replace("_" + app.Application.Username, "");
+            if (doc != null) context.Model = TNovCommon.ModelName.StripUserSuffix(doc.Title, app.Application.Username);
             McpActivity.OnModel(context.Model, context.Kind, context.EffectiveLevel);
         }
 
