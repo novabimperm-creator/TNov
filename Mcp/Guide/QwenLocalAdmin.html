@@ -1,0 +1,324 @@
+<title>Qwen в локальной сети</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column on a faint blueprint grid; steps as a real numbered sequence, levels as a table; accent = violet of the «Нейросетошная» icon */
+:root {
+  --bg: #f5f6f9;
+  --surface: #ffffff;
+  --fg: #1d2030;
+  --muted: #5e6378;
+  --line: #dcdde8;
+  --grid: rgba(70, 60, 140, 0.06);
+  --accent: #5f47c2;
+  --accent-soft: #ebe7fa;
+  --code-bg: #eff0f5;
+  --ok: #2f8a4a;
+  --warn: #a8710a;
+  --display: "Unbounded", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #13141c; --surface: #1b1d28; --fg: #e5e6f0; --muted: #9a9db2; --line: #2e3040;
+    --grid: rgba(160, 150, 230, 0.05); --accent: #a996f2; --accent-soft: #2b2545; --code-bg: #232534;
+    --ok: #5cc27a; --warn: #e0a83a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #13141c; --surface: #1b1d28; --fg: #e5e6f0; --muted: #9a9db2; --line: #2e3040;
+  --grid: rgba(160, 150, 230, 0.05); --accent: #a996f2; --accent-soft: #2b2545; --code-bg: #232534;
+  --ok: #5cc27a; --warn: #e0a83a; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--fg);
+  font: 400 16px/1.6 var(--body);
+  padding-inline: 16px;
+  padding-block: 40px 64px;
+}
+main { max-width: 720px; margin: 0 auto; display: grid; gap: 44px; }
+main > * { min-width: 0; }
+h1, h2 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(28px, 6vw, 40px); font-weight: 700; line-height: 1.15; }
+h2 { font-size: 20px; font-weight: 500; }
+h3 { font-size: 16px; font-weight: 600; margin: 0; }
+p { margin: 0; }
+a { color: var(--accent); }
+section { display: grid; gap: 14px; }
+section > * { min-width: 0; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.lead { font-size: 18px; color: var(--muted); max-width: 62ch; }
+header { display: grid; gap: 14px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font: 500 12px/1 var(--mono); padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+
+code, kbd { font-family: var(--mono); font-size: .9em; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+.cmd { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: 8px; background: var(--code-bg); overflow: hidden; }
+.cmd pre { margin: 0; padding: 12px 14px; overflow-x: auto; font: 14px/1.5 var(--mono); flex: 1; min-width: 0; }
+.cmd button {
+  border: 0; border-left: 1px solid var(--line); background: var(--surface); color: var(--fg);
+  font: 500 13px var(--body); padding: 0 14px; cursor: pointer;
+}
+.cmd button:hover { color: var(--accent); }
+.cmd button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; counter-reset: step; }
+ol.steps > li { display: grid; grid-template-columns: 40px 1fr; gap: 14px; counter-increment: step; }
+ol.steps > li::before {
+  content: counter(step); font: 700 16px/40px var(--display); text-align: center;
+  width: 40px; height: 40px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+}
+ol.steps > li > div { display: grid; gap: 8px; min-width: 0; padding-top: 8px; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 520px; }
+th, td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+th { font: 500 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+td.lvl { font: 700 22px/1 var(--display); color: var(--accent); width: 56px; }
+
+.pick { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.pick > div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
+.pick .who { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+
+.examples { display: grid; gap: 10px; }
+.example { border-left: 3px solid var(--line); padding: 4px 0 4px 14px; }
+.example .tag { font: 500 11px var(--mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+
+ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.callout { background: var(--accent-soft); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; }
+
+dl.faq { margin: 0; display: grid; gap: 16px; }
+dl.faq dt { font-weight: 600; }
+dl.faq dd { margin: 4px 0 0; color: var(--muted); }
+
+.status { display: grid; gap: 8px; }
+.status div { display: flex; gap: 10px; align-items: baseline; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; transform: translateY(1px); }
+.dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.off { background: var(--muted); }
+
+footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+@media (max-width: 480px) { ol.steps > li { grid-template-columns: 32px 1fr; } ol.steps > li::before { width: 32px; height: 32px; line-height: 32px; font-size: 14px; } }
+.ui { font: 500 .9em var(--body); padding: 1px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); white-space: nowrap; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px; }
+nav.toc a { font: 500 13px var(--body); color: var(--fg); text-decoration: none; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+nav.toc a:hover { color: var(--accent); border-color: var(--accent); }
+.part { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding-top: 8px; border-top: 1px solid var(--line); }
+.prompt { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 10px; }
+.prompt .row { display: flex; flex-wrap: wrap; gap: 8px; }
+.prompt p { font-size: 15px; }
+.cmd pre.file { white-space: pre; }
+.note { font-size: 14px; color: var(--muted); }
+</style>
+
+<main>
+  <header>
+    <span class="eyebrow">TNov · памятка администратору</span>
+    <h1>Qwen в локальной сети</h1>
+    <p class="lead">Как поднять в сети компании сервер с открытой моделью Qwen, чтобы сотрудники работали с Revit через Qwen Code, а данные моделей не уходили наружу.</p>
+    <div class="meta">
+      <span class="chip">Qwen3-Coder-30B-A3B</span>
+      <span class="chip">vLLM / Ollama</span>
+      <span class="chip">OpenAI-совместимый API</span>
+    </div>
+    <nav class="toc" aria-label="Разделы">
+      <a href="#scheme">Схема</a>
+      <a href="#hardware">Железо</a>
+      <a href="#vllm">vLLM</a>
+      <a href="#ollama">Ollama</a>
+      <a href="#security">Безопасность</a>
+      <a href="#check">Проверка</a>
+      <a href="#handover">Что передать</a>
+    </nav>
+  </header>
+
+  <section id="scheme">
+    <h2>Схема</h2>
+    <div class="cmd"><pre>ПК сотрудника                                           Сервер в сети компании
+Revit + TNov ◄── MCP, только localhost ──► Qwen Code ── HTTPS + ключ ──► nginx ─► vLLM или Ollama + модель Qwen</pre></div>
+    <ul class="plain">
+      <li><b>Коннектор TNov в Revit не меняется.</b> Он слушает только <code>127.0.0.1</code> и <code>[::1]</code> на компьютере сотрудника, из сети недоступен.</li>
+      <li><b>Новая служба — только сервер модели.</b> Он принимает запросы Qwen Code по OpenAI-совместимому API (<code>/v1/chat/completions</code>). Через тот же сервер может работать и Codex.</li>
+      <li><b>Данные не уходят наружу.</b> Интернет серверу нужен только один раз — скачать модель и образы. Дальше он может работать без выхода в интернет.</li>
+      <li><b>Лицензия.</b> Модели Qwen3 и Qwen3-Coder выпущены под Apache 2.0, коммерческое использование разрешено.</li>
+    </ul>
+  </section>
+
+  <section id="hardware">
+    <h2>Железо и модель</h2>
+    <p>Модель — <b>Qwen3-Coder-30B-A3B-Instruct</b>: 30,5 млрд параметров, на каждый токен работают ~3,3 млрд, поэтому она быстрая. Хорошо вызывает инструменты, а для коннектора это главное.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Сценарий</th><th>Видеопамять</th><th>Вариант модели</th><th>Пользователей одновременно</th></tr></thead>
+        <tbody>
+          <tr><td>Пилот</td><td>24 ГБ (RTX 3090 / 4090 / 5090)</td><td>4 бита: AWQ для vLLM или GGUF Q4 для Ollama, ~17–19 ГБ весов</td><td>1–3</td></tr>
+          <tr><td>Отдел</td><td>48 ГБ (RTX 6000 Ada, L40S) или 2 × 24 ГБ</td><td>FP8, ~31 ГБ весов</td><td>5–10</td></tr>
+          <tr><td>С запасом</td><td>80 ГБ и больше</td><td>BF16, ~61 ГБ весов</td><td>10+</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="plain">
+      <li><b>Сервер:</b> Linux (Ubuntu 22.04/24.04), драйвер NVIDIA, Docker и NVIDIA Container Toolkit. Оперативной памяти от 64 ГБ, SSD от 100 ГБ под модели.</li>
+      <li><b>Контекст:</b> нужно не меньше 32 тыс. токенов, лучше 64 тыс. Описания инструментов коннектора и ответы с данными модели Revit занимают много места. Контекст тоже расходует видеопамять, поэтому числа пользователей в таблице — ориентир для пилота, а не гарантия.</li>
+      <li>Цифры по памяти приблизительные. Перед закупкой проверьте их на пилотной карте.</li>
+    </ul>
+  </section>
+
+  <section id="vllm">
+    <h2>Вариант А · vLLM (рекомендуется)</h2>
+    <p>vLLM рассчитан на несколько одновременных пользователей и сам проверяет ключ доступа. Запуск в Docker на пилотной карте 24 ГБ:</p>
+    <div class="cmd">
+      <pre id="vllm-cmd">export VLLM_API_KEY="$(openssl rand -hex 32)"   # сохраните ключ в хранилище паролей
+
+docker run -d --name qwen-coder --restart unless-stopped \
+  --gpus all --ipc=host \
+  -p 127.0.0.1:8000:8000 \
+  -v /srv/hf-cache:/root/.cache/huggingface \
+  vllm/vllm-openai:&lt;версия&gt; \
+  --model QuantTrio/Qwen3-Coder-30B-A3B-Instruct-AWQ \
+  --served-model-name qwen3-coder \
+  --api-key "$VLLM_API_KEY" \
+  --enable-auto-tool-choice \
+  --tool-call-parser qwen3_coder \
+  --max-model-len 65536 \
+  --gpu-memory-utilization 0.92</pre>
+      <button type="button" data-copy="vllm-cmd">Копировать</button>
+    </div>
+    <ul class="plain">
+      <li><b><code>--enable-auto-tool-choice --tool-call-parser qwen3_coder</code></b> — обязательно. Без них модель возвращает вызовы инструментов обычным текстом, и Qwen Code не сможет работать с Revit. Обычный парсер <code>hermes</code> для Qwen3-Coder не подходит.</li>
+      <li><b>Порт</b> открыт только на <code>127.0.0.1</code>. Наружу его отдаёт nginx с HTTPS (см. «Безопасность»).</li>
+      <li><b>Версия образа.</b> Вместо <code>&lt;версия&gt;</code> укажите конкретную проверенную версию, а не <code>latest</code>: внутренние интерфейсы vLLM и парсеры меняются от версии к версии.</li>
+      <li><b>Другие карты.</b> Для 48 ГБ — <code>--model Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8</code>. Для двух карт добавьте <code>--tensor-parallel-size 2</code>. Для квантованной модели на нескольких картах может понадобиться <code>--enable-expert-parallel</code>.</li>
+      <li>AWQ-сборка <code>QuantTrio/…-AWQ</code> сторонняя (Hugging Face). Если политика требует только официальные веса, берите FP8-версию от Qwen и карту на 48 ГБ.</li>
+    </ul>
+  </section>
+
+  <section id="ollama">
+    <h2>Вариант Б · Ollama (для пробы)</h2>
+    <p>Проще в установке, но рассчитан на малую нагрузку и <b>не умеет проверять ключ</b>: доступ закрывается только через nginx.</p>
+    <div class="cmd">
+      <pre id="ollama-cmd">curl -fsSL https://ollama.com/install.sh | sh
+
+sudo systemctl edit ollama
+# в открывшийся файл:
+# [Service]
+# Environment="OLLAMA_HOST=127.0.0.1:11434"
+# Environment="OLLAMA_CONTEXT_LENGTH=65536"
+sudo systemctl restart ollama
+
+ollama pull hf.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:UD-Q4_K_XL</pre>
+      <button type="button" data-copy="ollama-cmd">Копировать</button>
+    </div>
+    <ul class="plain">
+      <li><b><code>OLLAMA_CONTEXT_LENGTH</code></b> задаётся именно в службе: переменная в своей консоли на службу не действует. Контекст по умолчанию — всего несколько тысяч токенов, с ним вызовы инструментов ломаются: модель отвечает пустотой или сырым JSON.</li>
+      <li>Сборка Unsloth выбрана потому, что в ней исправлены вызовы инструментов для Qwen3-Coder. Берите её или другую сборку, где эти исправления точно есть.</li>
+      <li>Адрес API для клиентов — <code>/v1</code> за nginx. Имя модели — то, что показывает <code>ollama list</code>.</li>
+    </ul>
+  </section>
+
+  <section id="security">
+    <h2>Безопасность</h2>
+    <div class="callout">
+      <p><b>Сервер модели читает всё, что сотрудники отправляют из Revit:</b> параметры, имена, сведения о проекте, изображения видов. Относитесь к нему как к файловому серверу с проектными данными.</p>
+    </div>
+    <ul class="plain">
+      <li><b>Только HTTPS через nginx</b>, сертификат внутреннего ЦС. Сама модель слушает только <code>127.0.0.1</code>.</li>
+      <li><b>Ключ доступа.</b> vLLM проверяет его сам (<code>--api-key</code>). Для Ollama проверку делает nginx (пример ниже). Ключ передавайте только через защищённый канал.</li>
+      <li><b>Фаервол:</b> порт 443 открыт только для подсетей компании. Без доступа из интернета и из сегментов NetBird, где есть посторонние устройства.</li>
+      <li><b>Журналы.</b> Не включайте запись содержимого запросов. Если она нужна для отладки, храните такие журналы как проектные данные и удаляйте после разбора.</li>
+      <li><b>Выход в интернет</b> серверу после загрузки модели не нужен. Его можно закрыть.</li>
+    </ul>
+    <div class="cmd">
+      <pre id="nginx-cmd">server {
+    listen 443 ssl;
+    server_name llm.example.local;                 # имя сервера в сети компании
+    ssl_certificate     /etc/ssl/llm/fullchain.pem;
+    ssl_certificate_key /etc/ssl/llm/privkey.pem;
+
+    location /v1/ {
+        # Только для Ollama: у vLLM ключ проверяет сам vLLM, этот if не нужен.
+        if ($http_authorization != "Bearer ВАШ_КЛЮЧ") { return 401; }
+
+        proxy_pass http://127.0.0.1:8000;          # vLLM; для Ollama — 127.0.0.1:11434
+        proxy_http_version 1.1;
+        proxy_buffering off;                       # потоковые ответы
+        proxy_read_timeout 900s;                   # долгие ответы модели
+        client_max_body_size 50m;                  # изображения видов в запросах
+    }
+}</pre>
+      <button type="button" data-copy="nginx-cmd">Копировать</button>
+    </div>
+    <div class="cmd">
+      <pre id="ufw-cmd">sudo ufw allow from 192.168.0.0/16 to any port 443 proto tcp   # подставьте подсети компании
+sudo ufw deny 443/tcp
+sudo ufw enable</pre>
+      <button type="button" data-copy="ufw-cmd">Копировать</button>
+    </div>
+  </section>
+
+  <section id="check">
+    <h2>Проверка</h2>
+    <p>С любого компьютера в сети компании:</p>
+    <div class="cmd">
+      <pre id="check-models">curl -s https://llm.example.local/v1/models -H "Authorization: Bearer ВАШ_КЛЮЧ"</pre>
+      <button type="button" data-copy="check-models">Копировать</button>
+    </div>
+    <p>В ответе должна быть модель <code>qwen3-coder</code> (или имя из <code>ollama list</code>). Без ключа сервер должен вернуть 401. Проверка, что модель вызывает инструменты:</p>
+    <div class="cmd">
+      <pre id="check-tools">curl -s https://llm.example.local/v1/chat/completions \
+  -H "Authorization: Bearer ВАШ_КЛЮЧ" -H "Content-Type: application/json" \
+  -d '{"model":"qwen3-coder","messages":[{"role":"user","content":"Сколько стен в модели?"}],
+       "tools":[{"type":"function","function":{"name":"count_walls","description":"Количество стен в модели Revit",
+       "parameters":{"type":"object","properties":{}}}}]}'</pre>
+      <button type="button" data-copy="check-tools">Копировать</button>
+    </div>
+    <p>В ответе должно быть поле <code>tool_calls</code> с вызовом <code>count_walls</code>. Если вместо него текст с XML или JSON внутри <code>content</code>, проверьте параметры парсера инструментов (vLLM) или сборку модели (Ollama).</p>
+  </section>
+
+  <section id="handover">
+    <h2>Что передать BIM-менеджеру</h2>
+    <ul class="plain">
+      <li><b>Адрес API:</b> например, <code>https://llm.example.local/v1</code>.</li>
+      <li><b>Имя модели:</b> <code>qwen3-coder</code> (или из <code>ollama list</code>).</li>
+      <li><b>Ключ доступа</b> — только через защищённый канал.</li>
+      <li><b>Сертификат внутреннего ЦС</b>, если его ещё нет на рабочих станциях: иначе Qwen Code не доверит HTTPS-соединению.</li>
+    </ul>
+    <p>Когда сервер заработает, в плагин TNov будет добавлена автонастройка: адрес, модель и ключ задаются один раз в настройках коннектора на сетевой папке TNov, а кнопка в Revit прописывает подключение Qwen Code у сотрудника. До этого Qwen Code у каждого настраивается вручную: <code>/auth</code> → свой OpenAI-совместимый провайдер → адрес, модель, ключ.</p>
+    <div class="callout">
+      <p><b>Прокси на рабочих станциях.</b> Если на компьютерах стоит локальный прокси (Qwen Code берёт его из <code>HTTPS_PROXY</code>), имя сервера модели нужно добавить в <code>NO_PROXY</code>. Иначе запросы уйдут в прокси и до сервера не дойдут.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Ограничения</h2>
+    <ul class="plain">
+      <li><b>Качество.</b> Локальная модель на 30 млрд параметров слабее облачных Claude и Codex: в сложных скриптах Revit API ошибается чаще, и ей нужно больше попыток. Простые задачи — поиск, подсчёты, марки, параметры — решает нормально. Защита модели в TNov (уровни доступа, проверка скриптов, отмена Ctrl+Z) работает так же.</li>
+      <li><b>Нагрузка.</b> Одновременные запросы делят видеокарту: при нескольких активных пользователях ответы медленнее. Начните с пилота на одной карте и замерьте.</li>
+      <li><b>Обновления.</b> Версии vLLM, Ollama и модели обновляйте вручную, после проверки на пилоте.</li>
+    </ul>
+  </section>
+
+  <footer>TNov · коннектор Revit — нейросети (MCP). Памятка по развёртыванию локальной модели Qwen. Команды проверены по документации vLLM, Ollama и Qwen Code на октябрь 2026 года; перед установкой сверьтесь с документацией вашей версии.</footer>
+</main>
+
+<script>
+document.querySelectorAll("[data-copy]").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    var pre = document.getElementById(btn.getAttribute("data-copy"));
+    var text = pre.textContent;
+    function done() { btn.textContent = "Скопировано"; setTimeout(function () { btn.textContent = "Копировать"; }, 1600); }
+    function fallback() {
+      var range = document.createRange(); range.selectNodeContents(pre);
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      btn.textContent = "Выделено — Ctrl+C";
+    }
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+  });
+});
+</script>

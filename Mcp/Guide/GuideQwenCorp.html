@@ -1,0 +1,378 @@
+<title>Revit × Qwen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column on a faint blueprint grid; steps as a real numbered sequence, levels as a table; accent = violet of the «Нейросетошная» icon */
+:root {
+  --bg: #f5f6f9;
+  --surface: #ffffff;
+  --fg: #1d2030;
+  --muted: #5e6378;
+  --line: #dcdde8;
+  --grid: rgba(70, 60, 140, 0.06);
+  --accent: #5f47c2;
+  --accent-soft: #ebe7fa;
+  --code-bg: #eff0f5;
+  --ok: #2f8a4a;
+  --warn: #a8710a;
+  --display: "Unbounded", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #13141c; --surface: #1b1d28; --fg: #e5e6f0; --muted: #9a9db2; --line: #2e3040;
+    --grid: rgba(160, 150, 230, 0.05); --accent: #a996f2; --accent-soft: #2b2545; --code-bg: #232534;
+    --ok: #5cc27a; --warn: #e0a83a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #13141c; --surface: #1b1d28; --fg: #e5e6f0; --muted: #9a9db2; --line: #2e3040;
+  --grid: rgba(160, 150, 230, 0.05); --accent: #a996f2; --accent-soft: #2b2545; --code-bg: #232534;
+  --ok: #5cc27a; --warn: #e0a83a; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--fg);
+  font: 400 16px/1.6 var(--body);
+  padding-inline: 16px;
+  padding-block: 40px 64px;
+}
+main { max-width: 720px; margin: 0 auto; display: grid; gap: 44px; }
+main > * { min-width: 0; }
+h1, h2 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(28px, 6vw, 40px); font-weight: 700; line-height: 1.15; }
+h2 { font-size: 20px; font-weight: 500; }
+h3 { font-size: 16px; font-weight: 600; margin: 0; }
+p { margin: 0; }
+a { color: var(--accent); }
+section { display: grid; gap: 14px; }
+section > * { min-width: 0; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.lead { font-size: 18px; color: var(--muted); max-width: 62ch; }
+header { display: grid; gap: 14px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font: 500 12px/1 var(--mono); padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+
+code, kbd { font-family: var(--mono); font-size: .9em; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+.cmd { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: 8px; background: var(--code-bg); overflow: hidden; }
+.cmd pre { margin: 0; padding: 12px 14px; overflow-x: auto; font: 14px/1.5 var(--mono); flex: 1; min-width: 0; }
+.cmd button {
+  border: 0; border-left: 1px solid var(--line); background: var(--surface); color: var(--fg);
+  font: 500 13px var(--body); padding: 0 14px; cursor: pointer;
+}
+.cmd button:hover { color: var(--accent); }
+.cmd button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; counter-reset: step; }
+ol.steps > li { display: grid; grid-template-columns: 40px 1fr; gap: 14px; counter-increment: step; }
+ol.steps > li::before {
+  content: counter(step); font: 700 16px/40px var(--display); text-align: center;
+  width: 40px; height: 40px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+}
+ol.steps > li > div { display: grid; gap: 8px; min-width: 0; padding-top: 8px; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 520px; }
+th, td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+th { font: 500 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+td.lvl { font: 700 22px/1 var(--display); color: var(--accent); width: 56px; }
+
+.pick { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.pick > div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
+.pick .who { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+
+.examples { display: grid; gap: 10px; }
+.example { border-left: 3px solid var(--line); padding: 4px 0 4px 14px; }
+.example .tag { font: 500 11px var(--mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+
+ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.callout { background: var(--accent-soft); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; }
+
+dl.faq { margin: 0; display: grid; gap: 16px; }
+dl.faq dt { font-weight: 600; }
+dl.faq dd { margin: 4px 0 0; color: var(--muted); }
+
+.status { display: grid; gap: 8px; }
+.status div { display: flex; gap: 10px; align-items: baseline; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; transform: translateY(1px); }
+.dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.off { background: var(--muted); }
+
+footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+@media (max-width: 480px) { ol.steps > li { grid-template-columns: 32px 1fr; } ol.steps > li::before { width: 32px; height: 32px; line-height: 32px; font-size: 14px; } }
+.ui { font: 500 .9em var(--body); padding: 1px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); white-space: nowrap; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px; }
+nav.toc a { font: 500 13px var(--body); color: var(--fg); text-decoration: none; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+nav.toc a:hover { color: var(--accent); border-color: var(--accent); }
+.part { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding-top: 8px; border-top: 1px solid var(--line); }
+.prompt { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 10px; }
+.prompt .row { display: flex; flex-wrap: wrap; gap: 8px; }
+.prompt p { font-size: 15px; }
+.cmd pre.file { white-space: pre; }
+.note { font-size: 14px; color: var(--muted); }
+</style>
+
+<main>
+  <header>
+    <span class="eyebrow">TNov · бета-тест · корпоративная конфигурация</span>
+    <h1>Revit × Qwen</h1>
+    <p class="lead">Как подключить Qwen Code от Alibaba к модели, открытой у вас в Revit: установка, вход по ключу Alibaba Cloud, подключение кнопкой в TNov и ежедневная работа.</p>
+    <div class="meta">
+      <span class="chip">Revit 2022 / 2027</span>
+      <span class="chip">Qwen Code</span>
+      <span class="chip">Alibaba Cloud · Coding Plan</span>
+    </div>
+    <nav class="toc" aria-label="Разделы">
+      <a href="#install">Установка</a>
+      <a href="#account">Аккаунт и ключ</a>
+      <a href="#login">Вход в Qwen Code</a>
+      <a href="#connect">Подключение к Revit</a>
+      <a href="#daily">Как работать</a>
+      <a href="#levels">Уровни доступа</a>
+      <a href="#problems">Если не работает</a>
+    </nav>
+  </header>
+
+  <section>
+    <h2>Как это устроено</h2>
+    <p>Кнопка <b>Нейросетошная</b> в Revit включает у вас на компьютере небольшой сервер. Qwen Code подключается к нему и получает набор инструментов: «найти элементы», «прочитать параметры», «показать вид» и другие. Вы пишете задачу обычным текстом, Qwen сам решает, какие инструменты вызвать, и отвечает.</p>
+    <p>Revit и модель остаются у вас. Qwen видит только то, что прочитал через инструменты, и только пока Revit открыт, а коннектор включён. Данные, которые он прочитал, уходят на серверы Alibaba Cloud вместе с вашими сообщениями.</p>
+  </section>
+
+  <section>
+    <h2>Что понадобится</h2>
+    <ul class="plain">
+      <li><b>Revit с плагином TNov</b> последней версии. На вкладке TNov, панель <b>Настройки</b>, должна быть кнопка <b>Нейросетошная</b>.</li>
+      <li><b>Аккаунт Alibaba Cloud с подпиской Coding Plan.</b> Подписка платная. Оплату и тариф согласуйте с руководителем или BIM-менеджером до оформления.</li>
+      <li><b>Qwen Code</b> на компьютере. Права администратора для установки не нужны.</li>
+    </ul>
+    <div class="callout">
+      <p><b>Бесплатного входа через аккаунт qwen.ai больше нет.</b> Alibaba закрыла его 15 апреля 2026 года. В интернете много старых инструкций со входом «Qwen OAuth» и бесплатными лимитами — они больше не работают.</p>
+    </div>
+  </section>
+
+  <span class="part">Настройка, один раз</span>
+
+  <section id="install">
+    <h2>1. Установите Qwen Code</h2>
+    <ol class="steps">
+      <li><div>
+        <h3>Откройте PowerShell</h3>
+        <p>Меню «Пуск» → наберите <b>PowerShell</b> → откройте <b>Windows PowerShell</b>. Запускать от имени администратора не нужно.</p>
+      </div></li>
+      <li><div>
+        <h3>Выполните команду установки</h3>
+        <p>Вставьте команду из официальной инструкции Qwen Code и нажмите <kbd>Enter</kbd>. Она скачивает Qwen Code вместе со всем нужным для работы, отдельно ставить Node.js не надо.</p>
+        <div class="cmd">
+          <pre id="install-cmd">irm https://qwen-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen-standalone.ps1 | iex</pre>
+          <button type="button" data-copy="install-cmd">Копировать</button>
+        </div>
+        <p class="note">Официальная инструкция по установке: <a href="https://qwenlm.github.io/qwen-code-docs/ru/users/quickstart/">qwenlm.github.io/qwen-code-docs</a>. Если политика ИБ требует проверять скрипты, сначала откройте ссылку из команды в браузере, сохраните файл и покажите его администратору.</p>
+      </div></li>
+      <li><div>
+        <h3>Перезапустите PowerShell и проверьте</h3>
+        <p>Закройте окно PowerShell, откройте новое и выполните:</p>
+        <div class="cmd">
+          <pre id="version-cmd">qwen --version</pre>
+          <button type="button" data-copy="version-cmd">Копировать</button>
+        </div>
+        <p>Должен появиться номер версии. Если установка выдала «Could not resolve host» или PowerShell пишет, что команда не найдена, загляните в раздел <a href="#problems">«Если не работает»</a>.</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <section id="account">
+    <h2>2. Аккаунт Alibaba Cloud и ключ Coding Plan</h2>
+    <ol class="steps">
+      <li><div>
+        <h3>Войдите в Alibaba Cloud через Google</h3>
+        <p>Откройте <a href="https://www.alibabacloud.com/">alibabacloud.com</a> → <span class="ui">Log In</span>. На странице входа выберите вход через <b>Google</b> и укажите свой Google-аккаунт. При первом входе Alibaba Cloud создаст аккаунт и попросит заполнить профиль.</p>
+        <p class="note">Если кнопки Google на странице нет, зарегистрируйтесь по адресу электронной почты — дальше всё так же.</p>
+      </div></li>
+      <li><div>
+        <h3>Оформите подписку Coding Plan</h3>
+        <p>Откройте консоль Model Studio, раздел <a href="https://modelstudio.console.alibabacloud.com/?tab=dashboard#/efm/coding_plan">Coding Plan</a>, и оформите подписку на согласованный тариф. Работайте в международной консоли (International), а не в китайской.</p>
+      </div></li>
+      <li><div>
+        <h3>Скопируйте ключ</h3>
+        <p>На странице Coding Plan скопируйте ключ. Он начинается с <code>sk-sp-</code>. Обычный ключ Model Studio вида <code>sk-…</code> для Coding Plan не подходит.</p>
+        <div class="callout">
+          <p><b>Ключ — как пароль.</b> Не пересылайте его в мессенджерах, не вставляйте в чат Qwen и не публикуйте. По условиям Alibaba ключ Coding Plan можно использовать только в программах для работы с кодом вроде Qwen Code, а не в своих скриптах.</p>
+        </div>
+      </div></li>
+    </ol>
+  </section>
+
+  <section id="login">
+    <h2>3. Войдите в Qwen Code</h2>
+    <ol class="steps">
+      <li><div>
+        <h3>Запустите Qwen Code</h3>
+        <p>В PowerShell выполните команду <code>qwen</code>.</p>
+      </div></li>
+      <li><div>
+        <h3>Выберите вход по Coding Plan</h3>
+        <p>Если Qwen Code не предложил вход сам, наберите <code>/auth</code> и нажмите <kbd>Enter</kbd>. Дальше выберите:</p>
+        <div class="prompt">
+          <div class="row"><span class="ui">Alibaba ModelStudio</span><span class="ui">Coding Plan</span><span class="ui">International</span></div>
+        </div>
+        <p>и вставьте ключ <code>sk-sp-…</code>.</p>
+        <p class="note">Ключ сохранится в настройках Qwen Code в вашем профиле, вводить его каждый раз не нужно. Названия пунктов меню могут немного отличаться в разных версиях.</p>
+      </div></li>
+      <li><div>
+        <h3>Проверьте</h3>
+        <p>Напишите Qwen любой вопрос, например «привет». Если он ответил, вход выполнен.</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <section id="connect">
+    <h2>4. Подключите Qwen Code к Revit</h2>
+    <ol class="steps">
+      <li><div>
+        <h3>Нажмите кнопку в Revit</h3>
+        <p>Откройте модель, нажмите <b>Нейросетошная</b> на вкладке TNov, в разделе <b>Qwen</b> нажмите <span class="ui">Подключить к Qwen Code</span>. Плагин сам пропишет сервер <b>revit</b> в файл <code>%USERPROFILE%\.qwen\settings.json</code>. Остальные настройки Qwen Code не меняются, копия файла сохраняется рядом как <code>settings.json.bak-tnov</code>.</p>
+      </div></li>
+      <li><div>
+        <h3>Перезапустите Qwen Code</h3>
+        <p>Закройте Qwen Code (команда <code>/quit</code> или закрыть окно PowerShell) и снова запустите <code>qwen</code>. Наберите <code>/mcp</code>: в списке должен быть сервер <b>revit</b>.</p>
+      </div></li>
+      <li><div>
+        <h3>Проверьте связь с моделью</h3>
+        <p>Напишите в Qwen Code:</p>
+        <div class="prompt"><p>Какая модель сейчас открыта в Revit? Сколько в ней уровней?</p></div>
+        <p>Qwen должен назвать файл модели и уровни. Если Revit закрыт или кнопка не нажата, Qwen сообщит, что Revit не отвечает.</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <span class="part" id="daily">Как работать каждый день</span>
+
+  <section>
+    <h2>Порядок работы</h2>
+    <ol class="steps">
+      <li><div>
+        <h3>Revit: откройте модель и нажмите «Нейросетошная»</h3>
+        <p>Коннектор включается вручную при каждом запуске Revit. Окно можно просто закрыть.</p>
+      </div></li>
+      <li><div>
+        <h3>PowerShell: запустите <code>qwen</code></h3>
+        <p>Если коннектор включили уже после запуска Qwen Code, перезапустите Qwen Code.</p>
+      </div></li>
+      <li><div>
+        <h3>Пишите задачу обычным языком</h3>
+        <p>Называйте категории и параметры, как в интерфейсе Revit: «Стены», «Комментарии», «Марка». Значения — в единицах проекта: «3000», «Да».</p>
+      </div></li>
+      <li><div>
+        <h3>Проверяйте результат в Revit</h3>
+        <p>Попросите Qwen выделить найденные элементы — они подсветятся в Revit. Перед правками сначала посмотрите список.</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Примеры запросов</h2>
+    <div class="examples">
+      <div class="example"><span class="tag">уровень 1 · чтение</span><p>Сколько дверей на каждом уровне и каких типов? Сведи в таблицу.</p></div>
+      <div class="example"><span class="tag">уровень 1 · оформление</span><p>Промаркируй все окна на активном виде, у которых нет марки.</p></div>
+      <div class="example"><span class="tag">уровень 1 · подсчёт</span><p>Посчитай массу арматуры по каждой марке конструкции.</p></div>
+      <div class="example"><span class="tag">уровень 2 · 3D-элементы</span><p>Всем стенам толщиной больше 400 мм на «Этаж 3» поставь «Комментарии» = «Проверить». Сначала покажи список.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Подтверждения и безопасность</h2>
+    <ul class="plain">
+      <li>Перед вызовом инструмента Revit Qwen Code может спросить разрешения. Чтение модели можно разрешать всегда, изменения — читайте, что именно будет сделано.</li>
+      <li>Перед запуском скрипта Revit сам покажет код и права скрипта в этой модели. В заголовке окна видно, что код прислал Qwen. Если не понимаете, что делает код, нажмите «Отмена» и попросите объяснить.</li>
+      <li>Qwen работает с <b>активным</b> документом. Перед запросом переключитесь на нужную модель.</li>
+      <li>Каждое изменение записывается в списке отмены с подписью «Qwen:» и отменяется <kbd>Ctrl+Z</kbd> в Revit.</li>
+      <li>Пока в Revit открыт диалог или идёт синхронизация, Qwen ждёт и через 2 минуты получает отказ. Закройте окно и попросите повторить.</li>
+      <li>Не давайте нескольким нейросетям одновременно менять одну модель.</li>
+      <li>Вызовы инструментов и тексты скриптов записываются в журнал TNov.</li>
+    </ul>
+    <div class="callout">
+      <p><b>На время бета-теста работайте на копиях или отсоединённых моделях.</b></p>
+    </div>
+  </section>
+
+  <section id="levels">
+    <h2>Уровни доступа</h2>
+    <p>Уровень общий для всех нейросетей. Инструменты выше вашего уровня Qwen не видит и вызвать не может.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ур.</th><th>Что может Qwen</th></tr></thead>
+        <tbody>
+          <tr><td class="lvl">1</td><td>Читать модель целиком, считать объёмы и арматуру, проверять высоты и пересечения. Оформлять: марки, виды, листы, спецификации на листах, изображения. Экспортировать. 3D-элементы не меняет и ничего не удаляет.</td></tr>
+          <tr><td class="lvl">2</td><td>Плюс 3D-элементы: заполнять параметры, размещать и перемещать, до 50 штук за запрос. В локальной копии файла-хранилища скрипты 3D-элементы не меняют.</td></tr>
+          <tr><td class="lvl">3</td><td>Всё, включая параметры типов, удаление элементов и скрипты без ограничений.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Уровень 2 открывается сам, как только выполнится любое из условий: больше 3 дней работы с коннектором подряд, больше 5 дней всего или больше 30 успешных операций. Уровень 3 назначает BIM-менеджер. Текущий уровень виден в окне кнопки <b>Нейросетошная</b>, там же можно временно выбрать уровень ниже. После смены уровня перезапустите Qwen Code.</p>
+  </section>
+
+  <section id="problems">
+    <h2>Если не работает</h2>
+    <dl class="faq">
+      <div>
+        <dt>Установка: «Could not resolve host» или «curl.exe download failed»</dt>
+        <dd>
+          <p>Компьютер выходит в интернет через прокси, а установщик (и потом сам Qwen Code) системный прокси Windows не видит. Выполните в том же окне PowerShell команду ниже: она берёт адрес прокси из настроек Windows и передаёт его установщику. Затем повторите установку.</p>
+          <div class="cmd">
+            <pre id="proxy-cmd">$s = Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'; $p = $s.ProxyServer; if ($s.ProxyEnable -and $p) { $h = $p -split ';' | Where-Object { $_ -like 'https=*' } | Select-Object -First 1; if (-not $h) { $h = ($p -split ';')[0] }; $h = 'http://' + ($h -replace '^\w+=', ''); $env:HTTPS_PROXY = $h; $env:HTTP_PROXY = $h; $env:NO_PROXY = 'localhost,127.0.0.1,::1'; "Прокси: $h" } else { 'В Windows прокси не задан — обратитесь к администратору' }</pre>
+            <button type="button" data-copy="proxy-cmd">Копировать</button>
+          </div>
+          <p>Эти настройки действуют только в текущем окне, а прокси нужен и для работы Qwen Code. Чтобы не задавать его каждый раз, сохраните его для своей учётной записи (права администратора не нужны). Сразу после команды выше выполните:</p>
+          <div class="cmd">
+            <pre id="setx-cmd">setx HTTPS_PROXY $env:HTTPS_PROXY; setx HTTP_PROXY $env:HTTP_PROXY; setx NO_PROXY "localhost,127.0.0.1,::1"</pre>
+            <button type="button" data-copy="setx-cmd">Копировать</button>
+          </div>
+          <p>и откройте новое окно PowerShell. <code>NO_PROXY</code> с <code>localhost</code> обязателен: без него запросы к коннектору Revit уйдут в прокси. Если вторая команда ответила, что прокси в Windows не задан, или прокси настроен через автоматический сценарий (PAC), адрес прокси подскажет администратор.</p>
+        </dd>
+      </div>
+      <div><dt>Qwen Code не отвечает или пишет об ошибке соединения с Alibaba</dt><dd>Та же причина, что и выше: Qwen Code не видит прокси. Задайте переменные из предыдущего пункта (лучше через <code>setx</code>) и перезапустите PowerShell и Qwen Code.</dd></div>
+      <div><dt>PowerShell: «qwen» не является именем командлета</dt><dd>Закройте и снова откройте PowerShell после установки. Если не помогло, выполните <code>where.exe qwen</code> и пришлите результат BIM-менеджеру.</dd></div>
+      <div><dt>Ошибка про Qwen OAuth или «discontinued»</dt><dd>Qwen Code пытается войти старым бесплатным способом. Наберите <code>/auth</code> и выберите Alibaba ModelStudio → Coding Plan.</dd></div>
+      <div><dt>Ошибка 401 после ввода ключа</dt><dd>Чаще всего выбран не тот регион или не тот ключ. Нужен ключ <code>sk-sp-…</code> со страницы Coding Plan и регион International. Повторите <code>/auth</code>.</dd></div>
+      <div><dt>В <code>/mcp</code> нет сервера revit</dt><dd>Нажмите «Подключить к Qwen Code» в окне «Нейросетошная» и перезапустите Qwen Code.</dd></div>
+      <div><dt>Qwen говорит, что Revit не отвечает</dt><dd>Revit закрыт, кнопка «Нейросетошная» не нажата или в Revit открыт диалог. Освободите Revit и попросите повторить.</dd></div>
+      <div><dt>Qwen говорит, что такого инструмента нет</dt><dd>Инструмент выше вашего уровня доступа. Уровень видно в окне кнопки «Нейросетошная».</dd></div>
+      <div><dt>«Изменения отменены»</dt><dd>Скрипт вышел за права вашего уровня в этой модели, и плагин отменил всё, что он сделал. Qwen обычно сам предлагает другой путь.</dd></div>
+    </dl>
+  </section>
+
+  <section>
+    <h2>Что сообщать</h2>
+    <p>По каждой находке отправьте BIM-менеджеру TNov:</p>
+    <ul class="plain">
+      <li>версию Revit и плагина (окно «Настройки»);</li>
+      <li>что пользовались Qwen Code, и ваш запрос дословно;</li>
+      <li>что ожидали и что получилось, со скриншотом;</li>
+      <li>скриншот окна «Нейросетошная» после нажатия «Проверить».</li>
+    </ul>
+  </section>
+
+  <footer>TNov · коннектор Revit — Qwen (MCP), бета-версия, корпоративная конфигурация. Коннектор принимает запросы только с вашего компьютера. Данные модели, которые прочитал Qwen, уходят в Alibaba Cloud в составе вашего сеанса, как и всё, что вы пишете. Вызовы инструментов и тексты скриптов записываются в журнал TNov.</footer>
+</main>
+
+<script>
+document.querySelectorAll("[data-copy]").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    var pre = document.getElementById(btn.getAttribute("data-copy"));
+    var text = pre.textContent;
+    function done() { btn.textContent = "Скопировано"; setTimeout(function () { btn.textContent = "Копировать"; }, 1600); }
+    function fallback() {
+      var range = document.createRange(); range.selectNodeContents(pre);
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      btn.textContent = "Выделено — Ctrl+C";
+    }
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+  });
+});
+</script>
