@@ -38,6 +38,86 @@
                 <Setter Property="TextWrapping" Value="Wrap"/>
                 <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
             </Style>
+
+            <!-- Раздел нейросети: карточка, заголовок (имя и статус) раскрывает настройки подключения. -->
+            <Style x:Key="SectionExpanderStyle" TargetType="Expander">
+                <Setter Property="Margin" Value="0,0,0,10"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Expander">
+                            <Border Background="{StaticResource CardBrush}" CornerRadius="10">
+                                <DockPanel>
+                                    <ToggleButton DockPanel.Dock="Top" Cursor="Hand"
+                                                  Content="{TemplateBinding Header}"
+                                                  IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                        <ToggleButton.Template>
+                                            <ControlTemplate TargetType="ToggleButton">
+                                                <Border x:Name="HeaderBorder" Background="Transparent" CornerRadius="10" Padding="12,10">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <ContentPresenter VerticalAlignment="Center"/>
+                                                        <TextBlock x:Name="Chevron" Grid.Column="1" Text="▸" FontSize="16"
+                                                                   Foreground="{StaticResource MutedBrush}"
+                                                                   VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                    </Grid>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsChecked" Value="True">
+                                                        <Setter TargetName="Chevron" Property="Text" Value="▾"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="HeaderBorder" Property="Background" Value="{StaticResource SubtleHoverBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </ToggleButton.Template>
+                                    </ToggleButton>
+                                    <ContentPresenter x:Name="Body" Margin="12,0,12,12" Visibility="Collapsed"/>
+                                </DockPanel>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsExpanded" Value="True">
+                                    <Setter TargetName="Body" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="SectionNameStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="15"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+            </Style>
+
+            <!-- Текст, который скрывается, когда пустой (активность коннектора). -->
+            <Style x:Key="HideWhenEmptyLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource InfoCardLabelStyle}">
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Style.Triggers>
+                    <Trigger Property="Text" Value="">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- Кнопки внутри карточки: фон окна, чтобы не сливались с карточкой. -->
+            <Style x:Key="CardButtonStyle" TargetType="Button" BasedOn="{StaticResource CloseButtonStyle}">
+                <Setter Property="Background" Value="{StaticResource BgBrush}"/>
+            </Style>
+
+            <Style x:Key="CommandBoxStyle" TargetType="TextBox">
+                <Setter Property="IsReadOnly" Value="True"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+                <Setter Property="FontFamily" Value="Consolas"/>
+                <Setter Property="Margin" Value="0,2,0,8"/>
+            </Style>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -76,62 +156,26 @@
 
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,16,0,0">
             <StackPanel>
-                <!-- Статус: по строке на коннектор -->
-                <Border Style="{StaticResource InfoCardBorderStyle}" Margin="0,0,0,10">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="10" Height="10" Fill="{Binding Claude.StatusBrush}"
-                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="{Binding Claude.StatusText}" Style="{StaticResource InfoCardValueStyle}"
-                                       TextWrapping="Wrap"/>
-                        </StackPanel>
-                        <TextBlock Text="{Binding Claude.Activity}" TextWrapping="Wrap" Margin="18,2,0,0">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource InfoCardLabelStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Claude.Activity}" Value="">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                            <Ellipse Width="10" Height="10" Fill="{Binding Codex.StatusBrush}"
-                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="{Binding Codex.StatusText}" Style="{StaticResource InfoCardValueStyle}"
-                                       TextWrapping="Wrap"/>
-                        </StackPanel>
-                        <TextBlock Text="{Binding Codex.Activity}" TextWrapping="Wrap" Margin="18,2,0,0">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource InfoCardLabelStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Codex.Activity}" Value="">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                            <Ellipse Width="10" Height="10" Fill="{Binding Qwen.StatusBrush}"
-                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="{Binding Qwen.StatusText}" Style="{StaticResource InfoCardValueStyle}"
-                                       TextWrapping="Wrap"/>
-                        </StackPanel>
-                        <TextBlock Text="{Binding Qwen.Activity}" TextWrapping="Wrap" Margin="18,2,0,0">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource InfoCardLabelStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Qwen.Activity}" Value="">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </StackPanel>
-                </Border>
+                <!-- Управление коннектором -->
+                <UniformGrid Columns="2" Margin="0,0,0,10">
+                    <Button Content="Проверить" Style="{StaticResource CloseButtonStyle}"
+                            Margin="0,0,4,0" Click="CheckButton_Click"/>
+                    <Button Content="{Binding ToggleText}" IsEnabled="{Binding CanToggle}"
+                            Style="{StaticResource CloseButtonStyle}"
+                            Margin="4,0,0,0" Click="ToggleButton_Click"/>
+                </UniformGrid>
+
+                <TextBlock Text="{Binding CheckResult}" TextWrapping="Wrap" Margin="0,0,0,10">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource InfoCardLabelStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CheckResult}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
 
                 <!-- Другой MCP-коннектор в Revit -->
                 <Border BorderBrush="{StaticResource ElementErrorBrush}" BorderThickness="1"
@@ -207,108 +251,102 @@
                               SelectedItem="{Binding SelectedLevel, Mode=TwoWay}"/>
                 </StackPanel>
 
-                <!-- Подключение -->
-                <TextBlock Text="Claude" Style="{StaticResource SectionTitleStyle}"/>
-                <Border Style="{StaticResource InfoCardBorderStyle}" Margin="0,0,0,10">
+                <!-- Нейросети: заголовок — имя и состояние, внутри — подключение. Раскрытые разделы запоминаются. -->
+                <TextBlock Text="Нейросети" Style="{StaticResource SectionTitleStyle}"/>
+
+                <Expander Style="{StaticResource SectionExpanderStyle}" IsExpanded="{Binding Claude.IsExpanded, Mode=TwoWay}">
+                    <Expander.Header>
+                        <StackPanel>
+                            <TextBlock Text="Claude" Style="{StaticResource SectionNameStyle}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <Ellipse Width="10" Height="10" Fill="{Binding Claude.StatusBrush}"
+                                         VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding Claude.StatusText}" Style="{StaticResource InfoCardLabelStyle}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander.Header>
                     <StackPanel>
+                        <TextBlock Text="{Binding Claude.Activity}" Style="{StaticResource HideWhenEmptyLabelStyle}" Margin="0,0,0,8"/>
                         <TextBlock Text="Адрес" Style="{StaticResource InfoCardLabelStyle}"/>
-                        <TextBox Text="{Binding Claude.Url, Mode=OneWay}" IsReadOnly="True"
-                                 Background="Transparent" BorderThickness="0"
-                                 Foreground="{StaticResource PrimaryTextBrush}"
-                                 FontFamily="Consolas" Margin="0,2,0,8"/>
+                        <TextBox Text="{Binding Claude.Url, Mode=OneWay}" Style="{StaticResource CommandBoxStyle}"/>
                         <TextBlock Text="Claude Code — выполните в PowerShell (не в чате Claude), один раз на компьютере" TextWrapping="Wrap"
                                    Style="{StaticResource InfoCardLabelStyle}"/>
-                        <TextBox Text="{Binding Claude.ConnectCommand, Mode=OneWay}" IsReadOnly="True"
-                                 Background="Transparent" BorderThickness="0" TextWrapping="Wrap"
-                                 Foreground="{StaticResource PrimaryTextBrush}"
-                                 FontFamily="Consolas" Margin="0,2,0,8"/>
+                        <TextBox Text="{Binding Claude.ConnectCommand, Mode=OneWay}" Style="{StaticResource CommandBoxStyle}"/>
                         <UniformGrid Columns="2">
                             <Button Content="Скопировать команду"
-                                    Style="{StaticResource CloseButtonStyle}"
+                                    Style="{StaticResource CardButtonStyle}"
                                     Margin="0,0,4,0"
                                     Click="CopyClaudeButton_Click"/>
                             <Button Content="Claude Desktop"
                                     ToolTip="Обычный чат Claude Desktop (без Claude Code): прописать мост в настройки приложения"
-                                    Style="{StaticResource CloseButtonStyle}"
+                                    Style="{StaticResource CardButtonStyle}"
                                     Margin="4,0,0,0"
                                     Click="DesktopButton_Click"/>
                         </UniformGrid>
                     </StackPanel>
-                </Border>
+                </Expander>
 
-                <TextBlock Text="Codex" Style="{StaticResource SectionTitleStyle}"/>
-                <Border Style="{StaticResource InfoCardBorderStyle}" Margin="0,0,0,10">
+                <Expander Style="{StaticResource SectionExpanderStyle}" IsExpanded="{Binding Codex.IsExpanded, Mode=TwoWay}">
+                    <Expander.Header>
+                        <StackPanel>
+                            <TextBlock Text="Codex" Style="{StaticResource SectionNameStyle}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <Ellipse Width="10" Height="10" Fill="{Binding Codex.StatusBrush}"
+                                         VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding Codex.StatusText}" Style="{StaticResource InfoCardLabelStyle}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander.Header>
                     <StackPanel>
+                        <TextBlock Text="{Binding Codex.Activity}" Style="{StaticResource HideWhenEmptyLabelStyle}" Margin="0,0,0,8"/>
                         <TextBlock Text="Адрес" Style="{StaticResource InfoCardLabelStyle}"/>
-                        <TextBox Text="{Binding Codex.Url, Mode=OneWay}" IsReadOnly="True"
-                                 Background="Transparent" BorderThickness="0"
-                                 Foreground="{StaticResource PrimaryTextBrush}"
-                                 FontFamily="Consolas" Margin="0,2,0,8"/>
+                        <TextBox Text="{Binding Codex.Url, Mode=OneWay}" Style="{StaticResource CommandBoxStyle}"/>
                         <TextBlock Text="«Подключить к Codex» прописывает коннектор в %USERPROFILE%\.codex\config.toml (программа для терминала, расширение IDE и приложение Codex). Права администратора не нужны. Вручную: вставьте этот блок в конец того же файла в Блокноте. Не отправляйте его в чат Codex."
                                    TextWrapping="Wrap" Style="{StaticResource InfoCardLabelStyle}"/>
-                        <TextBox Text="{Binding Codex.ConnectCommand, Mode=OneWay}" IsReadOnly="True"
-                                 Background="Transparent" BorderThickness="0" TextWrapping="Wrap"
-                                 Foreground="{StaticResource PrimaryTextBrush}"
-                                 FontFamily="Consolas" Margin="0,2,0,8"/>
+                        <TextBox Text="{Binding Codex.ConnectCommand, Mode=OneWay}" Style="{StaticResource CommandBoxStyle}"/>
                         <UniformGrid Columns="2">
                             <Button Content="Скопировать блок"
-                                    Style="{StaticResource CloseButtonStyle}"
+                                    Style="{StaticResource CardButtonStyle}"
                                     Margin="0,0,4,0"
                                     Click="CopyCodexButton_Click"/>
                             <Button Content="Подключить к Codex"
-                                    Style="{StaticResource CloseButtonStyle}"
+                                    Style="{StaticResource CardButtonStyle}"
                                     Margin="4,0,0,0"
                                     Click="CodexButton_Click"/>
                         </UniformGrid>
                     </StackPanel>
-                </Border>
+                </Expander>
 
-                <TextBlock Text="Qwen" Style="{StaticResource SectionTitleStyle}"/>
-                <Border Style="{StaticResource InfoCardBorderStyle}" Margin="0,0,0,10">
+                <Expander Style="{StaticResource SectionExpanderStyle}" IsExpanded="{Binding Qwen.IsExpanded, Mode=TwoWay}">
+                    <Expander.Header>
+                        <StackPanel>
+                            <TextBlock Text="Qwen" Style="{StaticResource SectionNameStyle}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <Ellipse Width="10" Height="10" Fill="{Binding Qwen.StatusBrush}"
+                                         VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding Qwen.StatusText}" Style="{StaticResource InfoCardLabelStyle}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander.Header>
                     <StackPanel>
+                        <TextBlock Text="{Binding Qwen.Activity}" Style="{StaticResource HideWhenEmptyLabelStyle}" Margin="0,0,0,8"/>
                         <TextBlock Text="Адрес" Style="{StaticResource InfoCardLabelStyle}"/>
-                        <TextBox Text="{Binding Qwen.Url, Mode=OneWay}" IsReadOnly="True"
-                                 Background="Transparent" BorderThickness="0"
-                                 Foreground="{StaticResource PrimaryTextBrush}"
-                                 FontFamily="Consolas" Margin="0,2,0,8"/>
+                        <TextBox Text="{Binding Qwen.Url, Mode=OneWay}" Style="{StaticResource CommandBoxStyle}"/>
                         <TextBlock Text="«Подключить к Qwen Code» прописывает коннектор в %USERPROFILE%\.qwen\settings.json. Права администратора не нужны. Вручную: добавьте сервер «revit» из этого фрагмента в раздел mcpServers того же файла. Не отправляйте его в чат Qwen."
                                    TextWrapping="Wrap" Style="{StaticResource InfoCardLabelStyle}"/>
-                        <TextBox Text="{Binding Qwen.ConnectCommand, Mode=OneWay}" IsReadOnly="True"
-                                 Background="Transparent" BorderThickness="0" TextWrapping="Wrap"
-                                 Foreground="{StaticResource PrimaryTextBrush}"
-                                 FontFamily="Consolas" Margin="0,2,0,8"/>
+                        <TextBox Text="{Binding Qwen.ConnectCommand, Mode=OneWay}" Style="{StaticResource CommandBoxStyle}"/>
                         <UniformGrid Columns="2">
                             <Button Content="Скопировать фрагмент"
-                                    Style="{StaticResource CloseButtonStyle}"
+                                    Style="{StaticResource CardButtonStyle}"
                                     Margin="0,0,4,0"
                                     Click="CopyQwenButton_Click"/>
                             <Button Content="Подключить к Qwen Code"
-                                    Style="{StaticResource CloseButtonStyle}"
+                                    Style="{StaticResource CardButtonStyle}"
                                     Margin="4,0,0,0"
                                     Click="QwenButton_Click"/>
                         </UniformGrid>
                     </StackPanel>
-                </Border>
-
-                <TextBlock Text="{Binding CheckResult}" TextWrapping="Wrap" Margin="0,0,0,10">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource InfoCardLabelStyle}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding CheckResult}" Value="{x:Null}">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
-
-                <UniformGrid Columns="2" Margin="0,0,0,10">
-                    <Button Content="Проверить" Style="{StaticResource CloseButtonStyle}"
-                            Margin="0,0,4,0" Click="CheckButton_Click"/>
-                    <Button Content="{Binding ToggleText}" IsEnabled="{Binding CanToggle}"
-                            Style="{StaticResource CloseButtonStyle}"
-                            Margin="4,0,0,0" Click="ToggleButton_Click"/>
-                </UniformGrid>
+                </Expander>
 
                 <Button Content="Готово"
                         Style="{StaticResource RunButtonStyle}"

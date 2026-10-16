@@ -79,11 +79,17 @@ namespace TNov.Mcp
         public string Activity { get; internal set; }
         public string Url => McpServer.IsRunning ? McpServer.UrlFor(Client) : "коннектор остановлен";
         public string ConnectCommand => McpConnector.ConnectCommand(Client);
+
+        /// <summary>Раскрыт ли раздел в окне «Нейросетошная» — запоминается у пользователя (TNovClient\TNovMcp.json).</summary>
+        public bool IsExpanded
+        {
+            get => McpAccess.IsSectionExpanded(Client.Name);
+            set => McpAccess.SetSectionExpanded(Client.Name, value);
+        }
     }
 
     /// <summary>
-    /// Модель общего окна кнопки «Нейросетошная» и упрощённого блока «Нейросети» в окне «Настройки»:
-    /// один сервер, общий уровень доступа, коннекторы Claude, Codex и Qwen. Обновляется таймером окна.
+    /// Модель окна кнопки «Нейросетошная»: один сервер, общий уровень доступа, коннекторы Claude, Codex и Qwen. Обновляется таймером окна.
     /// </summary>
     public class McpStatusViewModel : INotifyPropertyChanged
     {
@@ -110,8 +116,6 @@ namespace TNov.Mcp
         /// <summary>Уровень доступа 1–3 (шкала в окне).</summary>
         public int Level { get; private set; }
         public string LevelCaption { get; private set; }
-        /// <summary>Одна строка об уровне — для блока в «Настройках».</summary>
-        public string LevelSummary { get; private set; }
 
         /// <summary>Предупреждение о других MCP-коннекторах в Revit (null — их нет). Сборки грузятся при старте Revit, поэтому считаем один раз.</summary>
         public string OtherMcpWarning { get; } = BuildOtherMcpWarning();
@@ -218,9 +222,6 @@ namespace TNov.Mcp
             if (McpActivity.LastModel != null && McpActivity.LastEffectiveLevel > 0 && McpActivity.LastEffectiveLevel < level)
                 LevelCaption += $"\nВ модели «{McpActivity.LastModel}» ({McpActivity.LastModelKind}) действует уровень {McpActivity.LastEffectiveLevel}.";
 
-            LevelSummary = "Уровень доступа: " + McpAccess.LevelName(level) +
-                           (McpAccess.AssignedLevel == null && level < 2 ? " (до уровня 2: " + McpAccess.Level2Progress + ")" : "");
-
             Claude.RaiseAll();
             Codex.RaiseAll();
             Qwen.RaiseAll();
@@ -228,7 +229,6 @@ namespace TNov.Mcp
             OnPropertyChanged(nameof(CanToggle));
             OnPropertyChanged(nameof(Level));
             OnPropertyChanged(nameof(LevelCaption));
-            OnPropertyChanged(nameof(LevelSummary));
             OnPropertyChanged(nameof(LevelOptions));
             OnPropertyChanged(nameof(CanChooseLevel));
             OnPropertyChanged(nameof(LevelChoiceLabel));
@@ -237,28 +237,28 @@ namespace TNov.Mcp
 
         private static void Update(McpClientStatus status)
         {
+            // Имя нейросети — в заголовке раздела окна, здесь только состояние.
             McpActivity activity = status.Client.Activity;
-            string name = status.Name;
             DateTime? last = activity.LastRequestUtc;
             if (!McpAccess.Enabled && !McpServer.IsRunning)
             {
-                Set(status, name + ": отключён администратором", Gray);
+                Set(status, "Отключён администратором", Gray);
             }
             else if (!McpServer.IsRunning)
             {
-                Set(status, name + ": коннектор остановлен", Gray);
+                Set(status, "Коннектор остановлен", Gray);
             }
             else if (last == null)
             {
-                Set(status, name + ": ещё не подключался", Amber);
+                Set(status, "Ещё не подключался", Amber);
             }
             else
             {
                 TimeSpan idle = DateTime.UtcNow - last.Value;
                 if (idle.TotalMinutes < ActiveMinutes)
-                    Set(status, name + ": подключён · запрос " + Ago(idle), Green);
+                    Set(status, "Подключён · запрос " + Ago(idle), Green);
                 else
-                    Set(status, name + ": нет запросов " + Ago(idle), Amber);
+                    Set(status, "Нет запросов " + Ago(idle), Amber);
             }
 
             var text = new StringBuilder();

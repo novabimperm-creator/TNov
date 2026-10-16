@@ -18,18 +18,7 @@ namespace TNov
         {
             InitializeComponent();
             DataContext = viewModel;
-
-            // Блок «Нейросети» живёт своей моделью и обновляется, пока окно открыто.
-            McpCard.DataContext = _mcpStatus;
-            Loaded += (s, e) => _mcpStatus.StartMonitoring();
-            Closed += (s, e) => _mcpStatus.StopMonitoring();
         }
-
-        private readonly Mcp.McpStatusViewModel _mcpStatus = new Mcp.McpStatusViewModel();
-
-        private void McpCheckButton_Click(object sender, RoutedEventArgs e) => _mcpStatus.Check();
-
-        private void McpToggleButton_Click(object sender, RoutedEventArgs e) => _mcpStatus.Toggle();
 
         private AppVersionViewModel ViewModel => (AppVersionViewModel)DataContext;
 

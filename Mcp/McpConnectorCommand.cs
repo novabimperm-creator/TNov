@@ -32,7 +32,8 @@ namespace TNov.Mcp
             int port = McpServer.IsRunning ? McpServer.Port : McpAccess.Local.Port;
             if (client == McpClient.Codex) return CodexSetup.Block(port).TrimEnd();
             if (client == McpClient.Qwen) return QwenSetup.Snippet(port);
-            return $"claude mcp add --transport http --scope user revit {McpServer.UrlFor(client)}";
+            // Порт из настроек, а не McpServer.Port: у остановленного коннектора он 0.
+            return $"claude mcp add --transport http --scope user revit http://localhost:{port}{client.Path}";
         }
 
         /// <summary>

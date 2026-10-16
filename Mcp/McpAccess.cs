@@ -68,6 +68,8 @@ namespace TNov.Mcp
             public int CorpMaxSeen { get; set; }
             /// <summary>Пользователь уже записан в KnownUsers серверного файла.</summary>
             public bool RegisteredOnServer { get; set; }
+            /// <summary>Какие разделы нейросетей раскрыты в окне «Нейросетошная» (имя коннектора → раскрыт).</summary>
+            public Dictionary<string, bool> ExpandedSections { get; set; } = new Dictionary<string, bool>();
         }
 
         private static readonly object _lock = new object();
@@ -92,6 +94,27 @@ namespace TNov.Mcp
                     }
                     return _local;
                 }
+            }
+        }
+
+        /// <summary>Раскрыт ли раздел нейросети в окне. Пока пользователь не выбирал — раскрыт только Claude.</summary>
+        public static bool IsSectionExpanded(string name)
+        {
+            lock (_lock)
+            {
+                Dictionary<string, bool> sections = Local.ExpandedSections;
+                return sections != null && sections.TryGetValue(name, out bool expanded) ? expanded : name == "Claude";
+            }
+        }
+
+        public static void SetSectionExpanded(string name, bool expanded)
+        {
+            lock (_lock)
+            {
+                if (Local.ExpandedSections == null) Local.ExpandedSections = new Dictionary<string, bool>();
+                if (Local.ExpandedSections.TryGetValue(name, out bool old) && old == expanded) return;
+                Local.ExpandedSections[name] = expanded;
+                SaveLocal();
             }
         }
 

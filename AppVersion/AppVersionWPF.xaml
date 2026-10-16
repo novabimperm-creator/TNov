@@ -120,66 +120,6 @@
                     </StackPanel>
                 </ToggleButton>
 
-                <TextBlock Text="Нейросети (Claude, Codex, Qwen)"
-                           Style="{StaticResource SectionTitleStyle}"/>
-
-                <!-- Упрощённо: статус коннекторов и уровень; подключение и выбор уровня — в окне кнопки «Нейросетошная». -->
-                <Border x:Name="McpCard" Style="{StaticResource InfoCardBorderStyle}" Margin="0,0,0,10">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="10" Height="10" Fill="{Binding Claude.StatusBrush}"
-                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="{Binding Claude.StatusText}" Style="{StaticResource InfoCardValueStyle}"
-                                       TextWrapping="Wrap"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <Ellipse Width="10" Height="10" Fill="{Binding Codex.StatusBrush}"
-                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="{Binding Codex.StatusText}" Style="{StaticResource InfoCardValueStyle}"
-                                       TextWrapping="Wrap"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <Ellipse Width="10" Height="10" Fill="{Binding Qwen.StatusBrush}"
-                                     VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="{Binding Qwen.StatusText}" Style="{StaticResource InfoCardValueStyle}"
-                                       TextWrapping="Wrap"/>
-                        </StackPanel>
-                        <TextBlock Text="{Binding LevelSummary}" Style="{StaticResource InfoCardLabelStyle}"
-                                   TextWrapping="Wrap" Margin="0,6,0,0"/>
-                        <TextBlock Text="{Binding OtherMcpWarning}" TextWrapping="Wrap" FontSize="12"
-                                   Foreground="{StaticResource ElementErrorBrush}" Margin="0,6,0,0">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding OtherMcpWarning}" Value="{x:Null}">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                        <TextBlock Text="{Binding CheckResult}"
-                                   TextWrapping="Wrap" Margin="0,6,0,0">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource InfoCardLabelStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding CheckResult}" Value="{x:Null}">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                        <UniformGrid Columns="2" Margin="0,8,0,0">
-                            <Button Content="Проверить" Style="{StaticResource CloseButtonStyle}"
-                                    Margin="0,0,4,0" Click="McpCheckButton_Click"/>
-                            <Button Content="{Binding ToggleText}" IsEnabled="{Binding CanToggle}"
-                                    Style="{StaticResource CloseButtonStyle}"
-                                    Margin="4,0,0,0" Click="McpToggleButton_Click"/>
-                        </UniformGrid>
-                    </StackPanel>
-                </Border>
-
                 <TextBlock Text="Предупреждения о синхронизации"
                            Style="{StaticResource SectionTitleStyle}"/>
 
