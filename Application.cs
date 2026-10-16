@@ -78,6 +78,9 @@ namespace TNov
         #region Переменные класса
         static AddInId addinId = new AddInId(new Guid("83403DB6-EA74-4E10-85B3-508AE241A743"));
 
+        private bool _startupRolesCheckPending;
+        private bool _restrictModelEditing;
+        private readonly HashSet<Document> _modelsPendingClose = new HashSet<Document>();
         private DateTime? _startTime = null;
         public static Application ThisApp { get; private set; }
         private BasicFileInfo info;
@@ -149,6 +152,8 @@ namespace TNov
                 // Личная конфигурация: «сервер» — папка TNovClient, клиент обновляется сам (EnsureTNovClient).
                 if (CorpGate.IsCorp(_config)) serverPath = TNovCommon.Server.ServerData.NormalizeRoot(_config.ServerPath);
             }
+            // Имя пользователя Revit доступно через UIApplication в первом Idling.
+            _startupRolesCheckPending = CorpGate.IsCorp(_config) && _config.CorpName == "ООО ПМ Новация";
             // «Модель» TNovPRO: ключ синхронизации лежит на корпоративной папке раздачи —
             // синхронизация работает у всех, у кого стоит плагин, без входа в TNovPRO.
             // В личной конфигурации модели на сайт не уходят.
@@ -2092,6 +2097,19 @@ namespace TNov
         }
         public void OnDocumentOpened(object sender, DocumentOpenedEventArgs e)
         {
+            Document openedDocument = e.Document;
+            if (openedDocument == null || !openedDocument.IsValidObject)
+                return;
+
+            // При открытии из стартового окна DocumentOpened может прийти раньше первого Idling.
+            CheckStartupUserRoles(new UIApplication(openedDocument.Application));
+            if (MustCloseRestrictedModel(openedDocument))
+            {
+                _modelsPendingClose.Add(openedDocument);
+                _startTime = null;
+                return;
+            }
+
             LoadSettings();
 
             info = BasicFileInfo.Extract(e.Document.PathName);
@@ -2414,8 +2432,114 @@ namespace TNov
             }*/
         }
 
+        private void CheckStartupUserRoles(UIApplication uiApp)
+        {
+            if (!_startupRolesCheckPending || uiApp == null)
+                return;
+
+            _startupRolesCheckPending = false;
+            string userName = uiApp.Application.Username;
+            if (string.IsNullOrWhiteSpace(userName))
+                return;
+
+            bool requiresActions;
+            string rolesPath = Path.Combine(serverPath, "roles.txt");
+            try
+            {
+                // Прямое чтение при запуске: не зависим от готовности кэша RolesService.
+                string[] lines = File.ReadAllLines(rolesPath, DetectEncoding(rolesPath));
+                requiresActions = StartupUserRequiresActions(lines, userName);
+            }
+            catch (Exception ex)
+            {
+                // Недоступный справочник не означает, что пользователь отсутствует в нём.
+                Debug.WriteLine($"TNov: не удалось проверить пользователя по {rolesPath}: {ex.Message}");
+                return;
+            }
+
+            if (requiresActions)
+                ExecuteStartupUserActions(uiApp);
+        }
+
+        internal static bool StartupUserRequiresActions(IEnumerable<string> lines, string userName)
+        {
+            foreach (string line in lines)
+            {
+                string value = line.Trim();
+                if (value.Length == 0 || value.StartsWith("::", StringComparison.Ordinal))
+                    continue;
+
+                string[] fields = value.Split(',');
+                if (fields.Length < 2 ||
+                    !string.Equals(fields[0].Trim(), userName.Trim(), StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                string department = fields[1].Trim();
+                if (string.Equals(department, "GIP", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(department, "UPR", StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private void ExecuteStartupUserActions(UIApplication uiApp)
+        {
+            _restrictModelEditing = true;
+        }
+
+        private bool MustCloseRestrictedModel(Document document)
+        {
+            if (!_restrictModelEditing || document.IsLinked || !document.IsWorkshared || document.IsDetached)
+                return false;
+
+            using (ModelPath centralPath = document.GetWorksharingCentralModelPath())
+            {
+                return centralPath is ServerPath &&
+                    ModelPathUtils.ConvertModelPathToUserVisiblePath(centralPath)
+                        .IndexOf("rvt-nova", StringComparison.OrdinalIgnoreCase) >= 0;
+            }
+        }
+
+        private void CloseRestrictedModels(UIApplication uiApp)
+        {
+            if (uiApp == null)
+                return;
+
+            foreach (Document document in _modelsPendingClose.ToList())
+            {
+                if (!document.IsValidObject)
+                {
+                    _modelsPendingClose.Remove(document);
+                    continue;
+                }
+
+                if (uiApp.ActiveUIDocument?.Document == document)
+                {
+                    // Активный документ нельзя закрыть через Document.Close: передаём команду UI.
+                    RevitCommandId closeCommand = RevitCommandId.LookupPostableCommandId(PostableCommand.Close);
+                    if (!uiApp.CanPostCommand(closeCommand))
+                        continue;
+
+                    uiApp.PostCommand(closeCommand);
+                }
+                else if (!document.Close(false))
+                {
+                    continue;
+                }
+
+                _modelsPendingClose.Remove(document);
+                new InfoWindow280("Вы не можете редактировать модели. Откройте модель с галочкой Отсоединить").ShowDialog();
+                // За один Idling отправляем не более одной команды закрытия.
+                return;
+            }
+        }
+
         public void OnIdling(object sender, IdlingEventArgs e)
         {
+            CheckStartupUserRoles(sender as UIApplication);
+            CloseRestrictedModels(sender as UIApplication);
+
             // Блокировка плагина сервером: смена политики и отложенное окно с причиной.
             DrainPluginBlock();
 
