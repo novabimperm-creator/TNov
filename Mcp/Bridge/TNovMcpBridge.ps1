@@ -139,7 +139,26 @@ function Handle([string]$line) {
     }
     elseif ($method -eq 'tools/list') { Log 'tools/list' }
     elseif ($method -eq 'tools/call') {
-        try { Log "tools/call $(($line | ConvertFrom-Json).params.name)" } catch { Log 'tools/call' }
+        $tool = $null
+        try { $tool = ($line | ConvertFrom-Json).params.name } catch { }
+        Log "tools/call $tool"
+        # revit_status — инструмент самого моста (его видно, пока Revit был недоступен); в Revit его нет.
+        if ($tool -eq 'revit_status' -and $null -ne $id) {
+            $idJson = IdJson $id
+            if (Test-Revit) {
+                $script:revitUp = $true
+                $script:announcedDown = $false
+                Send '{"jsonrpc":"2.0","method":"notifications/tools/list_changed"}'
+                $text = ('Коннектор Revit запущен и отвечает. Если инструменты Revit ещё не появились, ' +
+                         'попросите пользователя начать новый чат (в Claude Code — /mcp, затем reconnect).') | ConvertTo-Json -Compress
+                Send "{""jsonrpc"":""2.0"",""id"":$idJson,""result"":{""content"":[{""type"":""text"",""text"":$text}],""isError"":false}}"
+            }
+            else {
+                $text = $downMessage | ConvertTo-Json -Compress
+                Send "{""jsonrpc"":""2.0"",""id"":$idJson,""result"":{""content"":[{""type"":""text"",""text"":$text}],""isError"":true}}"
+            }
+            return
+        }
     }
     try {
         # Скрипты в Revit могут работать до 10 минут — ждём чуть дольше.
