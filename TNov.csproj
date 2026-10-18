@@ -50,16 +50,24 @@
     <ProjectReference Include="..\TNovViewsSheets\TNovViewsSheets.csproj" Private="false" />
   </ItemGroup>
 
-  <!-- ===== Версионирование ===== -->
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="powershell -ExecutionPolicy Bypass -File &quot;$(ProjectDir)UpdateVersion.ps1&quot; -Major 5" />
-  </Target>
+  <!-- ===== Версионирование =====
+       Версия 5.гг.ММдд.минуты генерируется при сборке в obj (TNovGenerateVersionInfo в TNovDeploy\TNov.Build.props). -->
+  <PropertyGroup>
+    <TNovMajorVersion>5</TNovMajorVersion>
+  </PropertyGroup>
 
   <!-- ===== Автодеплой на текущую машину (один раз, после сборки всего решения) =====
        TNov собирается последним (ссылается на все модули), поэтому деплой запускаем здесь.
-       Запуск через start — отдельное окно, чтобы Console.ReadKey в TNovDebug не блокировал сборку. -->
+       Запуск через start — отдельное окно, чтобы Console.ReadKey в TNovDeploy не блокировал сборку.
+       TNovDeploy.exe собирает TNovDeploy\Setup-Workspace.ps1 (или dotnet build TNovDeploy.csproj). -->
+  <PropertyGroup>
+    <TNovDeployDir>$(MSBuildThisFileDirectory)..\TNovDeploy\bin\deploy</TNovDeployDir>
+  </PropertyGroup>
   <Target Name="DeployToRevit" AfterTargets="Build" Condition="'$(TNovDeploy)' != 'false'">
-    <Exec Command="start &quot;TNovDeploy&quot; /d &quot;$(MSBuildThisFileDirectory)..\TNovDebug\bin\deploy&quot; TNovDebug.exe $(RevitVersion)" />
+    <Warning Condition="!Exists('$(TNovDeployDir)\TNovDeploy.exe')"
+             Text="Автодеплой пропущен: нет $(TNovDeployDir)\TNovDeploy.exe — соберите TNovDeploy (Setup-Workspace.ps1)." />
+    <Exec Condition="Exists('$(TNovDeployDir)\TNovDeploy.exe')"
+          Command="start &quot;TNovDeploy&quot; /d &quot;$(TNovDeployDir)&quot; TNovDeploy.exe $(RevitVersion) &quot;$(OutDir.TrimEnd('\'))&quot;" />
   </Target>
 
 </Project>
