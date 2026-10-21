@@ -2335,9 +2335,10 @@ namespace TNov
         private static PushButtonData ModelSyncButtonData() =>
             new PushButtonData(nameof(UploadProjectCommand), "TNovPRO\nМодель", typeof(UploadProjectCommand).Assembly.Location, typeof(UploadProjectCommand).FullName)
             {
-                ToolTip = "Загрузить проект в TNovPRO: вопросы о модели на сайте с ответом в 3D.",
-                LongDescription = "Выгружает дом целиком (сводный файл и выбранные связи) один раз. " +
-                                  "Дальше сайт обновляется сам при каждой синхронизации с центральной моделью."
+                ToolTip = "Загрузить проект в TNovPRO: «Модель» на сайте, из неё — Атлас и смета Афины.",
+                LongDescription = "Одна кнопка на дом: выгружает его целиком (сводный файл и выбранные связи) один раз, вход в TNovPRO — через браузер. " +
+                                  "Дальше сайт обновляется сам: через час после последней синхронизации с центральной моделью. " +
+                                  "Атлас для браузера и смета Афины собираются из «Модели» на сервере — отдельно их выгружать не нужно."
             };
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -2348,6 +2349,9 @@ namespace TNov
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ModelSyncSynchronized(Document doc) => ModelSyncService.OnSynchronized(doc);
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ModelSyncClosing(Document doc) => ModelSyncService.OnClosing(doc);
 
         /// <summary>«Модель» TNovPRO: учёт изменённых элементов.</summary>
         private void OnDocumentChangedForTNovPro(object sender, DocumentChangedEventArgs e)
@@ -2405,6 +2409,10 @@ namespace TNov
         public void OnDocumentClosing(object sender, DocumentClosingEventArgs e)
         {
             LoadSettings();
+
+            // «Модель» TNovPRO: накопленные приращения уходят на сайт при закрытии
+            // документа (ждать час после выхода из Revit некому). Документ не читается.
+            RunModelSync(() => ModelSyncClosing(e.Document));
 
             Document doc = e.Document;
             if (doc != null && _docStopwatches.ContainsKey(doc))
