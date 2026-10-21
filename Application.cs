@@ -1690,7 +1690,7 @@ namespace TNov
 
             PushButtonData buttonDataholescheckdynamo = new PushButtonData(nameof(HolesCheckDynamo), "Проверка\nотверстий", typeof(HolesCheckDynamo).Assembly.Location, typeof(HolesCheckDynamo).FullName)
             {
-                ToolTip = "Проверить задание по правилам статьи «Задания на отверстия»: кратность 5 мм, прорезание с запасом 20 мм, дубли и пересечения, сквозные марки, имена групп, ADSK_Группирование. Выбраны группы — проверяются они, иначе вся модель. Отдел BIM здесь же согласует отверстия по отчёту."
+                ToolTip = "Проверить задание по правилам статьи «Задания на отверстия»: прорезание с запасом 20 мм, дубли и пересечения, сквозные марки, имена групп, ADSK_Группирование. Выбраны группы — проверяются они, иначе вся модель. Отдел BIM здесь же согласует отверстия по отчёту."
             };
             RibbonIcons.Set(buttonDataholescheckdynamo, nameof(Properties.Resources.dynpl16));
             buttonDataholescheckdynamo.SetContextualHelp(taskautohelp);
