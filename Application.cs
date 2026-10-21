@@ -393,8 +393,11 @@ namespace TNov
             ElementFilter combinedFilterOVVK = CombinedElementFilter.CombinedFilterOVVK();
             ElementFilter combinedFilterAR = CombinedElementFilter.CombinedFilterAR();
 
+            //журнал заданий (TNovCommon) читает TNovPRO через клиент TNovTasks
+            TNovTasks.TasksPro.ProJournal.Register();
+
             //объявление апдейтеров
-            
+
             TNovHoleUpdater holeUpdater = new TNovHoleUpdater(application.ActiveAddInId); //отверстия
             UpdaterRegistry.RegisterUpdater(holeUpdater, true);
             UpdaterRegistry.AddTrigger(holeUpdater.GetUpdaterId(), filterGM, Element.GetChangeTypeAny());
