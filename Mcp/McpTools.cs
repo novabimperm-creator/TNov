@@ -29,6 +29,8 @@ namespace TNov.Mcp
             public int Level = 1;
             /// <summary>false — инструмент не трогает Revit (база знаний) и выполняется вне его потока.</summary>
             public bool NeedsRevit = true;
+            /// <summary>Только корпоративная конфигурация (библиотека скиллов на шаре или в TNovApi).</summary>
+            public bool CorpOnly;
             public TimeSpan Timeout = TimeSpan.FromMinutes(2);
             public Func<UIApplication, JObject, object> Run;
         }
@@ -182,7 +184,8 @@ namespace TNov.Mcp
                     "Универсальный инструмент: компилирует и выполняет C#-код против Revit API. Им решаются задачи, для которых нет отдельного инструмента: " +
                     "разбивка спецификаций по листам, размещение видов на листах, марки и аннотации, проверки высот и расстояний, " +
                     "подсчёты арматуры и объёмов по всей модели без лимита элементов, импорт изображений на виды, экспорт, поиск пересечений. " +
-                    "Код — тело метода `object Run(UIApplication uiapp, UIDocument uidoc, Document doc, TextWriter log)`; " +
+                    "Код — тело метода `object Run(UIApplication uiapp, UIDocument uidoc, Document doc, TextWriter log, IDictionary<string, string> args)`; " +
+                    "args — параметры из аргумента args (строки): выносите в них конкретные значения, если код может пригодиться как скилл. " +
                     "верните результат через return (сериализуется в JSON; Element → краткое описание, XYZ → [x,y,z] во футах), " +
                     "промежуточный вывод — log.WriteLine(...). " +
                     "Подключены using: System, System.Linq, System.Collections.Generic, System.Text, System.IO, Autodesk.Revit.DB (+ Architecture, Structure, Mechanical, Plumbing, Electrical), Autodesk.Revit.UI. " +
@@ -197,10 +200,88 @@ namespace TNov.Mcp
                     "В Revit 2022 доступен только C# 5 (без $\"...\", ?., =>-членов, кортежей); в Revit 2027 — последняя версия C#.",
                 Schema = Schema(new[] { "code" },
                     Prop("code", "string", "Тело метода на C#."),
+                    ArgsProperty(),
                     Prop("transaction", "boolean", "Выполнить в одной транзакции (откат при исключении)."),
                     Prop("transaction_name", "string", "Имя операции в журнале отмены.")),
                 Timeout = TimeSpan.FromMinutes(10),
                 Run = (app, args) => ScriptRunner.Run(app, args)
+            },
+            new Tool
+            {
+                Name = "skills_search",
+                Title = "Поиск скиллов",
+                Description =
+                    "Поиск в общей библиотеке скиллов компании — проверенных рецептов для Revit (C#-код с параметрами), " +
+                    "которые сохранили коллеги. Перед тем как писать скрипт для типовой задачи, поищите готовый скилл. " +
+                    "Возвращает id, название, описание, параметры, статус (опубликован или черновик) и версию Revit, где он проверен.",
+                Schema = Schema(null,
+                    Prop("query", "string", "Слова из задачи (пусто — список опубликованных)."),
+                    Prop("limit", "integer", "Сколько вернуть (по умолчанию 10).")),
+                ReadOnly = true,
+                CorpOnly = true,
+                NeedsRevit = false,
+                Timeout = TimeSpan.FromSeconds(40),
+                Run = (app, args) => Skills.SkillTools.Search(args)
+            },
+            new Tool
+            {
+                Name = "skills_get",
+                Title = "Скилл",
+                Description = "Полное описание скилла: параметры, примеры запросов, история версий и код последней (или указанной) версии.",
+                Schema = Schema(new[] { "id" },
+                    Prop("id", "string", "Id или название скилла."),
+                    Prop("version", "integer", "Номер версии (по умолчанию последняя).")),
+                ReadOnly = true,
+                CorpOnly = true,
+                NeedsRevit = false,
+                Timeout = TimeSpan.FromSeconds(40),
+                Run = (app, args) => Skills.SkillTools.Get(args)
+            },
+            new Tool
+            {
+                Name = "skill_run",
+                Title = "Запустить скилл",
+                Description =
+                    "Запускает скилл из библиотеки с параметрами. Выполняется так же, как execute_csharp: с правами текущего пользователя " +
+                    "в этой модели, с проверкой изменений и подтверждением в Revit. Параметры без значения берутся из значений по умолчанию.",
+                Schema = Schema(new[] { "id" },
+                    Prop("id", "string", "Id или название скилла."),
+                    ArgsProperty(),
+                    Prop("version", "integer", "Номер версии (по умолчанию последняя)."),
+                    Prop("transaction", "boolean", "Выполнить в одной транзакции.")),
+                CorpOnly = true,
+                Timeout = TimeSpan.FromMinutes(10),
+                Run = (app, args) => Skills.SkillTools.Run(app, args)
+            },
+            new Tool
+            {
+                Name = "skill_save",
+                Title = "Сохранить скилл",
+                Description =
+                    "Сохраняет код как скилл в общую библиотеку, когда пользователь просит сохранить решение. " +
+                    "Код должен уже отработать в Revit у этого пользователя без отката (в этом или прошлом сеансе) — возьмите его из чата точно таким, как он выполнялся. " +
+                    "Если хотите вынести значения в параметры, сначала один раз выполните изменённый код через execute_csharp с args, затем сохраните. " +
+                    "Пользователь подтверждает сохранение в Revit. Уровень 2–3 публикует сразу, уровень 1 — черновик для коллег уровня 2–3. " +
+                    "То же название — новая версия существующего скилла.",
+                Schema = Schema(new[] { "name", "description", "code" },
+                    Prop("name", "string", "Короткое название: что делает скилл («Разбить спецификацию по листам»)."),
+                    Prop("description", "string", "Что делает, когда применять, ограничения, единицы измерения."),
+                    Prop("code", "string", "Код скилла (тело метода, как в execute_csharp)."),
+                    new JProperty("parameters", new JObject
+                    {
+                        ["type"] = "array",
+                        ["description"] = "Параметры, которые код читает из args.",
+                        ["items"] = Schema(new[] { "name" },
+                            Prop("name", "string", "Имя ключа в args."),
+                            Prop("description", "string", "Что означает, в каких единицах."),
+                            Prop("default", "string", "Значение по умолчанию."))
+                    }),
+                    StringArray("examples", "2–4 примера запросов пользователя, по которым скилл должен находиться."),
+                    Prop("instruction", "string", "Черновик короткой инструкции для коллег: когда применять, что подготовить в модели, что проверить после. Пользователь поправит его в окне сохранения и сможет приложить файлы."),
+                    Prop("note", "string", "Что изменилось в этой версии.")),
+                CorpOnly = true,
+                Timeout = TimeSpan.FromMinutes(10),
+                Run = (app, args) => Skills.SkillTools.Save(app, args)
             },
             new Tool
             {
@@ -316,7 +397,8 @@ namespace TNov.Mcp
         public static JArray List()
         {
             int level = McpAccess.Level;
-            return new JArray(_tools.Where(t => t.Level <= level).Select(t => new JObject
+            bool corp = McpAccess.IsCorp;
+            return new JArray(_tools.Where(t => t.Level <= level && (corp || !t.CorpOnly)).Select(t => new JObject
             {
                 ["name"] = t.Name,
                 ["title"] = t.Title,
@@ -343,6 +425,7 @@ namespace TNov.Mcp
             JObject args = parameters?["arguments"] as JObject ?? new JObject();
             Tool tool = _tools.FirstOrDefault(t => t.Name == name);
             if (tool == null) return TextResult("Неизвестный инструмент: " + name, true);
+            if (tool.CorpOnly && !McpAccess.IsCorp) return TextResult("Скиллы доступны только в корпоративной конфигурации.", true);
             int level = McpAccess.Level;
             var context = new McpLog.Context { EffectiveLevel = level, Client = client.Name };
             if (tool.Level > level)
@@ -1192,6 +1275,14 @@ namespace TNov.Mcp
 
         private static JProperty StringArray(string name, string description) =>
             new JProperty(name, new JObject { ["type"] = "array", ["items"] = new JObject { ["type"] = "string" }, ["description"] = description });
+
+        private static JProperty ArgsProperty() =>
+            new JProperty("args", new JObject
+            {
+                ["type"] = "object",
+                ["description"] = "Параметры скрипта: {\"имя\": \"значение\"}; в коде — словарь args (строки).",
+                ["additionalProperties"] = new JObject { ["type"] = "string" }
+            });
 
         private static JProperty FiltersProperty() =>
             new JProperty("filters", new JObject

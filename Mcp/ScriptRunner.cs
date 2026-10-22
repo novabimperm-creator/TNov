@@ -41,10 +41,16 @@ namespace TNov.Mcp
             "Autodesk.Revit.UI"
         };
 
-        public static object Run(UIApplication app, JObject args)
+        /// <param name="skillTitle">Запуск скилла: название, автор и версия — для окна подтверждения.</param>
+        public static object Run(UIApplication app, JObject args, string skillTitle = null)
         {
             string code = args["code"]?.ToString();
             if (string.IsNullOrWhiteSpace(code)) throw new ArgumentException("Пустой код.");
+            // Параметры скрипта: в коде — словарь args (строки), как у скиллов.
+            var scriptArgs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (args["args"] is JObject argsObject)
+                foreach (JProperty property in argsObject.Properties())
+                    scriptArgs[property.Name] = property.Value.Type == JTokenType.Null ? null : property.Value.ToString();
             bool useTransaction = args["transaction"]?.Type == JTokenType.Boolean && (bool)args["transaction"];
             string transactionName = args["transaction_name"]?.ToString() ?? McpClient.Current.Name + ": скрипт";
 
@@ -53,7 +59,7 @@ namespace TNov.Mcp
             if (useTransaction && doc == null) throw new InvalidOperationException("Нет открытого документа для транзакции.");
             McpAccess.ScriptScope scope = McpAccess.ScriptScopeFor(doc);
 
-            if (!Confirm(code, useTransaction, scope))
+            if (!Confirm(code, useTransaction, scope, skillTitle))
                 return new JObject { ["declined"] = true, ["message"] = "Пользователь отклонил выполнение кода в Revit." };
 
             MethodInfo entry = Compile(code, out List<string> errors);
@@ -77,7 +83,7 @@ namespace TNov.Mcp
                     McpTools.SuppressWarnings(transaction, warnings);
                 }
 
-                result = entry.Invoke(null, new object[] { app, uidoc, doc, log });
+                result = entry.Invoke(null, new object[] { app, uidoc, doc, log, scriptArgs });
 
                 if (transaction != null && transaction.GetStatus() == TransactionStatus.Started)
                 {
@@ -95,6 +101,8 @@ namespace TNov.Mcp
                         "Права в этой модели: " + ScopeText(scope) + "." + Output(log));
                 }
                 if (group != null && group.GetStatus() == TransactionStatus.Started) group.Assimilate();
+                // Код отработал без исключения и без отката — его можно сохранить как скилл (в любом сеансе).
+                Skills.SkillLibrary.MarkVerified(code);
             }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
@@ -251,7 +259,7 @@ namespace TNov.Mcp
             return string.Join("\n", lines).Trim();
         }
 
-        private static bool Confirm(string code, bool useTransaction, McpAccess.ScriptScope scope)
+        private static bool Confirm(string code, bool useTransaction, McpAccess.ScriptScope scope, string skillTitle)
         {
             // Доверие «до закрытия Revit» действует только для прав не шире тех, при которых его дали.
             if (_trustedScope != null && scope <= _trustedScope.Value) return true;
@@ -260,7 +268,9 @@ namespace TNov.Mcp
             var dialog = new TaskDialog("TNov — " + McpClient.Current.Name)
             {
                 MainIcon = TaskDialogIcon.TaskDialogIconWarning,
-                MainInstruction = McpClient.Current.Name + " хочет выполнить код в Revit",
+                MainInstruction = skillTitle != null
+                    ? McpClient.Current.Name + " хочет запустить скилл " + skillTitle
+                    : McpClient.Current.Name + " хочет выполнить код в Revit",
                 MainContent = "Права скрипта: " + ScopeText(scope) + ". Изменения сверх прав будут отменены целиком.\n" +
                     "Результат можно отменить Ctrl+Z.\n\n" + shown,
                 CommonButtons = TaskDialogCommonButtons.Cancel,
@@ -286,7 +296,7 @@ namespace TNov.Mcp
             return string.Join("\n", Usings.Select(u => "using " + u + ";")) + "\n" +
                    "namespace " + ScriptNamespace + "\n{\n" +
                    "public static class Script\n{\n" +
-                   "public static object Run(UIApplication uiapp, UIDocument uidoc, Document doc, TextWriter log)\n{\n" +
+                   "public static object Run(UIApplication uiapp, UIDocument uidoc, Document doc, TextWriter log, IDictionary<string, string> args)\n{\n" +
                    "#line 1\n" + body + "\n" +
                    "}\n}\n}\n";
         }

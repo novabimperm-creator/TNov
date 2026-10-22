@@ -20,6 +20,7 @@
                 <ResourceDictionary Source="/TNovCommon;component/Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+            <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
 
             <!-- Ступень шкалы уровней: неактивная — карточка, достигнутая — акцент. -->
             <Style x:Key="LevelStepStyle" TargetType="Border">
@@ -104,6 +105,13 @@
                 </Style.Triggers>
             </Style>
 
+            <!-- Вкладки окна: как карточки-переключатели TNov, текст по центру. -->
+            <Style x:Key="TabRadioStyle" TargetType="RadioButton" BasedOn="{StaticResource CardRadioStyle}">
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+            </Style>
+
             <!-- Кнопки внутри карточки: фон окна, чтобы не сливались с карточкой. -->
             <Style x:Key="CardButtonStyle" TargetType="Button" BasedOn="{StaticResource CloseButtonStyle}">
                 <Setter Property="Background" Value="{StaticResource BgBrush}"/>
@@ -154,7 +162,16 @@
                 </Grid>
             </Border>
 
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,16,0,0">
+            <!-- Переключатель вкладок -->
+            <UniformGrid DockPanel.Dock="Top" Columns="2" Margin="0,16,0,0">
+                <RadioButton x:Name="ConnectionTab" Content="Подключение" GroupName="McpTabs" IsChecked="True"
+                             Style="{StaticResource TabRadioStyle}" Margin="0,0,4,0" Checked="Tab_Checked"/>
+                <RadioButton x:Name="SkillsTab" Content="Скиллы" GroupName="McpTabs"
+                             Style="{StaticResource TabRadioStyle}" Margin="4,0,0,0" Checked="Tab_Checked"/>
+            </UniformGrid>
+
+            <Grid>
+            <ScrollViewer x:Name="ConnectionPanel" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,12,0,0">
             <StackPanel>
                 <!-- Управление коннектором -->
                 <UniformGrid Columns="2" Margin="0,0,0,10">
@@ -360,6 +377,160 @@
                            HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,10,0,0"/>
             </StackPanel>
             </ScrollViewer>
+
+            <!-- Вкладка «Скиллы»: своя модель (SkillsViewModel), загрузка при первом открытии. -->
+            <DockPanel x:Name="SkillsPanel" Visibility="Collapsed" Margin="0,12,0,0">
+                <Button DockPanel.Dock="Bottom" Content="Готово" Style="{StaticResource RunButtonStyle}"
+                        Margin="0,10,0,0" Click="CloseButton_Click"/>
+
+                <!-- Не корпоративная конфигурация -->
+                <TextBlock DockPanel.Dock="Top" Text="{Binding UnavailableText}" TextWrapping="Wrap">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource InfoCardLabelStyle}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Available}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                              Visibility="{Binding Available, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Style="{StaticResource DarkTextBoxStyle}"
+                                     Text="{Binding Query, UpdateSourceTrigger=PropertyChanged, Delay=400}"
+                                     ToolTip="Поиск по названию, описанию и примерам запросов"/>
+                            <Button Grid.Column="1" Content="Обновить" Style="{StaticResource CloseButtonStyle}"
+                                    Margin="8,0,0,0" Padding="12,0" Click="SkillsRefresh_Click"/>
+                        </Grid>
+                        <TextBlock Text="{Binding Message}" Style="{StaticResource HideWhenEmptyLabelStyle}" Margin="0,0,0,8"/>
+
+                        <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding Selected, Mode=TwoWay}"
+                                 Style="{StaticResource JournalListBoxStyle}" MaxHeight="260"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,2">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Name}" Style="{StaticResource SectionNameStyle}" FontSize="13"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <Border Grid.Column="1" Style="{StaticResource AccentBadgeStyle}" Margin="6,0,0,0">
+                                                <TextBlock Text="{Binding StatusText}" Style="{StaticResource JournalBadgeTextStyle}"/>
+                                            </Border>
+                                        </Grid>
+                                        <TextBlock Text="{Binding ListMeta}" Style="{StaticResource InfoCardLabelStyle}" FontSize="11"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <!-- Выбранный скилл -->
+                        <Border Style="{StaticResource InfoCardBorderStyle}" Margin="0,10,0,0"
+                                Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Selected.Name}" Style="{StaticResource SectionNameStyle}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding Selected.Author}" Style="{StaticResource InfoCardValueStyle}" Margin="0,2,0,0"/>
+                                <TextBlock Text="{Binding Selected.Meta}" Style="{StaticResource InfoCardLabelStyle}" Margin="0,2,0,8"/>
+                                <TextBlock Text="Описание" Style="{StaticResource InfoCardLabelStyle}"/>
+                                <TextBlock Text="{Binding Selected.Description}" Style="{StaticResource InfoCardValueStyle}"
+                                           TextWrapping="Wrap" Margin="0,2,0,8"/>
+
+                                <!-- Инструкция: правят автор и отдел BIM, остальные читают -->
+                                <TextBlock Text="Инструкция" Style="{StaticResource InfoCardLabelStyle}"/>
+                                <TextBlock Text="{Binding Selected.Instruction}" Style="{StaticResource InfoCardValueStyle}"
+                                           TextWrapping="Wrap" Margin="0,2,0,8"
+                                           Visibility="{Binding Selected.ReadOnlyInstruction, Converter={StaticResource BoolToVis}}"/>
+                                <StackPanel Visibility="{Binding Selected.CanEdit, Converter={StaticResource BoolToVis}}" Margin="0,2,0,8">
+                                    <TextBox Style="{StaticResource DarkTextBoxStyle}"
+                                             Text="{Binding InstructionDraft, UpdateSourceTrigger=PropertyChanged}"
+                                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" MaxHeight="160"
+                                             VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top"/>
+                                    <Button Content="Сохранить инструкцию" Style="{StaticResource CardButtonStyle}"
+                                            Margin="0,6,0,0" Click="SkillSaveInstruction_Click"/>
+                                </StackPanel>
+
+                                <!-- Файлы -->
+                                <TextBlock Text="Файлы" Style="{StaticResource InfoCardLabelStyle}"/>
+                                <TextBlock Text="нет" Style="{StaticResource InfoCardValueStyle}" Margin="0,2,0,4">
+                                    <TextBlock.Visibility>
+                                        <Binding Path="Selected.HasFiles" Converter="{StaticResource InverseBoolToVis}"/>
+                                    </TextBlock.Visibility>
+                                </TextBlock>
+                                <ItemsControl ItemsSource="{Binding Selected.Files}" Margin="0,2,0,4">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Name}" Style="{StaticResource InfoCardValueStyle}"
+                                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
+                                                    <TextBlock Text="{Binding Meta}" Style="{StaticResource InfoCardLabelStyle}" FontSize="11"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="6,0,0,0">
+                                                    <Button Content="Открыть" Style="{StaticResource CardButtonStyle}" Padding="10,0"
+                                                            Tag="{Binding Name}" Click="SkillFileOpen_Click"/>
+                                                    <Button Content="Заменить" Style="{StaticResource CardButtonStyle}" Padding="10,0" Margin="4,0,0,0"
+                                                            Tag="{Binding Name}" Click="SkillFileReplace_Click"
+                                                            Visibility="{Binding CanEdit, Converter={StaticResource BoolToVis}}"/>
+                                                    <Button Content="✕" Style="{StaticResource CloseButtonStyleMini}" Margin="4,0,0,0"
+                                                            Tag="{Binding Name}" Click="SkillFileRemove_Click" ToolTip="Удалить файл"
+                                                            Visibility="{Binding CanEdit, Converter={StaticResource BoolToVis}}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Content="Прикрепить файл…" Style="{StaticResource CardButtonStyle}" Margin="0,0,0,8"
+                                        Visibility="{Binding Selected.CanEdit, Converter={StaticResource BoolToVis}}"
+                                        Click="SkillFileAdd_Click"/>
+                                <TextBlock Text="Параметры" Style="{StaticResource InfoCardLabelStyle}"/>
+                                <TextBlock Text="{Binding Selected.ParametersText}" Style="{StaticResource InfoCardValueStyle}"
+                                           TextWrapping="Wrap" Margin="0,2,0,8"/>
+                                <TextBlock Text="Примеры запросов" Style="{StaticResource InfoCardLabelStyle}"/>
+                                <TextBlock Text="{Binding Selected.ExamplesText}" Style="{StaticResource InfoCardValueStyle}"
+                                           TextWrapping="Wrap" Margin="0,2,0,8"/>
+                                <TextBlock Text="Код последней версии" Style="{StaticResource InfoCardLabelStyle}"/>
+                                <TextBox Text="{Binding Selected.Code, Mode=OneWay}" IsReadOnly="True" Background="Transparent"
+                                         BorderThickness="0" TextWrapping="NoWrap" FontFamily="Consolas" FontSize="12"
+                                         Foreground="{StaticResource PrimaryTextBrush}" MaxHeight="180" Margin="0,2,0,8"
+                                         VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"/>
+                                <UniformGrid Rows="1">
+                                    <Button Content="Скопировать код" Style="{StaticResource CardButtonStyle}" Margin="0,0,4,0"
+                                            Click="SkillCopy_Click"/>
+                                    <Button Content="Опубликовать" Style="{StaticResource CardButtonStyle}" Margin="4,0,0,0"
+                                            Visibility="{Binding Selected.CanPublish, Converter={StaticResource BoolToVis}}"
+                                            Click="SkillPublish_Click"/>
+                                    <Button Content="Скрыть" Style="{StaticResource CardButtonStyle}" Margin="4,0,0,0"
+                                            Visibility="{Binding Selected.CanHide, Converter={StaticResource BoolToVis}}"
+                                            Click="SkillHide_Click"/>
+                                    <Button Content="Вернуть" Style="{StaticResource CardButtonStyle}" Margin="4,0,0,0"
+                                            Visibility="{Binding Selected.CanRestore, Converter={StaticResource BoolToVis}}"
+                                            Click="SkillRestore_Click"/>
+                                </UniformGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Style="{StaticResource InfoCardLabelStyle}"
+                                   Text="Чтобы сохранить скилл, попросите нейросеть после удачного решения: «сохрани это как скилл» — в окне сохранения можно написать инструкцию и прикрепить файлы. Уровень 2–3 публикует сразу, уровень 1 — черновиком. Инструкцию и файлы позже меняют автор и отдел BIM."/>
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+            </Grid>
         </DockPanel>
     </Border>
 </Window>
