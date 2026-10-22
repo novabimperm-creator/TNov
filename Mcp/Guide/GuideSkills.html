@@ -1,0 +1,235 @@
+<title>Скиллы TNov</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column on a faint blueprint grid; steps as a real numbered sequence, levels as a table; accent = violet of the «Нейросетошная» icon */
+:root {
+  --bg: #f5f6f9;
+  --surface: #ffffff;
+  --fg: #1d2030;
+  --muted: #5e6378;
+  --line: #dcdde8;
+  --grid: rgba(70, 60, 140, 0.06);
+  --accent: #5f47c2;
+  --accent-soft: #ebe7fa;
+  --code-bg: #eff0f5;
+  --ok: #2f8a4a;
+  --warn: #a8710a;
+  --display: "Unbounded", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #13141c; --surface: #1b1d28; --fg: #e5e6f0; --muted: #9a9db2; --line: #2e3040;
+    --grid: rgba(160, 150, 230, 0.05); --accent: #a996f2; --accent-soft: #2b2545; --code-bg: #232534;
+    --ok: #5cc27a; --warn: #e0a83a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #13141c; --surface: #1b1d28; --fg: #e5e6f0; --muted: #9a9db2; --line: #2e3040;
+  --grid: rgba(160, 150, 230, 0.05); --accent: #a996f2; --accent-soft: #2b2545; --code-bg: #232534;
+  --ok: #5cc27a; --warn: #e0a83a; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--fg);
+  font: 400 16px/1.6 var(--body);
+  padding-inline: 16px;
+  padding-block: 40px 64px;
+}
+main { max-width: 720px; margin: 0 auto; display: grid; gap: 44px; }
+main > * { min-width: 0; }
+h1, h2 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(28px, 6vw, 40px); font-weight: 700; line-height: 1.15; }
+h2 { font-size: 20px; font-weight: 500; }
+h3 { font-size: 16px; font-weight: 600; margin: 0; }
+p { margin: 0; }
+a { color: var(--accent); }
+section { display: grid; gap: 14px; }
+section > * { min-width: 0; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.lead { font-size: 18px; color: var(--muted); max-width: 62ch; }
+header { display: grid; gap: 14px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font: 500 12px/1 var(--mono); padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+
+code, kbd { font-family: var(--mono); font-size: .9em; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+.cmd { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: 8px; background: var(--code-bg); overflow: hidden; }
+.cmd pre { margin: 0; padding: 12px 14px; overflow-x: auto; font: 14px/1.5 var(--mono); flex: 1; min-width: 0; }
+.cmd button {
+  border: 0; border-left: 1px solid var(--line); background: var(--surface); color: var(--fg);
+  font: 500 13px var(--body); padding: 0 14px; cursor: pointer;
+}
+.cmd button:hover { color: var(--accent); }
+.cmd button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; counter-reset: step; }
+ol.steps > li { display: grid; grid-template-columns: 40px 1fr; gap: 14px; counter-increment: step; }
+ol.steps > li::before {
+  content: counter(step); font: 700 16px/40px var(--display); text-align: center;
+  width: 40px; height: 40px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+}
+ol.steps > li > div { display: grid; gap: 8px; min-width: 0; padding-top: 8px; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 520px; }
+th, td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+th { font: 500 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+td.lvl { font: 700 22px/1 var(--display); color: var(--accent); width: 56px; }
+
+.pick { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.pick > div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
+.pick .who { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+
+.examples { display: grid; gap: 10px; }
+.example { border-left: 3px solid var(--line); padding: 4px 0 4px 14px; }
+.example .tag { font: 500 11px var(--mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+
+ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.callout { background: var(--accent-soft); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; }
+
+dl.faq { margin: 0; display: grid; gap: 16px; }
+dl.faq dt { font-weight: 600; }
+dl.faq dd { margin: 4px 0 0; color: var(--muted); }
+
+.status { display: grid; gap: 8px; }
+.status div { display: flex; gap: 10px; align-items: baseline; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; transform: translateY(1px); }
+.dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.off { background: var(--muted); }
+
+footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+@media (max-width: 480px) { ol.steps > li { grid-template-columns: 32px 1fr; } ol.steps > li::before { width: 32px; height: 32px; line-height: 32px; font-size: 14px; } }
+.ui { font: 500 .9em var(--body); padding: 1px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); white-space: nowrap; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px; }
+nav.toc a { font: 500 13px var(--body); color: var(--fg); text-decoration: none; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+nav.toc a:hover { color: var(--accent); border-color: var(--accent); }
+.part { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding-top: 8px; border-top: 1px solid var(--line); }
+.prompt { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 10px; }
+.prompt .row { display: flex; flex-wrap: wrap; gap: 8px; }
+.prompt p { font-size: 15px; }
+.cmd pre.file { white-space: pre; }
+.note { font-size: 14px; color: var(--muted); }
+</style>
+
+<main>
+  <header>
+    <span class="eyebrow">TNov · нейросети · корпоративная конфигурация</span>
+    <h1>Скиллы TNov</h1>
+    <p class="lead">Скилл — проверенное решение типовой задачи в Revit, которое коллега сохранил в общую библиотеку. Нейросеть находит его сама и запускает с вашими параметрами, а вы можете сохранить своё удачное решение для всех.</p>
+    <div class="meta">
+      <span class="chip">Claude · Codex · Qwen</span>
+      <span class="chip">окно «Нейросетошная» → Скиллы</span>
+    </div>
+    <nav class="toc" aria-label="Разделы">
+      <a href="#use">Как пользоваться</a>
+      <a href="#save">Как сохранить</a>
+      <a href="#edit">Правка и файлы</a>
+      <a href="#rules">Правила</a>
+      <a href="#problems">Если не работает</a>
+    </nav>
+  </header>
+
+  <section id="use">
+    <h2>Как пользоваться</h2>
+    <p>Просто опишите задачу нейросети, как обычно. Перед тем как писать новый скрипт, она проверит библиотеку и, если найдёт подходящий скилл, запустит его.</p>
+    <div class="prompt"><p>Раздели ведомость перемычек на листы КЖ по 30 строк.</p></div>
+    <ul class="plain">
+      <li>Перед запуском Revit покажет окно подтверждения: в заголовке видны название скилла, версия и автор.</li>
+      <li>Можно попросить и явно: «Поищи в скиллах, нет ли готового решения для…».</li>
+      <li>Все скиллы, их описания, инструкции, файлы и код — на вкладке <b>Скиллы</b> окна <b>Нейросетошная</b> (TNov → Настройки → Нейросетошная). Там же поиск по названию и описанию.</li>
+      <li>Скилл одинаково работает в Claude, Codex и Qwen: код выполняет плагин TNov, нейросеть только подставляет параметры.</li>
+    </ul>
+  </section>
+
+  <section id="save">
+    <h2>Как сохранить свой скилл</h2>
+    <ol class="steps">
+      <li><div>
+        <h3>Решите задачу с нейросетью</h3>
+        <p>Скилл получается из скрипта, который уже отработал у вас в Revit без ошибок, в этом или прошлом сеансе. Проверьте результат в модели.</p>
+      </div></li>
+      <li><div>
+        <h3>Попросите сохранить</h3>
+        <div class="prompt"><p>Сохрани это как скилл «Разбить спецификацию по листам».</p></div>
+        <p>Нейросеть сама составит описание, вынесет конкретные значения (имя спецификации, число строк) в параметры и подберёт примеры запросов, по которым скилл будут находить. Если она меняла код, то сначала запустит его ещё раз.</p>
+      </div></li>
+      <li><div>
+        <h3>Проверьте и дополните в окне «Сохранить скилл»</h3>
+        <p>В Revit откроется окно с названием, автором, описанием, параметрами и кодом. Здесь же:</p>
+        <ul class="plain">
+          <li><b>Инструкция для коллег</b> — коротко: когда применять, что подготовить в модели, что проверить после. Нейросеть предложит черновик, поправьте его.</li>
+          <li><b>Файлы</b> — «Прикрепить файл…»: шаблон, пример, схема (до 50 МБ каждый).</li>
+        </ul>
+        <p>Нажмите <span class="ui">Опубликовать</span> (или <span class="ui">Сохранить черновик</span> на уровне 1).</p>
+      </div></li>
+    </ol>
+    <p class="note">Автор указывается автоматически — ваш логин Windows. Сохранение с тем же названием создаёт новую версию скилла, прежние остаются в истории.</p>
+  </section>
+
+  <section id="edit">
+    <h2>Правка инструкции и файлов</h2>
+    <p>Автор скилла и сотрудники отдела BIM могут на вкладке <b>Скиллы</b>:</p>
+    <ul class="plain">
+      <li>изменить текст инструкции — <span class="ui">Сохранить инструкцию</span>;</li>
+      <li>заменить файл — <span class="ui">Заменить</span>, удалить — <span class="ui">✕</span>;</li>
+      <li>прикрепить ещё файлы — <span class="ui">Прикрепить файл…</span>.</li>
+    </ul>
+    <p>Остальные видят инструкцию и могут открыть файлы — кнопка <span class="ui">Открыть</span>.</p>
+  </section>
+
+  <section id="rules">
+    <h2>Правила</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Кто</th><th>Что может</th></tr></thead>
+        <tbody>
+          <tr><td>Уровень 1</td><td>Запускать скиллы. Сохранять свои скиллы черновиком — их видят коллеги с уровнем 2–3 и могут опубликовать.</td></tr>
+          <tr><td>Уровень 2–3</td><td>Публиковать сразу, без проверки. Публиковать черновики коллег, сохранять новые версии.</td></tr>
+          <tr><td>Автор, отдел BIM</td><td>Менять инструкцию и файлы скилла.</td></tr>
+          <tr><td>Автор, уровень 3</td><td>Скрыть скилл и вернуть скрытый.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="plain">
+      <li><b>Права при запуске — ваши.</b> Скилл выполняется с уровнем доступа того, кто его запускает, в текущей модели, с той же проверкой изменений. Если скилл сохранён на уровне 3, а у вас уровень 1, его попытка изменить 3D-элементы будет отменена.</li>
+      <li><b>Версия Revit.</b> У скилла указано, в какой версии Revit он проверен. Скилл из Revit 2027 может не запуститься в Revit 2022 — нейросеть предупредит.</li>
+      <li><b>Отменяется</b> скилл, как и любое изменение, <kbd>Ctrl+Z</kbd> в Revit.</li>
+      <li>Скиллы доступны только в корпоративной конфигурации TNov.</li>
+    </ul>
+  </section>
+
+  <section id="problems">
+    <h2>Если не работает</h2>
+    <dl class="faq">
+      <div><dt>«Этот код ещё не отрабатывал в Revit…»</dt><dd>Сохранить можно только код, который уже выполнился у вас без ошибок. Попросите нейросеть сначала запустить его (например, с нужными параметрами), а затем сохранить.</dd></div>
+      <div><dt>«На уровне 1 его нельзя менять»</dt><dd>Скилл с таким названием уже опубликован. Сохраните своё решение под другим названием или попросите коллегу с уровнем 2–3.</dd></div>
+      <div><dt>Нет кнопок правки инструкции и файлов</dt><dd>Их видят только автор скилла и сотрудники отдела BIM.</dd></div>
+      <div><dt>Нейросеть не находит скилл</dt><dd>Поиск идёт по названию, описанию и примерам запросов. Попросите явно: «найди в скиллах…» или посмотрите вкладку «Скиллы». Если скилл новый, нажмите там «Обновить».</dd></div>
+      <div><dt>Инструментов скиллов нет</dt><dd>Начните новый сеанс нейросети после обновления плагина. В личной конфигурации скиллы недоступны.</dd></div>
+    </dl>
+  </section>
+
+  <footer>TNov · библиотека скиллов коннектора Revit — нейросети (MCP), корпоративная конфигурация. Скиллы и файлы хранятся на сетевой папке TNov (в будущем — в TNovApi). Запуски скиллов записываются в журнал TNov.</footer>
+</main>
+
+<script>
+document.querySelectorAll("[data-copy]").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    var pre = document.getElementById(btn.getAttribute("data-copy"));
+    var text = pre.textContent;
+    function done() { btn.textContent = "Скопировано"; setTimeout(function () { btn.textContent = "Копировать"; }, 1600); }
+    function fallback() {
+      var range = document.createRange(); range.selectNodeContents(pre);
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      btn.textContent = "Выделено — Ctrl+C";
+    }
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+  });
+});
+</script>
