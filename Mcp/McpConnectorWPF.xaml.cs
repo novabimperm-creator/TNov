@@ -71,6 +71,8 @@ namespace TNov.Mcp
 
         private void DesktopButton_Click(object sender, RoutedEventArgs e) => _status.ConnectClaudeDesktop();
 
+        private void ClaudeCodeButton_Click(object sender, RoutedEventArgs e) => _status.ConnectClaudeCode();
+
         private void CodexButton_Click(object sender, RoutedEventArgs e) => _status.ConnectCodex();
 
         private void CopyQwenButton_Click(object sender, RoutedEventArgs e) => _status.CopyConnectCommand(_status.Qwen);

@@ -286,9 +286,13 @@
                         <TextBlock Text="{Binding Claude.Activity}" Style="{StaticResource HideWhenEmptyLabelStyle}" Margin="0,0,0,8"/>
                         <TextBlock Text="Адрес" Style="{StaticResource InfoCardLabelStyle}"/>
                         <TextBox Text="{Binding Claude.Url, Mode=OneWay}" Style="{StaticResource CommandBoxStyle}"/>
-                        <TextBlock Text="Claude Code — выполните в PowerShell (не в чате Claude), один раз на компьютере" TextWrapping="Wrap"
-                                   Style="{StaticResource InfoCardLabelStyle}"/>
+                        <TextBlock Text="«Подключить к Claude Code» прописывает мост в рабочую папку %USERPROFILE%\Claude\Revit и в настройки Claude Code. Через мост связь переживает перезапуск Revit. Права администратора не нужны. Вручную — команда ниже в PowerShell (не в чате Claude)."
+                                   TextWrapping="Wrap" Style="{StaticResource InfoCardLabelStyle}"/>
                         <TextBox Text="{Binding Claude.ConnectCommand, Mode=OneWay}" Style="{StaticResource CommandBoxStyle}"/>
+                        <Button Content="Подключить к Claude Code"
+                                Style="{StaticResource CardButtonStyle}"
+                                Margin="0,0,0,8"
+                                Click="ClaudeCodeButton_Click"/>
                         <UniformGrid Columns="2">
                             <Button Content="Скопировать команду"
                                     Style="{StaticResource CardButtonStyle}"

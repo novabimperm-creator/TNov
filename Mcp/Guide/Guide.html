@@ -175,39 +175,21 @@ nav.toc a:hover { color: var(--accent); border-color: var(--accent); }
     <h2>Подключение к Claude Code</h2>
     <ol class="steps">
       <li><div>
-        <h3>Создайте рабочую папку</h3>
-        <p>Например, <code>C:\Claude\Revit</code>. В ней лежит настройка, по которой Claude Code находит Revit, поэтому работать с Revit через Claude нужно из этой папки.</p>
-      </div></li>
-      <li><div>
-        <h3>Положите в неё файл настроек</h3>
-        <p>Откройте Блокнот, вставьте текст ниже и сохраните в эту папку под именем <code>.mcp.json</code>. В окне сохранения выберите тип файла <span class="ui">Все файлы (*.*)</span>, иначе Блокнот допишет <code>.txt</code>.</p>
-        <div class="cmd">
-          <pre id="mcp-json" class="file">{
-  "mcpServers": {
-    "revit": {
-      "type": "http",
-      "url": "http://localhost:48884/mcp"
-    }
-  }
-}</pre>
-          <button type="button" data-copy="mcp-json">Копировать</button>
-        </div>
-        <p class="note">Если вы пользуетесь Claude Code в терминале, вместо файла можно выполнить одну команду в PowerShell (не в чате Claude). Она подключает Revit сразу во всех папках. Её же копирует кнопка в разделе Claude окна «Нейросетошная».</p>
-        <div class="cmd">
-          <pre id="connect-cmd">claude mcp add --transport http --scope user revit http://localhost:48884/mcp</pre>
-          <button type="button" data-copy="connect-cmd">Копировать</button>
-        </div>
+        <h3>Подключите из Revit</h3>
+        <p>Нажмите кнопку <b>Нейросетошная</b>, в разделе Claude нажмите <span class="ui">Подключить к Claude Code</span>. Плагин сам создаст рабочую папку <code>%USERPROFILE%\Claude\Revit</code> с настройками и пропишет коннектор в настройки Claude Code. Права администратора не нужны.</p>
+        <p class="note">Коннектор подключается через мост: после перезапуска Revit или остановки коннектора связь восстанавливается сама, новый чат начинать не нужно. Если вы раньше подключались файлом <code>.mcp.json</code> или командой с адресом <code>http://localhost:48884/mcp</code>, просто нажмите кнопку — она заменит старую запись.</p>
+        <p class="note">Вручную (для Claude Code в терминале): скопируйте команду из раздела Claude окна «Нейросетошная» и выполните её в PowerShell, не в чате Claude. Перед этим один раз нажмите кнопку — она кладёт на диск файл моста.</p>
       </div></li>
       <li><div>
         <h3>Откройте папку в Claude Code</h3>
-        <p>Приложение Claude → вкладка <span class="ui">Code</span> → новый сеанс → выберите папку <code>C:\Claude\Revit</code>.</p>
-        <p>При первом открытии Claude Code спросит, доверять ли серверу <b>revit</b> из файла <code>.mcp.json</code>. Разрешите — это и есть коннектор TNov.</p>
+        <p>Приложение Claude → вкладка <span class="ui">Code</span> → новый сеанс → выберите папку <code>%USERPROFILE%\Claude\Revit</code> (обычно <code>C:\Users\ваш_логин\Claude\Revit</code>).</p>
+        <p>При первом открытии Claude Code спросит, доверять ли серверу <b>revit</b>. Разрешите — это и есть коннектор TNov.</p>
       </div></li>
       <li><div>
         <h3>Проверьте связь</h3>
         <p>Откройте модель в Revit, нажмите кнопку <b>Нейросетошная</b>, затем напишите в Claude Code:</p>
         <div class="prompt"><p>Какая модель сейчас открыта в Revit? Сколько в ней уровней?</p></div>
-        <p>Claude должен назвать файл модели и уровни. Если он отвечает, что не видит Revit, загляните в раздел <a href="#problems">«Если не работает»</a>.</p>
+        <p>Claude должен назвать файл модели и уровни. Если Revit был закрыт, Claude сообщит, что Revit не отвечает, — запустите коннектор и повторите. Если он отвечает, что не видит Revit вообще, загляните в раздел <a href="#problems">«Если не работает»</a>.</p>
       </div></li>
     </ol>
   </section>
@@ -423,7 +405,7 @@ nav.toc a:hover { color: var(--accent); border-color: var(--accent); }
   <section id="problems">
     <h2>Если не работает</h2>
     <dl class="faq">
-      <div><dt>Нейросеть говорит, что у неё нет доступа к Revit</dt><dd>Проверьте по порядку: Revit открыт, кнопка «Нейросетошная» нажата, сеанс начат после нажатия кнопки. Для Claude Code — сеанс открыт в папке с <code>.mcp.json</code>; если Claude Code спрашивал про сервер revit, а вы отклонили, откройте новый сеанс и разрешите. Для Codex и Qwen Code — нажата кнопка подключения в окне, и программа перезапущена после этого.</dd></div>
+      <div><dt>Нейросеть говорит, что у неё нет доступа к Revit</dt><dd>Проверьте по порядку: Revit открыт и коннектор запущен (окно «Нейросетошная»); в окне нажата кнопка подключения вашей нейросети («Подключить к Claude Code», «…к Codex», «…к Qwen Code»), и программа перезапущена после этого. Для Claude Code — сеанс открыт в папке <code>%USERPROFILE%\Claude\Revit</code>; если Claude Code спрашивал про сервер revit, а вы отклонили, откройте новый сеанс и разрешите. Если вы подключались раньше напрямую по адресу, «Проверить» подскажет нажать «Подключить к Claude Code»: со старым подключением после перезапуска Revit инструменты пропадают до нового чата.</dd></div>
       <div><dt>Codex отвечает, что не может подключиться к Revit или к вашему окружению</dt><dd>Нажмите «Проверить» в окне «Нейросетошная». Если там «Codex ни разу не запускал мост», это не тот Codex: сайт chatgpt.com или стороннее приложение из Microsoft Store. Узнать, что установлено, можно в PowerShell командой <code>Get-StartApps | Where-Object Name -match 'codex|chatgpt'</code>: стороннее приложение будет с чужим издателем в AppID (например, <code>ChatDog…</code>). Удалите его и поставьте ChatGPT с <a href="https://chatgpt.com/ru-RU/download/">chatgpt.com/ru-RU/download</a>.</dd></div>
       <div><dt>Codex в ответ на команду рассуждает о ней, вместо того чтобы подключиться</dt><dd>Команду или блок отправили в чат Codex. Нейросеть их не выполняет. Нажмите «Подключить к Codex» в окне «Нейросетошная» и перезапустите Codex.</dd></div>
       <div><dt>Подключали Codex командой <code>codex mcp add</code></dt><dd>Так тоже работает, но остаются стандартные таймауты Codex, и долгие скрипты могут обрываться. Нажмите «Подключить к Codex»: кнопка заменит эту запись своей, с увеличенными таймаутами.</dd></div>

@@ -156,7 +156,7 @@ namespace TNov.Mcp
                     ? "Блок скопирован. Вставьте его в конец config.toml в Блокноте и перезапустите Codex."
                     : client.Client == McpClient.Qwen
                     ? "Фрагмент скопирован. Добавьте сервер «revit» в раздел mcpServers файла %USERPROFILE%\\.qwen\\settings.json и перезапустите Qwen Code."
-                    : "Команда скопирована. Выполните её в PowerShell, не в чате Claude.";
+                    : "Команда скопирована. Выполните её в PowerShell, не в чате Claude. Проще — кнопка «Подключить к Claude Code».";
             }
             catch (Exception) { CheckResult = "Не удалось скопировать — выделите команду и нажмите Ctrl+C."; }
         }
@@ -166,6 +166,15 @@ namespace TNov.Mcp
         {
             try { CheckResult = ClaudeDesktopSetup.Install(McpServer.IsRunning ? McpServer.Port : McpAccess.Local.Port); }
             catch (Exception ex) { CheckResult = "Не удалось подключить Claude Desktop: " + ex.Message; }
+        }
+
+        /// <summary>Подключение Claude Code через мост: рабочая папка и пользовательские настройки (в фоне — может вызвать программу claude).</summary>
+        public async void ConnectClaudeCode()
+        {
+            int port = McpServer.IsRunning ? McpServer.Port : McpAccess.Local.Port;
+            CheckResult = "Подключаю Claude Code…";
+            try { CheckResult = await Task.Run(() => ClaudeCodeSetup.Install(port)); }
+            catch (Exception ex) { CheckResult = "Не удалось подключить Claude Code: " + ex.Message; }
         }
 
         /// <summary>Подключение к Codex: мост stdio -> HTTP в ~/.codex/config.toml.</summary>
@@ -336,13 +345,17 @@ namespace TNov.Mcp
                 }
             }
 
-            switch (ClaudeCodeConfigured())
+            int configuredPort = McpServer.IsRunning ? McpServer.Port : McpAccess.Local.Port;
+            switch (ClaudeCodeSetup.IsConfigured())
             {
                 case true:
-                    lines.AppendLine("✓ Коннектор прописан в Claude Code.");
+                    lines.AppendLine("✓ Мост прописан в Claude Code.");
+                    lines.AppendLine(BridgeLogLine(McpClient.Claude));
                     break;
                 case false:
-                    lines.AppendLine("– В Claude Code коннектор не прописан — выполните команду из раздела Claude.");
+                    lines.AppendLine(ClaudeCodeSetup.HasDirectUrl(configuredPort)
+                        ? "– Claude Code подключён напрямую, без моста: после перезапуска Revit связь рвётся. Нажмите «Подключить к Claude Code»."
+                        : "– В Claude Code коннектор не прописан — нажмите «Подключить к Claude Code».");
                     break;
             }
             switch (ClaudeDesktopSetup.IsConfigured())
@@ -402,23 +415,6 @@ namespace TNov.Mcp
                 ? " (журнал в папке приложения из Microsoft Store)"
                 : "";
             return $"• Мост {client.Name}, последняя запись{where}: {Trim(last, 200)}";
-        }
-
-        /// <summary>true/false — есть ли адрес коннектора в ~/.claude.json; null — файла нет.</summary>
-        private static bool? ClaudeCodeConfigured()
-        {
-            try
-            {
-                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".claude.json");
-                if (!File.Exists(path)) return null;
-                string text = File.ReadAllText(path);
-                int port = McpServer.IsRunning ? McpServer.Port : McpAccess.Local.Port;
-                return text.Contains("localhost:" + port + "/mcp") || text.Contains("127.0.0.1:" + port + "/mcp");
-            }
-            catch (Exception)
-            {
-                return null;
-            }
         }
 
         private static void Set(McpClientStatus status, string text, Brush brush)
